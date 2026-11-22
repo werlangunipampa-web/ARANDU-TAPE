@@ -192,7 +192,7 @@ s.navigationOutsideEvent({type:()=>4,get_source:()=>s.buttons.open[0].button});
 assert.equal(pending.has(previousTimer),false);
 assert(s.navigationIdleTimer && pending.has(s.navigationIdleTimer));
 // Clique fora do ARANDU: recolher imediatamente, sem consumir o clique.
-assert.equal(s.navigationOutsideEvent({type:()=>4,get_source:()=>new Actor()}),true);
+assert.equal(s.navigationOutsideEvent({type:()=>4,get_source:()=>new Actor()}),false);
 assert.equal(s.navigationOverlay,false);
 assert.equal(s.expanded,false);
 assert.equal(s.navigationIdleTimer,0);
@@ -258,7 +258,7 @@ s.selectRiver('open');
 s.focusSelectedNode();
 const first=s.navIndex;
 s.moveSelection(1);assert.notEqual(s.navIndex,first);
-s.activateSelection();assert.equal(s.expanded,true);
+s.activateSelection();assert.equal(s.expanded,false);
 s.cancelSelection();assert.equal(s.navRiver,null);
 s.selectRiver('frequent');assert.equal(s.navRiver,'frequent');
 s.selectRiver('memory');assert.equal(s.navRiver,'memory');
