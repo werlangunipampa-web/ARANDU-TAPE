@@ -47,10 +47,12 @@ class PerformanceContract(unittest.TestCase):
         self.assertIn('Gtk.Button(label="Desempenho")', app)
         self.assertIn("def show_performance(self):", app)
         panel = app.split("    def show_performance(self):", 1)[1].split(
-            "    def show_development(self):", 1)[0]
+            "    def start_benchmark(self):", 1)[0]
         self.assertIn("collect(limit=8)", panel)
         self.assertNotIn("timeout_add", panel)
-        self.assertNotIn("open(", panel)
+        self.assertNotIn("subprocess.Popen(", panel)
+        self.assertNotIn("with open(", panel)
+        self.assertNotIn("Path.open(", panel)
         self.assertNotIn("subprocess.", panel)
         core = (root / "performance.py").read_text()
         self.assertIn("parser.add_argument(\"--save\"", core)
