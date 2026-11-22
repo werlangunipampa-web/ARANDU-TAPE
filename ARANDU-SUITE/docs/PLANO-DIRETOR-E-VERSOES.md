@@ -205,3 +205,13 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - **Respeito cultural:** Opy é uma referência metafórica ao encontro e à organização, não representação de cerimônia ou reprodução de práticas religiosas. Recomendada futura escuta de interlocutores Guarani para avaliar terminologia e iconografia.
 - Publicados testes contratuais de teclado, exclusão da própria Opy, segurança e atalhos preservados. **Pendente:** confirmar no VAIO a abertura/centralização e troca entre Firefox, Nemo, Foot. O registro do atalho na sessão atual pode ser feito por `swaymsg`; centralização completa requer carregar nova configuração após relogin.
 - Futuro: reduzir presença da barra convencional de janelas, melhorar agrupamento acessível e navegação por múltiplos monitores, sem bloquear acesso de emergência.
+
+## Desktop 0.7.1 — plano de estabilização dos controles essenciais (22/11/2026)
+
+- Usuário validou entrada no ARANDU pelo login e ChatGPT/Firefox, mas encontrou ausência de ação visual para fechar, dificuldade de Print/clipboard, barra de títulos/abas convencional e navegação básica ainda incompleta.
+- **Decisão:** retornar temporariamente ao GNOME e testar em laboratório Sway aninhado. A opção de login ARANDU é preservada, mas não recomendada ainda como sessão principal.
+- Templates do Sway agora configuram `default_border none` e `workspace_layout default`: removem decoração/abas **do Sway**, mas cabeçalhos próprios de aplicações podem permanecer. `Alt+Tab` abre Opy; `Super+T` recupera abas, `Super+Q` solicita fechar janela, `Super+H` recolhe ao scratchpad, `Super+Shift+H` recupera; `Super+F` permite maximização via tela cheia.
+- Atalhos essenciais mantidos: `Ctrl+Alt+A` para retornar à Semente, `Print` para capturar ao clipboard e `Shift+Print` para arquivo, `Ctrl+Alt+Shift+Q` para saída de emergência.
+- `session/verify-essentials.sh` audita dependências e executa testes sem sudo, instalações ou modificações de configuração. `tests/test_essentials_contract.py` verifica contratos em ambos templates de sessão.
+- **Aceitação pendente no VAIO:** 1) login GNOME seguro, 2) laboratório Sway inicia, 3) Opy alterna Firefox ↔ Foot, 4) fechamento e recolhimento funcionam, 5) Print → Ctrl+V envia imagem ao ChatGPT, 6) salvar via Shift+Print, 7) retornar ao GNOME sem reiniciar.
+- Não afirmar que Opy já substituiu totalmente a barra de janelas ou que todos os programas GTK não tenham cabeçalhos próprios. Preservar modo de reversão via `Super+T` e exit do Sway.
