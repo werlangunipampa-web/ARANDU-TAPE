@@ -4,6 +4,7 @@ set -Eeuo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
 SOURCE="$ROOT/session/login/sway-login.config.in"
 LAUNCH="$ROOT/session/launch-arandu.sh"
+CAPTURE="$ROOT/session/capture-screen.sh"
 
 if [[ "${EUID}" -eq 0 ]]; then
   echo "ARANDU: não execute uma sessão gráfica como root." >&2
@@ -40,13 +41,19 @@ TMP="$(mktemp -d -t arandu-login.XXXXXXXX)"
 chmod 700 "$TMP"
 trap 'rm -rf -- "$TMP"' EXIT
 CONFIG="$TMP/sway.config"
-python3 - "$SOURCE" "$CONFIG" "$LAUNCH" <<'PY'
+python3 - "$SOURCE" "$CONFIG" "$LAUNCH" "$CAPTURE" <<'PY'
 import pathlib, shlex, sys
-source, dest, launch = map(pathlib.Path, sys.argv[1:])
+source, dest, launch, capture = map(pathlib.Path, sys.argv[1:])
 template = source.read_text(encoding="utf-8")
-if template.count("__ARANDU_LAUNCHER__") != 1:
+if (template.count("__ARANDU_LAUNCHER__") != 1 or
+        template.count("__ARANDU_CAPTURE__") != 1 or
+        template.count("__ARANDU_CAPTURE_SAVE__") != 1):
     raise SystemExit("ARANDU: marcador de comando inválido")
-dest.write_text(template.replace("__ARANDU_LAUNCHER__", "/bin/bash " + shlex.quote(str(launch))), encoding="utf-8")
+capture_cmd = "/bin/bash " + shlex.quote(str(capture))
+template = template.replace("__ARANDU_LAUNCHER__", "/bin/bash " + shlex.quote(str(launch)))
+template = template.replace("__ARANDU_CAPTURE_SAVE__", capture_cmd + " --save")
+template = template.replace("__ARANDU_CAPTURE__", capture_cmd + " --clipboard")
+dest.write_text(template, encoding="utf-8")
 dest.chmod(0o600)
 PY
 
