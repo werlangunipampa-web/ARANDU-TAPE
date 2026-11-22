@@ -299,10 +299,26 @@ class TapeSession {
     // O clique/toque externo devolve a janela ao trabalho sem consumir o evento.
     navigationOutsideEvent(event) {
         if(!this.navigationOverlay || this.scanning || !this.root)return Clutter.EVENT_PROPAGATE;
-        if(![Clutter.EventType.BUTTON_PRESS,Clutter.EventType.TOUCH_BEGIN].includes(event.type()))
+        const kind=event.type();
+        // Ao voltar a digitar numa janela, o foco de janela pode permanecer igual.
+        // Detectar o foco real do teclado (não intercepta o evento).
+        if(kind===Clutter.EventType.KEY_PRESS) {
+            const focused=global.stage.get_key_focus?.();
+            const inArandu=focused && (focused===this.root || this.root.contains(focused));
+            if(focused && !inArandu)this.finishNavigation();
+            return Clutter.EVENT_PROPAGATE;
+        }
+        if(kind!==Clutter.EventType.BUTTON_PRESS && kind!==Clutter.EventType.TOUCH_BEGIN)
             return Clutter.EVENT_PROPAGATE;
         const actor=typeof event.get_source==='function'?event.get_source():null;
-        if(actor && (actor===this.root || this.root.contains(actor))){
+        // Somente controles interativos contam como interação com o ARANDU.
+        // A superfície transparente da Confluência não deve manter a navegação ativa.
+        const controls=[this.seed,this.helpButton,this.helpBox,this.controlScroll,
+            ...Object.values(this.riverLabels||{})];
+        for(const river of RIVERS)for(const node of this.buttons[river]||[])controls.push(node.button);
+        const inside=controls.some(control=>control && actor &&
+            (actor===control || control.contains?.(actor)));
+        if(inside){
             this.resetNavigationTimeout();
             return Clutter.EVENT_PROPAGATE;
         }
