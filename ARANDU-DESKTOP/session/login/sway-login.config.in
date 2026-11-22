@@ -16,6 +16,10 @@ bindsym Ctrl+Alt+Shift+q exit
 bindsym $mod+Shift+Escape exit
 # Voltar à Semente sem instanciar uma segunda cópia.
 bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] focus
+# Opy: visão ARANDU das janelas em Alt+Tab, apenas na sessão Sway.
+bindsym Mod1+Tab exec __ARANDU_OPY__
+# Janela Opy flutua sobre as aplicações; não é um painel religioso ou layer-shell.
+for_window [app_id="org.arandulab.OpySwitcher"] floating enable, resize set width 660 px height 460 px, move position center
 bindsym $mod+Tab focus next
 bindsym $mod+Shift+Tab focus prev
 # Print copia PNG para a área de transferência (Ctrl+V).
