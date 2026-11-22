@@ -23,6 +23,7 @@ class RiversCanvas(Gtk.ScrolledWindow):
         self.marker_windows = {}
         self.mode = "rivers"
         self._fit_source = 0
+        self._energy_economy = False
         self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)
         self.canvas = Gtk.Overlay()
         self.canvas.set_halign(Gtk.Align.CENTER)
@@ -74,12 +75,25 @@ class RiversCanvas(Gtk.ScrolledWindow):
     def _on_map(self, *_args):
         if not self._fit_source:
             self._fit_width()
-            self._fit_source = GLib.timeout_add(450, self._fit_width)
+            self._fit_source = GLib.timeout_add(2400 if self._energy_economy else 450,
+                                                  self._fit_width)
 
     def _on_unmap(self, *_args):
         if self._fit_source:
             GLib.Source.remove(self._fit_source)
             self._fit_source = 0
+
+    def set_energy_mode(self, economical: bool):
+        """Reduz ciclos de geometria em economia, sem alterar janelas de terceiros."""
+        economical = bool(economical)
+        if economical == self._energy_economy:
+            return
+        self._energy_economy = economical
+        if self._fit_source:
+            GLib.Source.remove(self._fit_source)
+            self._fit_source = GLib.timeout_add(2400 if economical else 450,
+                                                  self._fit_width)
+        self._fit_width()
 
     def _fit_width(self):
         width = self.get_width()
