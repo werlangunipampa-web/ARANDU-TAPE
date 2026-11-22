@@ -5,6 +5,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOP="$HOME/.local/share/gnome-shell/extensions/arandu-topbar@local"
 TOP_SRC="$ROOT/TOPBAR/arandu-topbar@local"
 BACK="$HOME/.local/share/arandu-suite/backups"
+TOP_MODERN="$ROOT/TOPBAR/modern"
+ENABLE_EXPERIMENTAL=0
 SHELL_MAJOR="$(gnome-shell --version 2>/dev/null | grep -oE '[0-9]+' | head -1 || true)"
 case "${1:-}" in
   --preflight)
@@ -25,8 +27,10 @@ case "${1:-}" in
       gnome-extensions info "$extension" 2>&1 || true
     done
     exit 0;;
+  --experimental-topbar)
+    ENABLE_EXPERIMENTAL=1;;
   --instalar|"") ;;
-  *) echo 'Uso: bash instalar-tudo.sh [--preflight|--verificar|--status|--instalar]' >&2; exit 2;;
+  *) echo 'Uso: bash instalar-tudo.sh [--preflight|--verificar|--status|--instalar|--experimental-topbar]' >&2; exit 2;;
 esac
 command -v gnome-shell >/dev/null || { echo 'GNOME Shell não encontrado. Instalação interrompida.' >&2; exit 2; }
 python3 "$ROOT/verificar.py"
@@ -46,7 +50,18 @@ elif [[ -f "$TOP_SRC/metadata.json" ]]; then
   trap 'rm -rf -- "$STAGE"' EXIT
   cp -a "$TOP_SRC/." "$STAGE/"
   chmod 755 "$STAGE"
-  if [[ "$SHELL_MAJOR" == "46" ]]; then
+  if [[ "$SHELL_MAJOR" != "46" ]]; then
+    # Mantém íntegra a TOPBAR 6.6.1.2 no repositório.
+    # Em GNOME diferente de 46 usa apenas uma cópia de instalação da variante moderna.
+    if [[ ! -f "$TOP_MODERN/extension.js" || ! -f "$TOP_MODERN/metadata.json" ]]; then
+      echo 'ERRO: variante moderna da TOPBAR não está no pacote.' >&2
+      exit 2
+    fi
+    cp "$TOP_MODERN/extension.js" "$STAGE/extension.js"
+    cp "$TOP_MODERN/metadata.json" "$STAGE/metadata.json"
+  fi
+  # Compila o esquema em todas as variantes, antes da instalação atômica.
+  if [[ "$SHELL_MAJOR" == "46" || "$ENABLE_EXPERIMENTAL" == "1" ]]; then
     if [[ ! -f "$STAGE/schemas/org.gnome.shell.extensions.arandu-topbar.gschema.xml" ]]; then
       echo 'ERRO: esquema da TOPBAR ausente do pacote.' >&2; exit 2
     fi
@@ -62,10 +77,11 @@ fi
 if command -v gnome-extensions >/dev/null; then
   gnome-extensions enable confluencia@arandulab 2>/dev/null || true
   # TOPBAR original oferece somente suporte ao GNOME 46; não ativá-la fora dessa versão.
-  if [[ "$SHELL_MAJOR" == "46" && -f "$TOP/metadata.json" ]]; then
+  if [[ -f "$TOP/metadata.json" && ( "$SHELL_MAJOR" == "46" || "$ENABLE_EXPERIMENTAL" == "1" ) ]]; then
     gnome-extensions enable arandu-topbar@local 2>/dev/null || true
   else
-    echo 'TOPBAR: ativação automática omitida fora do GNOME 46.'
+    echo 'TOPBAR: GNOME fora do 46. Para testar a variante moderna (experimental),'
+    echo 'use bash instalar-tudo.sh --experimental-topbar numa sessão de testes.'
   fi
 fi
 echo
