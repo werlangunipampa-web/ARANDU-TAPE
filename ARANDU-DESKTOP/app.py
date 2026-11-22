@@ -26,7 +26,7 @@ except (ImportError, ValueError) as error:
 from visual import RiversCanvas
 from session.windows import list_windows, focus_window
 
-VERSION = "0.5.1"
+VERSION = "0.5.2"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -82,7 +82,7 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.5.1")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.5.2")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -93,7 +93,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.5.1 · TESTE DE DUAS JANELAS", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.5.2 · RIO ABERTOS FUNCIONAL", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         about = Gtk.Button(label="Sobre")
@@ -167,6 +167,10 @@ class Desktop(Gtk.Application):
             "ARANDU Seed / ECA: desconectado por padrão. Nenhuma identidade é migrada."))
 
     def select(self, river):
+        if river == "open" and os.environ.get("ARANDU_SESSION_LAB") == "1":
+            self.session.select(river)
+            self.show_windows()
+            return
         self.session.select(river)
         self.clear_content()
         self.visual.show_rivers()
@@ -175,7 +179,7 @@ class Desktop(Gtk.Application):
         self.content.append(self.text(NAMES[river], "arandu-title"))
         messages = {
             "memory": "Memória ainda não conectada. Procedência e consentimento serão obrigatórios.",
-            "open": "Leitura de janelas ainda não implementada. Não confundir aplicativos instalados com janelas abertas.",
+            "open": "Janelas reais disponíveis no laboratório Sway; GNOME hospedeiro não é consultado.",
             "frequent": "Frequência de uso desativada. O protótipo não monitora os seus aplicativos.",
         }
         self.content.append(self.text(messages[river]))
@@ -245,7 +249,7 @@ class Desktop(Gtk.Application):
         self.selected_window = None
         self.clear_content()
         self.detail_revealer.set_reveal_child(True)
-        self.content.append(self.text("JANELAS ABERTAS · SWAY", "arandu-title"))
+        self.content.append(self.text("RIO DOS ABERTOS · JANELAS SWAY", "arandu-title"))
         if os.environ.get("ARANDU_SESSION_LAB") != "1":
             self.visual.show_rivers()
             self.content.append(self.text(
@@ -261,12 +265,13 @@ class Desktop(Gtk.Application):
         self.visual.show_windows(windows)
         if not windows:
             self.content.append(self.text(
-                "Nenhuma outra janela Sway encontrada. Use Super+Enter para "
-                "abrir o terminal Foot dentro do laboratório e consulte novamente."))
+                "Nenhuma outra janela Sway encontrada. Clique em 'Abrir Foot no Sway', "
+                "volte ao ARANDU e selecione ABERTOS novamente."))
         else:
             self.content.append(self.text(
                 f"{len(windows)} janela(s) disponíveis. Selecione um medalhão "
-                "e confirme antes de mudar o foco."))
+                "e confirme antes de mudar o foco. Para voltar ao ARANDU, "
+                "use Ctrl+Alt+A dentro do Sway."))
             for item in windows[:15]:
                 self.content.append(self.text(
                     f"Medalhão · {item['title']} ({item['app']})"))
