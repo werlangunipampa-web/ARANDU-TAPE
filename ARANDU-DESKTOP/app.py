@@ -24,9 +24,9 @@ except (ImportError, ValueError) as error:
     raise SystemExit(2)
 
 from visual import RiversCanvas
-from session.windows import list_windows, focus_window, hide_arandu
+from session.windows import list_windows, focus_window, hide_arandu, list_outputs, move_arandu_to_output
 
-VERSION = "0.6.0"
+VERSION = "0.6.1"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -82,7 +82,7 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.6")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.6.1")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -93,7 +93,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.6.0 · SEMENTE RETRÁTIL", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.6.1 · SEMENTE E TELAS", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         about = Gtk.Button(label="Sobre")
@@ -130,6 +130,13 @@ class Desktop(Gtk.Application):
         windows_btn = Gtk.Button(label="Janelas da sessão Sway")
         windows_btn.connect("clicked", lambda *_: self.show_windows())
         actions.append(windows_btn)
+        if os.environ.get("ARANDU_SESSION_LAB") == "1":
+            displays = Gtk.Button(label="Telas do ARANDU")
+            displays.connect("clicked", lambda *_: self.show_displays())
+            actions.append(displays)
+            fullscreen = Gtk.Button(label="Tela cheia")
+            fullscreen.connect("clicked", lambda *_: self.toggle_fullscreen())
+            actions.append(fullscreen)
         if os.environ.get("ARANDU_SESSION_LAB") == "1":
             terminal_btn = Gtk.Button(label="Abrir Foot no Sway")
             terminal_btn.connect("clicked", lambda *_: self.open_test_terminal())
@@ -218,6 +225,48 @@ class Desktop(Gtk.Application):
         self.detail_revealer.set_reveal_child(True)
         if not apps:
             self.content.append(self.text("Nenhum aplicativo disponível nesta sessão."))
+
+    def toggle_fullscreen(self):
+        """Tela cheia opcional do cliente ARANDU; o Sway segue sendo o compositor."""
+        if os.environ.get("ARANDU_SESSION_LAB") != "1":
+            return
+        if self.window.is_fullscreen():
+            self.window.unfullscreen()
+        else:
+            self.window.fullscreen()
+
+    def show_displays(self):
+        """Permite escolher uma saída real/virtual retornada pelo Sway."""
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        self.content.append(self.text("MONITORES DA SESSÃO SWAY", "arandu-title"))
+        try:
+            outputs = list_outputs()
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+            self.content.append(self.text("Falha ao consultar monitores: " + str(error)))
+            return
+        if not outputs:
+            self.content.append(self.text("Nenhuma saída Sway disponível neste modo."))
+        for output in outputs:
+            name = output["name"]
+            dimensions = f'{output["width"]} × {output["height"]}'
+            description = f'{name} · {dimensions}'
+            if output["focused"]:
+                description += " · ativa"
+            button = Gtk.Button(label="Mover Semente para " + description)
+            button.set_halign(Gtk.Align.START)
+            button.connect("clicked", lambda _b, target=name: self.move_display(target))
+            self.content.append(button)
+        self.content.append(self.text(
+            "As saídas virtuais representam janelas do Sway aninhado; "
+            "não equivalem necessariamente aos monitores físicos do VAIO."))
+
+    def move_display(self, output):
+        try:
+            if not move_arandu_to_output(output):
+                self.content.append(self.text("Saída indisponível ou movimentação recusada."))
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+            self.content.append(self.text("Falha ao mover ARANDU: " + str(error)))
 
     def open_test_terminal(self):
         """Só abre o Foot por solicitação explícita dentro da sessão experimental."""
