@@ -44,7 +44,7 @@ export default class AranduTopbarExtension extends Extension {
             can_focus: true,
             track_hover: true,
             y_align: Clutter.ActorAlign.CENTER,
-            accessible_name: 'Abrir ARANDU CENTER',
+            accessible_name: 'Abrir menu de aplicativos ARANDU',
         });
 
         const box = new St.BoxLayout({
@@ -78,16 +78,7 @@ export default class AranduTopbarExtension extends Extension {
             text: '◈ RIOS',
             style_class: 'arandu-rivers-label',
         }));
-        this._riversButton.connect('clicked', () => {
-            try {
-                Gio.Subprocess.new(
-                    [`${this.path}/launch-rivers.sh`],
-                    Gio.SubprocessFlags.NONE
-                );
-            } catch (e) {
-                console.error(`[ARANDU TOPBAR] falha ao alternar RIOS: ${e}`);
-            }
-        });
+        this._riversButton.connect('clicked', () => this._toggleRivers());
         Main.panel._leftBox.insert_child_at_index(this._riversButton, 2);
 
         this._settingsChangedId = this._settings.connect('changed', () => this._apply());
@@ -106,14 +97,43 @@ export default class AranduTopbarExtension extends Extension {
         console.log('[ARANDU TOPBAR] v4.9.1 reboot persistence fix ativa');
     }
 
+    // ARANDU abre a grade de aplicativos nativa do GNOME 46.
     _launch() {
         try {
-            Gio.Subprocess.new(
-                [`${this.path}/launch-center.sh`],
-                Gio.SubprocessFlags.NONE
+            Main.overview.showApps();
+        } catch (e) {
+            console.error(`[ARANDU TOPBAR] erro no menu de aplicativos: ${e}`);
+            Main.notify('ARANDU', 'Não foi possível abrir os aplicativos.');
+        }
+    }
+
+    // RIOS expande/recolhe a Confluência instalada; não inicia outro aplicativo.
+    // A chamada é assíncrona para não bloquear a interface do GNOME Shell.
+    _toggleRivers() {
+        try {
+            Gio.DBus.session.call(
+                'org.gnome.Shell',
+                '/org/arandulab/Tape/Windows',
+                'org.arandulab.Tape.Windows1',
+                'AssistiveCommand',
+                new GLib.Variant('(s)', ['seed:toggle']),
+                new GLib.VariantType('(b)'),
+                Gio.DBusCallFlags.NONE,
+                3000,
+                null,
+                (connection, result) => {
+                    try {
+                        const [ok] = connection.call_finish(result).deep_unpack();
+                        if (!ok) Main.notify('ARANDU RIOS', 'A Confluência não aceitou o comando.');
+                    } catch (e) {
+                        console.error(`[ARANDU TOPBAR] falha D-Bus em RIOS: ${e}`);
+                        Main.notify('ARANDU RIOS', 'Ativa a extensão Confluência para navegar pelos rios.');
+                    }
+                }
             );
         } catch (e) {
-            console.error(`[ARANDU TOPBAR] falha ao abrir CENTER: ${e}`);
+            console.error(`[ARANDU TOPBAR] falha ao alternar RIOS: ${e}`);
+            Main.notify('ARANDU RIOS', 'Confluência indisponível.');
         }
     }
 
