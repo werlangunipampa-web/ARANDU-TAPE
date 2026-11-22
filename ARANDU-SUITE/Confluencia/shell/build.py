@@ -46,7 +46,7 @@ def build(version,destination):
     (d/"schemas").mkdir(parents=True,exist_ok=True);(d/"assets").mkdir(exist_ok=True)
     info={"uuid":UUID,"name":"Arandu Tape · Confluência","description":"Semente e três rios de navegação da sessão gráfica.",
           "shell-version":list(map(str,range(45,52) if modern else range(40,45))),
-          "settings-schema":"org.gnome.shell.extensions.arandu-confluencia","version":15,"version-name":"3.1.0-beta"}
+          "settings-schema":"org.gnome.shell.extensions.arandu-confluencia","version":16,"version-name":"3.2.0-beta"}
     (d/"metadata.json").write_text(json.dumps(info,ensure_ascii=False,indent=2)+"\n")
     src=(ROOT/"implementation.js.in").read_text().replace("__LAYOUT__",(assets/"geometria.json").read_text().strip())
     src=src.replace("__DYNAMIC_RIVERS__",(ROOT/"rios-dinamicos.json").read_text())
