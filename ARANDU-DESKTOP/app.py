@@ -20,7 +20,7 @@ from system_status import summary, clock_text, network_status, battery_status, b
 try:
     import gi
     gi.require_version("Gtk", "4.0")
-    from gi.repository import Gtk, Gio, Gdk
+    from gi.repository import Gtk, Gio, Gdk, GLib
 except (ImportError, ValueError) as error:
     print("GTK4 não disponível. Instale python3-gi e gir1.2-gtk-4.0.", file=sys.stderr)
     print(error, file=sys.stderr)
@@ -148,7 +148,6 @@ class Desktop(Gtk.Application):
             self.seed_status.append(button)
         main.append(self.seed_status)
         self.clock_button.set_label(clock_text())
-        from gi.repository import GLib
         GLib.timeout_add_seconds(30, self.update_seed_clock)
 
         self.detail_revealer = Gtk.Revealer()
@@ -373,7 +372,7 @@ class Desktop(Gtk.Application):
         try:
             command = [path]
             if program == "desktop":
-                desktop_dir = (Gio.get_user_special_dir(Gio.UserDirectory.DIRECTORY_DESKTOP)
+                desktop_dir = (GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP)
                                or str(Path.home() / "Área de Trabalho"))
                 if not Path(desktop_dir).is_dir():
                     desktop_dir = str(Path.home())
