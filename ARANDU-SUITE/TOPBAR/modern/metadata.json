@@ -1,0 +1,16 @@
+{
+  "uuid": "arandu-topbar@local",
+  "name": "ARANDU TOPBAR — Variante GNOME 45+ (experimental)",
+  "description": "Variante de compatibilidade em avaliação; mantém a identidade visual da TOPBAR 6.6.1.2.",
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "50",
+    "51"
+  ],
+  "version": 6613,
+  "settings-schema": "org.gnome.shell.extensions.arandu-topbar"
+}
