@@ -17,11 +17,10 @@ bindsym $mod+Shift+Escape exit
 # Navegação normal de janelas no compositor experimental.
 bindsym $mod+Tab focus next
 bindsym $mod+Shift+Tab focus prev
-# ARANDU experimental em janela flutuante retrátil, não ocupa uma aba.
-# Scratchpad mantém a janela viva; não é layer-shell nem transparência real.
-for_window [title="^ARANDU Desktop"] floating enable, resize set width 780 px height 610 px, move position center, move scratchpad, scratchpad show
-# Atalho alterna exibição/ocultação do ARANDU dentro deste Sway.
-bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] scratchpad show
+# Estabilidade primeiro: a interface ARANDU inicia VISÍVEL como aba normal.
+# O scratchpad automático experimental 0.6.1 foi desativado por regressão.
+# Ctrl+Alt+A retorna ao ARANDU; Super+Shift+Espaço habilita flutuação manual.
+bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] focus
 bindsym $mod+f fullscreen toggle
 bindsym $mod+Shift+space floating toggle
 # Terminal apenas nesta sessão aninhada; Foot instalado junto do Sway no Mint.
