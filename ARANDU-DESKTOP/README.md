@@ -1,11 +1,11 @@
-# ARANDU Desktop 0.1 — primeiro protótipo independente
+# ARANDU Desktop 0.2 — Semente e Rios originais no GTK4
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
 
 ## O que é hoje
 
-Uma **aplicação GTK4 própria** para testar a linguagem visual da Semente, os três Rios (Memória, Abertos, Frequentes), o botão de aplicativos instalados e as informações de autoria. Funciona **sobre** GNOME ou Cinnamon, mas **não depende das APIs internas do GNOME Shell**.
+Uma **aplicação GTK4 própria** que agora reutiliza os **SVG originais** `rios.svg`, `semente.svg`, `memory.svg`, `open.svg` e `frequent.svg` e `geometria.json` da Confluência. A Semente, os três Rios, o botão de aplicativos instalados e as informações de autoria funcionam em uma janela GTK4 independente do GNOME Shell. Funciona **sobre** GNOME ou Cinnamon, mas **não depende das APIs internas do GNOME Shell**.
 
 **Ainda não é** ambiente de sessão, gerenciador de janelas, compositor, desktop alternativo no login, observador de janelas, sistema cognitivo conectado ou substituto do Linux Mint.
 
@@ -29,6 +29,10 @@ sudo apt install python3-gi gir1.2-gtk-4.0
 ```
 
 Também pode iniciar com `bash ARANDU-DESKTOP/rodar-arandu-desktop.sh` a partir da raiz do clone. O script não instala pacotes, não cria serviços, não altera a sessão de login e não executa comandos privilegiados.
+
+## Limitações da visualização 0.2
+
+O gráfico usa um canvas nativo de 1200 × 500 px com rolagem em telas menores. Os quinze medalhões representam **posições gráficas**, sem dados de aplicativos associados. O layout deve ser visualmente testado na máquina antes de se declarar compatível com dimensionamento/HiDPI. Os ativos SVG permanecem no diretório original, evitando duplicação; a organização das pastas do repositório deve ser mantida.
 
 ## Rust (núcleo experimental isolado)
 
