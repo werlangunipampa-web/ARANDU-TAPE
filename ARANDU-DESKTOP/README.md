@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.2 — Semente e Rios originais no GTK4
+# ARANDU Desktop 0.2.1 — Semente e Rios com enquadramento corrigido
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -64,3 +64,7 @@ O crate Rust contém somente os contratos reversíveis de seleção/recolhimento
 **Critério de aceite:** nunca chamar o aplicativo GTK de um 'compositor' nem chamar testes unitários de 'validação da sessão Linux real'.
 
 Veja também `ARANDU-SUITE/docs/PLANO-DIRETOR-E-VERSOES.md`.
+
+## Ajuste 0.2.1 (22/11/2026)
+
+A captura da versão 0.2 no VAIO mostrou os Rios cortados verticalmente porque o painel informativo expandia até ocupar o espaço do canvas. A 0.2.1 usa uma geometria proporcional de 900 × 375, reduz o painel informativo e adiciona teste de enquadramento. **Publicada, mas ainda não validada na sessão GTK4 real após a correção.**
