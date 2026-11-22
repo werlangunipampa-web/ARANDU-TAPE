@@ -75,3 +75,22 @@ def focus_window(identifier):
     return isinstance(answer, list) and bool(answer) and all(
         isinstance(part, dict) and part.get("success") is True for part in answer
     )
+
+
+def hide_arandu():
+    """Recolhe apenas a janela ARANDU neste Sway, sem encerrá-la.
+
+    A regra de janela do laboratório move ARANDU para o scratchpad ao iniciar.
+    Este comando move a janela de volta à área oculta depois da navegação.
+    """
+    if not _sway_socket():
+        return False
+    result = subprocess.run(
+        ["swaymsg", "-r", "-t", "command",
+         '[title="^ARANDU Desktop"] move scratchpad'],
+        capture_output=True, text=True, timeout=3, check=True,
+    )
+    answer = json.loads(result.stdout)
+    return isinstance(answer, list) and bool(answer) and all(
+        isinstance(part, dict) and part.get("success") is True for part in answer
+    )
