@@ -28,7 +28,7 @@ except (ImportError, ValueError) as error:
 from visual import RiversCanvas
 from session.windows import list_windows, focus_window, list_outputs, move_arandu_to_output
 
-VERSION = "0.7.0"
+VERSION = "0.7.1"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -84,7 +84,7 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.7.0")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.7.1")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -95,7 +95,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.7.0 · OPY", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.7.1 · CONTROLES ESSENCIAIS", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         performance = Gtk.Button(label="Desempenho")
