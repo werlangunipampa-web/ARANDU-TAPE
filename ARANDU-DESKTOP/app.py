@@ -7,6 +7,7 @@ Não conecta à ECA, não coleta janelas e não modifica atalhos do sistema.
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -62,7 +63,10 @@ def add_style(widget, name):
 
 class Desktop(Gtk.Application):
     def __init__(self):
-        super().__init__(application_id="org.arandulab.DesktopPrototype",
+        super().__init__(application_id=(
+                             "org.arandulab.DesktopSessionLab"
+                             if os.environ.get("ARANDU_SESSION_LAB") == "1"
+                             else "org.arandulab.DesktopPrototype"),
                          flags=Gio.ApplicationFlags.FLAGS_NONE)
         self.session = Session()
         self.window = None
