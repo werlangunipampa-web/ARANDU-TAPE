@@ -1,0 +1,32 @@
+name: ARANDU Desktop — testes de contrato
+on:
+  push:
+    paths:
+      - 'ARANDU-DESKTOP/**'
+      - '.github/workflows/arandu-desktop-tests.yml'
+  pull_request:
+    paths:
+      - 'ARANDU-DESKTOP/**'
+      - '.github/workflows/arandu-desktop-tests.yml'
+permissions:
+  contents: read
+jobs:
+  python-and-shell:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validar sintaxe Python sem usar GTK
+        run: python -m compileall -q ARANDU-DESKTOP
+      - name: Testes unitários e contratuais
+        run: python -m unittest discover -s ARANDU-DESKTOP/tests -v
+      - name: Checar sintaxe shell de sessão e evolução
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          for script in ARANDU-DESKTOP/session/*.sh ARANDU-DESKTOP/session/login/*.sh; do
+            bash -n "$script"
+          done
