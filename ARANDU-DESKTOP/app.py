@@ -23,7 +23,7 @@ except (ImportError, ValueError) as error:
 
 from visual import RiversCanvas
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -40,7 +40,7 @@ window.arandu { background:#14221d; color:#e9eee7; }
  border:1px solid #82a78a;border-radius:18px;font-weight:700;
 }
 .arandu-river:hover,.arandu-seed:hover {background:#426c56;}
-.arandu-main {padding:26px;}
+.arandu-main {padding:16px;}
 .arandu-subpanel {background:#1c3128;padding:18px;border-radius:16px;}
 .arandu-action {background:#506d54;color:#fff;border-radius:10px;padding:10px;}
 .arandu-note {color:#cfdbcf;font-size:13px;}
@@ -73,8 +73,8 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.2")
-        self.window.set_default_size(1180, 800)
+        self.window.set_title("ARANDU Desktop · Laboratório 0.2.1")
+        self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
         provider.load_from_data(CSS.encode("utf-8"))
@@ -84,7 +84,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.2.0 · ARQUITETURA VISUAL INDEPENDENTE", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.2.1 · GEOMETRIA PROPORCIONAL", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         about = Gtk.Button(label="Sobre")
@@ -92,7 +92,7 @@ class Desktop(Gtk.Application):
         bar.append(about)
         root.append(bar)
 
-        main = add_style(Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=19), "arandu-main")
+        main = add_style(Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12), "arandu-main")
         main.set_hexpand(True)
         main.set_vexpand(True)
         root.append(main)
@@ -108,7 +108,8 @@ class Desktop(Gtk.Application):
 
         self.content = add_style(Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL, spacing=10), "arandu-subpanel")
-        self.content.set_vexpand(True)
+        self.content.set_vexpand(False)
+        self.content.set_size_request(-1, 108)
         main.append(self.content)
         actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         apps = add_style(Gtk.Button(label="Aplicativos instalados"), "arandu-action")
