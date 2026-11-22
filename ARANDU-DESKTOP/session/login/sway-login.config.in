@@ -32,7 +32,7 @@ bindsym $mod+Shift+Tab focus prev
 bindsym Print exec __ARANDU_CAPTURE__
 # Shift+Print salva PNG explicitamente em Imagens.
 bindsym Shift+Print exec __ARANDU_CAPTURE_SAVE__
-bindsym $mod+Return exec foot
+bindsym $mod+Return exec __ARANDU_TERMINAL__
 bindsym $mod+f fullscreen toggle
 bindsym $mod+Shift+space floating toggle
 # Ações explícitas para trabalhar sem botão X nem barra de título.
