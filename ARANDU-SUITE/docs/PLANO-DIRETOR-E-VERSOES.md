@@ -187,3 +187,12 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - Script `ARANDU-DESKTOP/performance.py` permite capturas JSON de sessões ARANDU/GNOME sob solicitação, com escrita apenas via `--save` e permissão 0600. Não coleta continuamente nem envia telemetria.
 - Comparação legítima exige mesmas condições de máquina/carga/programas, várias repetições e medidas adicionais de tempo de resposta e PSS; nenhum benchmark comparativo foi medido ainda.
 - Testes unitários acrescentados para parsing de RAM, processos e ausência de persistência automática. Execução efetiva e interface ainda requerem validação no VAIO.
+
+## Desktop 0.6.4 — benchmark comparativo reproduzível (22/11/2026)
+
+- Criado `ARANDU-DESKTOP/benchmark.py` com amostragem limitada a 2–20 intervalos de 0,5–5 s, RAM disponível/em uso, swap e CPU global calculada do delta de `/proc/stat`.
+- Criado comparador offline de dois relatórios JSON `--compare`, que calcula diferenças de mediana sem inventar superioridade entre desktops. Identifica sessões por variável `XDG_SESSION_DESKTOP`.
+- O botão `Desempenho → Ensaio comparativo (5 medições)` abre o Foot apenas sob clique e encerra a medição sozinho; não bloqueia o GTK nem grava arquivo automaticamente.
+- Persistência apenas mediante `--save`: cria arquivo novo, permissionamento 0600, recusa sobrescrever. Nenhuma telemetria/rede.
+- `tests/test_benchmark.py` testa CPU, medianas, segurança de arquivo, limites de coleta e disparo por GUI.
+- Critério: executar todos os testes Python e coletar baselines reais nas sessões ARANDU e GNOME, sob condições equivalentes. Não declarar desempenho comprovadamente superior sem repetições.
