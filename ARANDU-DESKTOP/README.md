@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.7.2 — Semente com indicadores e Centro de Sessão
+# ARANDU Desktop 0.7.4 — Semente, Opy e Centro de Atualizações
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -252,3 +252,35 @@ Na interface ARANDU, logo abaixo do mapa gráfico da Semente, aparecem botões p
 **Área de Trabalho** abre a pasta desktop configurada do usuário no Nemo. Isso permite copiar, colar, renomear e movimentar arquivos com atalhos do próprio Nemo. **Não é ainda uma superfície com ícones e arrastar/soltar diretamente sobre o papel de parede**; essa função requer integração posterior com compositor/gerenciador da área de trabalho. Cópia de texto entre aplicativos segue a área de transferência Wayland/X11; `wl-clipboard` habilita integração CLI de imagens/texto, mas não deve ser executado no GNOME/X11 para simular a sessão Sway. `Print → Ctrl+V` ainda necessita validação real dentro do ARANDU.
 
 **Estado dos testes:** código e novos testes de contrato publicados; funcionamento da UI deve ser verificado no VAIO a partir da sessão aninhada, antes de voltar ao ARANDU como login principal. Indicadores da Semente são um primeiro painel horizontal **próximo à Semente**, não ícones embutidos no desenho SVG — a integração visual final ainda está pendente.
+
+## 0.7.3–0.7.4 — ações essenciais e Centro de Atualizações
+
+- A Semente disponibiliza Firefox, Nemo, Foot, Área de Trabalho (pasta Nemo) e Opy (visão experimental das janelas). Captura `Print → Ctrl+V` também é acessível por um botão explícito; recortar/copiar/colar arquivos permanece no Nemo e ainda não existe drag-and-drop sobre o papel de parede próprio.
+- Rio Abertos: Focar, Recolher à Opy via scratchpad, Recuperar janela recolhida e Encerrar janela com confirmação. Identificadores sempre validados pelo Sway antes da ação. Recolher **não** libera RAM; encerrar pode solicitar salvamento dentro do programa.
+- Status da Semente: gerenciadores externos autorizados de redes (`nm-connection-editor`), Bluetooth (`blueman-manager`), áudio (`pavucontrol`) e calendário (`gnome-calendar`), só quando presentes, sem instalação automática.
+- **Atualizações:** botão `Atualizações`, consulta somente leitura do cache APT sob clique; contagem pode estar desatualizada. Flatpak ainda exige conferência no gerenciador oficial. `Abrir gerenciador oficial` lança MintUpdate quando instalado (fallback GNOME Software/Discover), com seus próprios controles de permissões. O ARANDU não executa apt upgrade/update nem instala pacotes sozinho.
+
+### Comparador ARANDU × GNOME × Cinnamon
+
+O script abaixo cria uma medição explicitamente solicitada por sessão, com 10 amostras de CPU global, memória disponível/estimada e swap. Não inicia serviços, não instala pacotes, não fecha sessões. O resultado é um arquivo JSON local, novo e restrito ao usuário:
+
+```bash
+# Na sessão GNOME do mesmo VAIO
+bash ARANDU-DESKTOP/session/benchmark-desktop.sh gnome 1
+
+# Noutra ocasião, no login ARANDU (após confirmar estabilidade)
+bash ARANDU-DESKTOP/session/benchmark-desktop.sh arandu 1
+
+# Se realmente houver uma sessão Cinnamon instalada
+bash ARANDU-DESKTOP/session/benchmark-desktop.sh cinnamon 1
+```
+
+Repetir três a cinco vezes por ambiente com MESMA resolução, mesmos aplicativos e rede, tempo após login e alimentação. Evitar GNOME com navegador aberto versus ARANDU vazio. Comparar relatórios individuais:
+
+```bash
+python3 ARANDU-DESKTOP/benchmark.py --compare CAMINHO-GNOME.json CAMINHO-ARANDU.json
+```
+
+**Limites metodológicos:** essas medições observam o computador inteiro; NÃO medem a memória exclusiva da shell nem provam superioridade. Adicionar posteriormente PSS por processo, consumo de energia (medidores adequados), tempo real de login, latência de Opy/Alt+Tab, inicialização de aplicações e estabilidade de sessões. Não atribuir métricas inventadas a GNOME ou Cinnamon. Monitorar também acessibilidade, recuperação de falhas e comportamento do clipboard. A comparação não é automática entre dois desktops simultâneos: cada ambiente precisa de seu próprio login e relatório.
+
+**Estado:** versão 0.7.4 publicada no código. Testes e usabilidade na máquina do usuário pendentes; o GNOME permanece o ambiente principal recomendado.
