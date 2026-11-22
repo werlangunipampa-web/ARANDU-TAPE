@@ -169,3 +169,13 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - Ao contrário do ensaio aninhado, a sessão real remove flags de backend X11 do wlroots e executa Sway Wayland sobre o hardware. Precisa validação específica de seat, login manager, GPU, teclado, mouse, saídas, integração GTK/Nemo e retorno ao greeter.
 - Emergência: `Ctrl+Alt+Shift+Q` encerra a sessão experimental, volta ao seletor de login se compositor estiver operante. GNOME permanece outra opção.
 - **Não declarar pronta nem recomendar login automático**: o código e testes contratuais não substituem o teste físico do VAIO nem provam integração de desktop completa. A Semente GUI segue GTK4, Rust segue isolado, camada layer-shell e motor de aprendizagem ainda não conectados.
+
+## Contrato permanente — captura de tela no ARANDU (2026-11-22)
+
+- **Print Screen:** captura PNG somente para a área de transferência Wayland (`grim - | wl-copy --type image/png`), sem gravar arquivo automaticamente; o usuário cola com Ctrl+V em ChatGPT ou outro aplicativo de sua escolha.
+- **Shift + Print:** salva arquivo PNG somente por solicitação explícita.
+- O contrato é mantido no código-fonte da sessão de login e do laboratório aninhado, portanto permanece após reinícios, ao contrário de atalhos adicionados manualmente com `swaymsg`.
+- A opção `--check` do gerenciador do login agora verifica `grim`, `wl-copy` e ambos os atalhos; testes de regressão em `test_login_contract.py`.
+- Não há armazenamento permanente de capturas na Semente, Memória, ECA ou nuvem, nem envio automático à rede. O conteúdo no clipboard permanece somente enquanto o serviço Wayland o mantiver ou até ser substituído.
+- **Critério de aceite antes de publicar futuras versões:** rodar suíte de testes, inspecionar `--check`, testar fisicamente Print -> Ctrl+V no navegador e Shift+Print -> arquivo, sobretudo após alterações da configuração do compositor.
+- Uma sessão já aberta com configuração antiga não recebe os novos atalhos automaticamente; deve usar `swaymsg` para habilitá-los no momento ou reiniciar a sessão ARANDU depois da atualização do Git.
