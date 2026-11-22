@@ -48,5 +48,5 @@ export WLR_BACKENDS=x11
 export WLR_LIBINPUT_NO_DEVICES=1
 export WLR_X11_OUTPUTS=1
 exec_sway_status=0
-sway --unsupported-gpu -c "$ARANDU_SESSION_CONFIG" || exec_sway_status=$?
+sway -c "$ARANDU_SESSION_CONFIG" || exec_sway_status=$?
 exit "$exec_sway_status"
