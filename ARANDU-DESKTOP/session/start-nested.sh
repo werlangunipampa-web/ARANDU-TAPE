@@ -5,6 +5,13 @@ set -Eeuo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 CFG="$ROOT/session/sway.config.in"
 LAUNCH="$ROOT/session/launch-arandu.sh"
+# Em X11, cada saída virtual é uma janela do compositor; NÃO detecta monitores físicos.
+OUTPUTS=1
+case "${1:-}" in
+    "") ;;
+    --outputs=1|--outputs=2|--outputs=3) OUTPUTS="${1#--outputs=}" ;;
+    *) echo "Uso: bash start-nested.sh [--outputs=1|2|3]" >&2; exit 2 ;;
+esac
 if [[ -z "${DISPLAY:-}" ]]; then
     echo "ERRO: inicie a partir da sessão gráfica X11 do Linux Mint." >&2
     exit 2
@@ -42,11 +49,12 @@ echo "=== ARANDU 0.4 · COMPOSITOR ANINHADO (NÃO INSTALAÇÃO) ==="
 echo "O Sway abre como uma janela do GNOME e executa o ARANDU GTK4 dentro dela."
 echo "Para sair: Ctrl+Alt+Shift+Q (dentro do Sway), ou feche a janela aninhada."
 echo "GNOME, TOPBAR, Confluência, dados ECA e login NÃO são alterados."
+echo "Saídas virtuais X11: $OUTPUTS (cada uma em janela própria; não são monitores físicos)."
 # Force X11 nested; do not touch the system compositor or DRM devices.
 # No shell-wide environment modifications survive termination of this script.
 export WLR_BACKENDS=x11
 export WLR_LIBINPUT_NO_DEVICES=1
-export WLR_X11_OUTPUTS=1
+export WLR_X11_OUTPUTS="$OUTPUTS"
 exec_sway_status=0
 sway -c "$ARANDU_SESSION_CONFIG" || exec_sway_status=$?
 exit "$exec_sway_status"
