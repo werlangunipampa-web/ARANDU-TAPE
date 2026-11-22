@@ -114,3 +114,12 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - Testes adicionados para isolamento, contrato de saída, identidade do cliente e parsing determinístico da árvore de janelas.
 - **Próximo aceite:** confirmar compositor abre no VAIO; confirmar janela ARANDU está **dentro do Sway**, não apenas no GNOME; abrir outro aplicativo no Sway; saída sem encerrar GNOME; diagnóstico do driver caso incompatível.
 - Após validação: extrair camada de interface em sobreposição (layer-shell em compositor compatível) e testar protocolo de foco e janelas reais **sem degradar** a Confluência GNOME.
+
+## ARANDU Desktop 0.5 — foco em janelas reais do Sway (2026-11-22)
+
+- **Código publicado, validação gráfica pendente no VAIO.**
+- O botão `Janelas da sessão Sway` consulta explicitamente a árvore IPC do compositor aninhado e não lê janelas GNOME. A própria janela ARANDU é excluída.
+- Medalhões representam janelas existentes (limite 15). Selecionar um medalhão não muda o foco: exige botão de confirmação. O `con_id` escolhido é validado novamente contra o estado atual antes do comando de foco.
+- Atalho `Super+Enter` abre Foot dentro do Sway para teste; saída aninhada `Ctrl+Alt+Shift+Q`.
+- **Limitação declarada:** GTK4 ARANDU continua janela cliente normal, não há overlay layer-shell nem recolhimento real sobre a janela do Foot. Ponte IPC não se conecta à Seed/ECA e não coleta histórico.
+- **Aceite:** testar abertura do Foot, lista de janelas, medalhão, confirmação de foco, recusa de janela removida, retorno seguro ao GNOME. Verificar 25+ testes Python e Rust.
