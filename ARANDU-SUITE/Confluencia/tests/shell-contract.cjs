@@ -118,7 +118,7 @@ assert(s.helpBox.pos[1]+s.helpBox.height<=s.area.height);
 s.setBarMode('hidden');assert.equal(panelActor.visible,false);
 s.setBarMode('visible');assert.equal(panelActor.visible,true);
 s.setBarMode('auto');s.barLastNear=Date.now()-4000;s.updateBar();assert.equal(panelActor.visible,true);
-pointer=[150,240];s.barLastNear=Date.now()-4000;s.updateBar();assert.equal(panelActor.visible,false);
+pointer=[150,240];s.barLastNear=Date.now()-9000;s.updateBar();assert.equal(panelActor.visible,false);
 hideConflict=true;s.updateBar();assert.equal(panelActor.visible,true);
 s.setBarMode('hidden');assert.equal(settings.get_string('panel-mode'),'auto');
 hideConflict=false;s.setBarMode('hidden');assert.equal(panelActor.visible,false);
@@ -173,6 +173,13 @@ let assistive=JSON.parse(s.AssistiveStatus());
 assert.equal(assistive.available,true);
 assert.equal(assistive.scanning,false);
 assert.equal(assistive.intervalMs,3500);
+// Configuração de velocidade: alterar pela interface persiste e não ativa janela.
+assert.equal(s.setScanInterval(5000),true);
+assert.equal(settings.get_int('scan-interval-ms'),5000);
+assert.equal(JSON.parse(s.AssistiveStatus()).intervalMs,5000);
+assert.equal(s.setScanInterval(1234),false);
+assert.equal(settings.get_int('scan-interval-ms'),5000);
+assert.equal(s.setScanInterval(3500),true);
 // A varredura inicia desligada, avança sem ativar e confirma sob comando explícito.
 assert.equal(s.scanning,false);
 s.selectRiver('open');
@@ -184,6 +191,16 @@ assert.equal(assistive.river,'open');
 assert(assistive.index>=0);
 assert(assistive.selected && assistive.selected.title);
 assert(s.scanTimer && pending.has(s.scanTimer));
+// Alterar velocidade em movimento reinicia o timer, sem ativar a janela.
+const oldScanTimer=s.scanTimer;
+const beforeChangeSelection=s.navIndex;
+const beforeChangeFocus=focused;
+assert.equal(s.setScanInterval(5000),true);
+assert.equal(s.scanning,true);
+assert.equal(pending.has(oldScanTimer),false);
+assert.equal(s.navIndex,beforeChangeSelection);
+assert.equal(focused,beforeChangeFocus);
+assert.equal(JSON.parse(s.AssistiveStatus()).intervalMs,5000);
 const scanTick=pending.get(s.scanTimer);
 const beforeTick=s.navIndex;
 const focusedBeforeScan=focused;
@@ -200,6 +217,7 @@ assert.equal(s.AssistiveCommand('scan:start'),true);
 assert.equal(s.AssistiveCommand('node:cancel'),true);
 assert.equal(s.scanning,false);
 assert.equal(s.AssistiveCommand('scan:unknown'),false);
+assert.equal(s.setScanInterval(3500),true);
 const fixedRoot=s.root;
 for(let i=0;i<60;i++){s.setExpanded(false);s.setExpanded(true);}
 assert.equal(s.root,fixedRoot);assert.equal(fixedRoot.destroyed,undefined);
