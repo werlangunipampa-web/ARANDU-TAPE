@@ -43,7 +43,8 @@ const prefs=new Map([['recent','[]'],['frequency','{}']]);
 const settings={get_string:k=>prefs.get(k),set_string:(k,v)=>prefs.set(k,v),
     get_double:k=>prefs.get(k)||0,set_double:(k,v)=>prefs.set(k,v),
     get_boolean:k=>!!prefs.get(k),set_boolean:(k,v)=>prefs.set(k,v),
-    get_int:k=>prefs.get(k)??3500,set_int:(k,v)=>prefs.set(k,v)};
+    get_int:k=>prefs.get(k)??3500,set_int:(k,v)=>prefs.set(k,v),
+    get_strv:k=>prefs.get(k)??['<Super><Alt>space'],set_strv:(k,v)=>prefs.set(k,v)};
 let privacy=true;
 class Privacy extends Actor {get_boolean(){return privacy;}}
 let service=false, key=false, actions=[], windowList=[], focused=null;
@@ -87,6 +88,21 @@ windowList=[a,b,c,own];focused=a;
 const s=new Session('/teste',settings);s.start();
 assert(service && key);assert.equal(s.root.get_parent(),bg);
 assert(s.helpButton && s.helpBox);
+assert(s.controlScroll && s.controlBox);
+assert.equal(s.controlScroll.visible,false);
+s.toggleAccessibility();assert.equal(s.controlScroll.visible,true);
+s.toggleAccessibility();assert.equal(s.controlScroll.visible,false);
+assert.equal(s.setMedallionScale(1.2),true);
+assert.equal(settings.get_double('medallion-scale'),1.2);
+assert.equal(s.setMedallionScale(1.3),false);
+s.setHighContrast(true);assert.equal(settings.get_boolean('high-contrast'),true);
+assert.equal(s.setSwitchShortcut('s'),true);
+assert.deepEqual([...settings.get_strv('arandu-varredura-acionar')],['<Super><Alt>s']);
+s.resetAccessibility();
+assert.equal(settings.get_double('medallion-scale'),1);
+assert.equal(settings.get_boolean('high-contrast'),false);
+assert.deepEqual([...settings.get_strv('arandu-varredura-acionar')],['<Super><Alt>space']);
+assert.equal(settings.get_string('panel-mode'),'visible');
 assert.equal(s.helpBox.visible,false);
 s.toggleHelp();assert.equal(s.helpBox.visible,true);
 s.toggleHelp();assert.equal(s.helpBox.visible,false);
@@ -99,6 +115,11 @@ pending.delete(s.helpSleepId);helpSleepTick();
 assert.equal(s.helpButton.opacity,0);
 assert.equal(s.helpButton.reactive,false);
 assert.equal(s.buttons.open[0].button.visible,true);
+assert.equal(s.setMedallionScale(1.2),true);
+assert.equal(s.buttons.open[0].button.scale[0],1.2);
+s.setHighContrast(true);
+assert(s.buttons.open[0].button.classes.has('arandu-node-high-contrast'));
+s.resetAccessibility();
 assert.equal(s.fabric.visible,true);
 s.wakeSeed();
 assert.equal(s.helpButton.opacity,255);
