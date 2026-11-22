@@ -272,9 +272,12 @@ class Desktop(Gtk.Application):
                 f"{len(windows)} janela(s) disponíveis. Selecione um medalhão "
                 "e confirme antes de mudar o foco. Para voltar ao ARANDU, "
                 "use Ctrl+Alt+A dentro do Sway."))
+            # Lista acessível acompanha os medalhões sem executar ações automaticamente.
             for item in windows[:15]:
-                self.content.append(self.text(
-                    f"Medalhão · {item['title']} ({item['app']})"))
+                entry = Gtk.Button(label=f"Selecionar · {item['title']} ({item['app']})")
+                entry.set_halign(Gtk.Align.START)
+                entry.connect("clicked", lambda _button, selected=item: self.select_window(selected))
+                self.content.append(entry)
 
     def select_window(self, window):
         self.selected_window = window
