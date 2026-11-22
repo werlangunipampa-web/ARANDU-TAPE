@@ -15,6 +15,7 @@ from pathlib import Path
 
 from core import Session, NAMES, RIVERS
 from performance import collect
+from updates import snapshot_updates, official_updater
 from system_status import summary, clock_text, network_status, battery_status, bluetooth_status, volume_status
 
 try:
@@ -29,7 +30,7 @@ except (ImportError, ValueError) as error:
 from visual import RiversCanvas
 from session.windows import list_windows, focus_window, list_outputs, move_arandu_to_output, window_action, show_scratchpad
 
-VERSION = "0.7.3"
+VERSION = "0.7.4"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -85,7 +86,7 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.7.3")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.7.4")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -96,12 +97,15 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.7.3 · FUNDAMENTOS", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.7.4 · ATUALIZAÇÕES", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         performance = Gtk.Button(label="Desempenho")
         performance.connect("clicked", lambda *_: self.show_performance())
         bar.append(performance)
+        updates = Gtk.Button(label="Atualizações")
+        updates.connect("clicked", lambda *_: self.show_updates())
+        bar.append(updates)
         roadmap = Gtk.Button(label="Evolução")
         roadmap.connect("clicked", lambda *_: self.show_development())
         bar.append(roadmap)
@@ -408,6 +412,66 @@ class Desktop(Gtk.Application):
                 "sem gravar automaticamente resultados."))
         except OSError as error:
             self.content.append(self.text("Não foi possível abrir o ensaio: " + str(error)))
+
+    def show_updates(self):
+        """Consulta solicitada pelo usuário, sem atualizar ou instalar silenciosamente."""
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        self.content.append(self.text("SEMENTE · ATUALIZAÇÕES", "arandu-title"))
+        self.content.append(self.text(
+            "Consulta local do cache APT. Nenhuma instalação é iniciada automaticamente."))
+        # Evita bloquear a interface aguardando o gerenciador de pacotes.
+        self.content.append(self.text(
+            "Para verificar o cache sem rede ou mudanças, use o botão abaixo."))
+        check = Gtk.Button(label="Consultar cache APT")
+        check.connect("clicked", lambda *_: self.check_updates())
+        self.content.append(check)
+        button = Gtk.Button(label="Abrir gerenciador oficial de atualizações")
+        button.connect("clicked", lambda *_: self.open_updater())
+        self.content.append(button)
+        self.content.append(self.text(
+            "Flatpak e atualizações de segurança devem ser conferidos pelo "
+            "gerenciador oficial. O ARANDU não executa upgrades por conta própria."))
+
+    def check_updates(self):
+        """Leitura curta em thread; resultado entregue de volta ao loop GTK."""
+        import threading
+        def worker():
+            status = snapshot_updates()
+            GLib.idle_add(self.display_updates, status)
+        threading.Thread(target=worker, daemon=True).start()
+        self.content.append(self.text("Consultando cache local..."))
+
+    def display_updates(self, status):
+        if self.window is None:
+            return False
+        result = status["apt"]
+        count = result["available"]
+        label = ("Pacotes APT no cache: " + str(count) if count is not None
+                 else "Cache APT indisponível")
+        self.content.append(self.text(label + " · " + result["detail"]))
+        self.content.append(self.text(status["flatpak"]["detail"]))
+        return False
+
+    def open_updater(self):
+        """O aplicativo oficial decide autenticação e oferece confirmação própria."""
+        if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
+            self.content.append(self.text("Disponível somente na sessão ARANDU/Sway."))
+            return
+        path = official_updater()
+        if not path:
+            self.content.append(self.text(
+                "Nenhum gerenciador gráfico reconhecido instalado. "
+                "Retorne ao GNOME para aplicar atualizações pelo sistema."))
+            return
+        try:
+            subprocess.Popen(
+                [path], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL, close_fds=True, start_new_session=True)
+            self.content.append(self.text(
+                "Gerenciador oficial aberto. Revise os pacotes e confirme nele."))
+        except OSError as error:
+            self.content.append(self.text("Não foi possível abrir atualizador: " + str(error)))
 
     def show_development(self):
         """Painel local de estado; nenhuma atualização automática de código."""
