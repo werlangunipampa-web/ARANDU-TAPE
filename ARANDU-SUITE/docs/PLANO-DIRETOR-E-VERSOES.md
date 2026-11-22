@@ -102,3 +102,15 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - Segurança: sem alterar login/compositor/GNOME, sem coleta de uso, sem integrar ou migrar ECA.
 - **Aceite pendente:** executar testes Python/Rust e abrir GTK4 no Linux Mint. Conferir escala ao reduzir/restaurar janela, seleção, pesquisa, confirmação e recolhimento. Registrar regressões antes de evoluir para provedor de janelas.
 
+
+## ARANDU Desktop 0.4 — sessão experimental aninhada no Mint (2026-11-22)
+
+- **Estado: publicada para testes, não homologada.** `ARANDU-DESKTOP/session/start-nested.sh` inicia Sway compositor Wayland **dentro de janela do GNOME X11**, com backend X11 explicitamente configurado. Requer pacote `sway` instalado e compatibilidade do hardware.
+- Ainda é um **laboratório**, não há entrada ARANDU no login, compositor próprio, layer-shell nem substituição da sessão gráfica existente. A GUI cliente dentro do Sway continua o protótipo 0.3, com ID GApplication próprio para evitar acionar a janela GNOME já aberta.
+- Configuração Sway temporária, criada no `mktemp` e removida ao sair; não altera `~/.config/sway`, GSettings, login, TOPBAR ou Confluência.
+- **Saída segura:** `Ctrl+Alt+Shift+Q` ou `Super+Shift+Esc` enquanto a janela aninhada está focada; fechar a janela Sway também encerra o laboratório.
+- Conector de janela `session/windows.py` consulta `swaymsg get_tree` apenas mediante chamada explícita; sem persistência e sem integração ainda com a interface.
+- ECA/G4 não importadas, não migradas, não ativadas.
+- Testes adicionados para isolamento, contrato de saída, identidade do cliente e parsing determinístico da árvore de janelas.
+- **Próximo aceite:** confirmar compositor abre no VAIO; confirmar janela ARANDU está **dentro do Sway**, não apenas no GNOME; abrir outro aplicativo no Sway; saída sem encerrar GNOME; diagnóstico do driver caso incompatível.
+- Após validação: extrair camada de interface em sobreposição (layer-shell em compositor compatível) e testar protocolo de foco e janelas reais **sem degradar** a Confluência GNOME.
