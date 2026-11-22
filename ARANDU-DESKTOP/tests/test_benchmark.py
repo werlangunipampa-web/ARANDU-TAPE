@@ -54,6 +54,17 @@ class BenchmarkContract(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 write_private_new(path, json.dumps(b))
 
+    def test_ui_exposes_finite_benchmark_by_click(self):
+        source = (Path(__file__).resolve().parents[1] / "app.py").read_text()
+        self.assertIn('Gtk.Button(label="Ensaio comparativo (5 medições)")', source)
+        self.assertIn('benchmark.connect("clicked", lambda *_: self.start_benchmark())', source)
+        self.assertIn('def start_benchmark(self):', source)
+        section = source.split("    def start_benchmark(self):", 1)[1].split(
+            "    def show_development(self):", 1)[0]
+        self.assertIn('"--count", "5", "--interval", "1"', section)
+        self.assertIn('subprocess.Popen(', section)
+        self.assertNotIn('shell=True', section)
+
     def test_no_background_sampling_or_network(self):
         source = (Path(__file__).resolve().parents[1] / "benchmark.py").read_text()
         self.assertIn('mode.add_argument("--measure"', source)
