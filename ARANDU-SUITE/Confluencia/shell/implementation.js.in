@@ -111,6 +111,9 @@ class TapeSession {
         this.signal(global.stage,'captured-event',(_stage,event)=>this.helpGlobalEvent(event));
         this.signal(global.stage,'captured-event',(_stage,event)=>this.navigationKeyEvent(event));
         this.signal(global.stage,'captured-event',(_stage,event)=>this.navigationOutsideEvent(event));
+        // O clique numa janela já focada pode não emitir notify::focus-window.
+        // O foco do teclado dá um segundo sinal independente dessa troca.
+        this.signal(global.stage,'notify::key-focus',()=>this.onKeyFocusChanged());
         this.signal(global.display,'notify::focus-window',()=>{
             this.onFocusWindowChanged();
             this.record();this.schedule();
@@ -308,7 +311,8 @@ class TapeSession {
             if(focused && !inArandu)this.finishNavigation();
             return Clutter.EVENT_PROPAGATE;
         }
-        if(kind!==Clutter.EventType.BUTTON_PRESS && kind!==Clutter.EventType.TOUCH_BEGIN)
+        if(kind!==Clutter.EventType.BUTTON_PRESS &&
+           kind!==Clutter.EventType.BUTTON_RELEASE && kind!==Clutter.EventType.TOUCH_BEGIN)
             return Clutter.EVENT_PROPAGATE;
         const actor=typeof event.get_source==='function'?event.get_source():null;
         // Somente controles interativos contam como interação com o ARANDU.
@@ -326,6 +330,15 @@ class TapeSession {
             return Clutter.EVENT_PROPAGATE;
         this.finishNavigation();
         return Clutter.EVENT_PROPAGATE;
+    }
+    onKeyFocusChanged() {
+        if(!this.navigationOverlay || this.scanning || !this.root)return;
+        const focused=global.stage.get_key_focus?.();
+        if(!focused)return;
+        if(focused===this.root || this.root.contains(focused))return;
+        // Preserva menus do painel GNOME; o foco em aplicativos recolhe os rios.
+        if(this.panel && (focused===this.panel || this.panel.contains(focused)))return;
+        this.finishNavigation();
     }
     onFocusWindowChanged() {
         const focused=global.display.focus_window;
