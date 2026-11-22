@@ -10,7 +10,7 @@ from layout import ASSETS, SEED, WIDTH, HEIGHT, paths
 from visual_contract import DEFAULT_SCALE, scale_for_viewport, scaled, choose_app_slots
 from core import RIVERS, NAMES
 
-LABEL_POSITIONS = {"memory": (130, 290), "open": (770, 18), "frequent": (1110, 120)}
+LABEL_POSITIONS = {"memory": (130, 290), "open": (770, 18), "frequent": (1040, 120)}
 
 
 class RiversCanvas(Gtk.ScrolledWindow):
