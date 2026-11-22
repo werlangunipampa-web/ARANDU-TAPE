@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.2.1 — Semente e Rios com enquadramento corrigido
+# ARANDU Desktop 0.3 — navegação adaptativa e medalhões de aplicativos
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -68,3 +68,14 @@ Veja também `ARANDU-SUITE/docs/PLANO-DIRETOR-E-VERSOES.md`.
 ## Ajuste 0.2.1 (22/11/2026)
 
 A captura da versão 0.2 no VAIO mostrou os Rios cortados verticalmente porque o painel informativo expandia até ocupar o espaço do canvas. A 0.2.1 usa uma geometria proporcional de 900 × 375, reduz o painel informativo e adiciona teste de enquadramento. **Publicada, mas ainda não validada na sessão GTK4 real após a correção.**
+
+## Novo marco 0.3.0 (22/11/2026)
+
+- **Rios adaptativos:** conserva o SVG e as posições originais da Confluência e adapta o canvas entre 48% e 100% conforme a largura disponível, com ajuste periódico somente enquanto a tela está visível.
+- **Painel contextual retrátil:** as informações não ocupam permanentemente a metade da janela. Botão `Mostrar/ocultar informações`.
+- **Aplicativos instalados:** clique no botão correspondente para exibir nos quinze medalhões os primeiros resultados alfabéticos reais de `Gio.AppInfo.get_all()`. É possível buscar por nome. Nenhuma relação falsa com janelas abertas.
+- **Confirmação antes de abrir:** clicar num medalhão apresenta nome e botão `Abrir aplicativo`. Não executa nenhum aplicativo com apenas a seleção do medalhão.
+- **Proteção ECA:** modo isolado por padrão; Memória, Frequentes e Abertos permanecem visuais sem provedor de janelas ou registro de frequência.
+- **Versão 0.2.1 preservada no Git:** se houver regressão visual, permanecer na versão anterior até corrigir.
+
+**Status:** publicada no GitHub. Testes escritos, mas execução real e validação no Linux Mint ainda pendentes.
