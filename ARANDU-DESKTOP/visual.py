@@ -28,7 +28,7 @@ class RiversCanvas(Gtk.ScrolledWindow):
         self.set_child(self.canvas)
 
         background = Gtk.Picture.new_for_filename(str(ASSETS / "rios.svg"))
-        background.set_can_shrink(False)
+        background.set_can_shrink(True)
         background.set_content_fit(Gtk.ContentFit.FILL)
         background.set_size_request(CANVAS_WIDTH, CANVAS_HEIGHT)
         self.canvas.set_child(background)
@@ -68,7 +68,7 @@ class RiversCanvas(Gtk.ScrolledWindow):
         button.add_css_class("arandu-seed-image")
         picture = Gtk.Picture.new_for_filename(str(ASSETS / filename))
         picture.set_size_request(size, size)
-        picture.set_can_shrink(False)
+        picture.set_can_shrink(True)
         button.set_child(picture)
         return button
 
