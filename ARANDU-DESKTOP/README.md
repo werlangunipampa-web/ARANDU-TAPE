@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.6.4 — medição comparativa de desempenho
+# ARANDU Desktop 0.7.0 — Opy, encontro das janelas
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -200,3 +200,24 @@ python3 ARANDU-DESKTOP/benchmark.py --compare "$HOME/arandu-benchmark-arandu.jso
 O comparador usa medianas de RAM estimada, CPU global e swap e calcula diferenças `GNOME – ARANDU`. **Não conclui automaticamente qual desktop é mais rápido:** RAM/CPU incluem todos os processos, inclusive navegador/serviços, e uma única medição curta é indicativa. Para precisão, repetir ensaios em repouso e com tarefas equivalentes, no mesmo hardware, evitando comparações com programas diferentes. Arquivos contêm métricas locais e etiqueta da sessão, e não devem ser enviados sem revisão. A medição termina sozinha; nenhum daemon foi instalado.
 
 **Pendente:** validação dos novos testes e funcionamento real do botão GTK no VAIO.
+
+## ARANDU 0.7.0 — Opy, espaço de encontro de janelas
+
+A **Opy** é o novo seletor de janelas do ARANDU, inspirado na ideia de um espaço de encontro. O termo cultural é empregado como metáfora de organização da interface, **não como simulação de rituais ou práticas religiosas Guarani**. O desenvolvimento segue com atenção à procedência e à possibilidade de revisão com representantes culturais.
+
+Na sessão Sway, **Alt+Tab** invoca a Opy por uma aplicação GTK4 própria (`opy.py`). A janela flutuante lista janelas abertas de verdade, exclui a própria Opy e aceita **setas**, **Enter** para focar e **Esc** para sair sem ação. Não fecha aplicativos; não monitora em segundo plano. O `Ctrl+Alt+A` segue trazendo a Semente. O recurso não opera sobre as janelas do GNOME hospedeiro.
+
+### Ativar sem sair do ARANDU atual
+
+```bash
+cd "$HOME/Downloads/ARANDU-TAPE-COMPLETO"
+git pull --ff-only
+python3 -m unittest discover -s ARANDU-DESKTOP/tests -q
+swaymsg "bindsym Mod1+Tab exec /usr/bin/python3 $PWD/ARANDU-DESKTOP/opy.py"
+```
+
+Esse comando instala **somente o atalho da sessão atualmente aberta**, sem mudar GNOME/LightDM. Para que a Opy também abra **flutuante centralizada**, a regra `for_window` consta no template de sessão para o **próximo login ARANDU**; a ativação dinâmica de um atalho não garante toda a apresentação visual do template novo.
+
+A barra de abas padrão do Sway ainda permanece nesta fase. Primeiro vamos validar que Opy encontra Firefox/Foot/Nemo e troca de foco corretamente; só depois consideraremos retirar/substituir a barra nativa, preservando alternativa acessível. A Opy não é uma camada layer-shell e não substitui o compositor Sway.
+
+**Estado:** versão e testes publicados no GitHub; ainda falta o teste real no VAIO.
