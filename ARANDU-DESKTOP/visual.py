@@ -49,14 +49,14 @@ class RiversCanvas(Gtk.ScrolledWindow):
                 fixed.put(indicator, x - 25, y - 25)
             label = Gtk.Button(label=NAMES[river])
             label.add_css_class("arandu-river-map")
-            label.set_accessible_name(f"Abrir Rio {NAMES[river]}")
+            label.set_tooltip_text(f"Abrir Rio {NAMES[river]}")
             label.connect("clicked", lambda _button, r=river: on_river(r))
             fixed.put(label, *positions[river])
             self.river_buttons[river] = label
 
     def _icon_button(self, filename, size, accessibility):
         button = Gtk.Button()
-        button.set_accessible_name(accessibility)
+        button.set_tooltip_text(accessibility)
         button.add_css_class("arandu-seed-image")
         picture = Gtk.Picture.new_for_filename(str(ASSETS / filename))
         picture.set_size_request(size, size)
