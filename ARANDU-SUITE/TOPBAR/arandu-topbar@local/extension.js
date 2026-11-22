@@ -80,6 +80,24 @@ export default class AranduTopbarExtension extends Extension {
         }));
         this._riversButton.connect('clicked', () => this._toggleRivers());
         Main.panel._leftBox.insert_child_at_index(this._riversButton, 2);
+        // Preferências visuais disponíveis diretamente na barra.
+        this._prefsButton = new St.Button({
+            style_class: 'panel-button arandu-preferences-button',
+            reactive:true, can_focus:true, track_hover:true,
+            y_align:Clutter.ActorAlign.CENTER,
+            accessible_name:'Configurar grafismos e aparência da TOPBAR ARANDU'
+        });
+        this._prefsButton.set_child(new St.Icon({
+            icon_name:'preferences-system-symbolic',icon_size:16
+        }));
+        this._prefsButton.connect('clicked',()=>{
+            try {this.openPreferences();}
+            catch(e) {
+                console.error(`[ARANDU TOPBAR] falha ao abrir preferências: ${e}`);
+                Main.notify('ARANDU','Não foi possível abrir as preferências da TOPBAR.');
+            }
+        });
+        Main.panel._leftBox.insert_child_at_index(this._prefsButton,3);
 
         this._settingsChangedId = this._settings.connect('changed', () => this._apply());
 
@@ -218,6 +236,9 @@ export default class AranduTopbarExtension extends Extension {
 
         if (this._riversButton)
             this._riversButton.destroy();
+
+        if (this._prefsButton)
+            this._prefsButton.destroy();
 
         if (this._clock) {
             this._removeClasses(this._clock, [
