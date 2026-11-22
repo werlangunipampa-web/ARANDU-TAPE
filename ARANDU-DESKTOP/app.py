@@ -23,7 +23,7 @@ except (ImportError, ValueError) as error:
 
 from visual import RiversCanvas
 
-VERSION = "0.2.1"
+VERSION = "0.3.0"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -67,13 +67,15 @@ class Desktop(Gtk.Application):
         self.session = Session()
         self.window = None
         self.content = None
+        self.detail_revealer = None
+        self.selected_app = None
 
     def do_activate(self):
         if self.window:
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.2.1")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.3")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -84,7 +86,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.2.1 · GEOMETRIA PROPORCIONAL", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.3.0 · NAVEGAÇÃO E MEDALHÕES", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         about = Gtk.Button(label="Sobre")
@@ -103,14 +105,17 @@ class Desktop(Gtk.Application):
             xalign=0), "arandu-muted"))
 
         # Reutiliza SVG e geometria reais da Confluência, sem extensão GNOME.
-        self.visual = RiversCanvas(self.select, self.toggle_seed)
+        self.visual = RiversCanvas(self.select, self.toggle_seed, self.select_app)
         main.append(self.visual)
 
+        self.detail_revealer = Gtk.Revealer()
+        self.detail_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
+        self.detail_revealer.set_reveal_child(False)
         self.content = add_style(Gtk.Box(
-            orientation=Gtk.Orientation.VERTICAL, spacing=10), "arandu-subpanel")
+            orientation=Gtk.Orientation.VERTICAL, spacing=8), "arandu-subpanel")
         self.content.set_vexpand(False)
-        self.content.set_size_request(-1, 108)
-        main.append(self.content)
+        self.detail_revealer.set_child(self.content)
+        main.append(self.detail_revealer)
         actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         apps = add_style(Gtk.Button(label="Aplicativos instalados"), "arandu-action")
         apps.connect("clicked", lambda *_: self.show_apps())
@@ -118,6 +123,10 @@ class Desktop(Gtk.Application):
         retract = Gtk.Button(label="Recolher Rios")
         retract.connect("clicked", lambda *_: self.retract())
         actions.append(retract)
+        toggle = Gtk.Button(label="Mostrar/ocultar informações")
+        toggle.connect("clicked", lambda *_: self.detail_revealer.set_reveal_child(
+            not self.detail_revealer.get_reveal_child()))
+        actions.append(toggle)
         main.append(actions)
 
         controller = Gtk.EventControllerKey.new()
@@ -135,6 +144,7 @@ class Desktop(Gtk.Application):
 
     def show_intro(self):
         self.clear_content()
+        self.visual.show_rivers()
         self.content.append(self.text("Escolha um Rio ou abra a lista de aplicativos instalados."))
         self.content.append(self.text(
             "MEMÓRIA e FREQUENTES não coletam dados nesta versão. "
@@ -145,7 +155,9 @@ class Desktop(Gtk.Application):
     def select(self, river):
         self.session.select(river)
         self.clear_content()
+        self.visual.show_rivers()
         self.visual.highlight(river)
+        self.detail_revealer.set_reveal_child(True)
         self.content.append(self.text(NAMES[river], "arandu-title"))
         messages = {
             "memory": "Memória ainda não conectada. Procedência e consentimento serão obrigatórios.",
@@ -163,39 +175,43 @@ class Desktop(Gtk.Application):
     def retract(self):
         self.session.retract()
         self.visual.highlight(None)
+        self.selected_app = None
+        self.detail_revealer.set_reveal_child(False)
         self.show_intro()
 
     def show_apps(self):
+        """Medalhões representam aplicativos instalados, não janelas abertas."""
         self.session.retract()
-        self.visual.highlight(None)
+        self.selected_app = None
         self.clear_content()
-        self.content.append(self.text("Aplicativos instalados · execução somente após clique",
-                                      "arandu-title"))
-        search = Gtk.SearchEntry()
-        search.set_placeholder_text("Filtrar aplicativos por nome")
-        self.content.append(search)
-        scroll = Gtk.ScrolledWindow(vexpand=True)
-        listing = Gtk.ListBox()
-        listing.set_selection_mode(Gtk.SelectionMode.NONE)
-        scroll.set_child(listing)
-        self.content.append(scroll)
+        self.content.append(self.text(
+            "APLICATIVOS INSTALADOS · seleção requer confirmação", "arandu-title"))
+        self.content.append(self.text(
+            "Escolhe um dos medalhões para examinar; nenhum aplicativo abre automaticamente."))
         apps = [a for a in Gio.AppInfo.get_all() if a.should_show() and a.get_name()]
         apps.sort(key=lambda a: a.get_name().casefold())
+        self.visual.show_apps(apps)
+        self.detail_revealer.set_reveal_child(True)
+        if not apps:
+            self.content.append(self.text("Nenhum aplicativo disponível nesta sessão."))
 
-        def refill(query=""):
-            while listing.get_first_child():
-                listing.remove(listing.get_first_child())
-            matches = [a for a in apps if query.casefold() in a.get_name().casefold()]
-            for application in matches[:120]:
-                row = Gtk.ListBoxRow()
-                button = Gtk.Button(label=application.get_name(), halign=Gtk.Align.FILL)
-                button.connect("clicked", lambda _b, a=application: self.launch_app(a))
-                row.set_child(button)
-                listing.append(row)
-            if len(matches)>120:
-                listing.append(self.text("Exibindo 120 resultados. Refine a pesquisa."))
-        search.connect("search-changed", lambda entry: refill(entry.get_text()))
-        refill()
+    def select_app(self, application):
+        self.selected_app = application
+        self.clear_content()
+        self.content.append(self.text("Aplicativo selecionado", "arandu-title"))
+        self.content.append(self.text(application.get_name()))
+        self.content.append(self.text(
+            "Abrir apenas com confirmação explícita. Nenhum acesso à ECA."))
+        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=9)
+        launch = Gtk.Button(label="Abrir aplicativo")
+        launch.add_css_class("arandu-action")
+        launch.connect("clicked", lambda *_: self.launch_app(application))
+        row.append(launch)
+        cancel = Gtk.Button(label="Cancelar")
+        cancel.connect("clicked", lambda *_: self.show_apps())
+        row.append(cancel)
+        self.content.append(row)
+        self.detail_revealer.set_reveal_child(True)
 
     def launch_app(self, application):
         try:
@@ -214,8 +230,9 @@ class Desktop(Gtk.Application):
 
     def show_about(self, *_args):
         self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
         self.content.append(self.text("Sobre o ARANDU Desktop", "arandu-title"))
-        self.content.append(self.text("Versão: " + VERSION + " (protótipo GTK4 com SVG originais)"))
+        self.content.append(self.text("Versão: " + VERSION + " (protótipo GTK4 · navegação local)"))
         self.content.append(self.text("Desenvolvimento: Rafhael Brum Werlang"))
         self.content.append(self.text("ARANDU TAPE, TOPBAR e ECA são projetos distintos."))
         self.content.append(self.text("Contrato de sessão:\n" +
