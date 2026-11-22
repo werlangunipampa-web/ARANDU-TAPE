@@ -179,3 +179,11 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - Não há armazenamento permanente de capturas na Semente, Memória, ECA ou nuvem, nem envio automático à rede. O conteúdo no clipboard permanece somente enquanto o serviço Wayland o mantiver ou até ser substituído.
 - **Critério de aceite antes de publicar futuras versões:** rodar suíte de testes, inspecionar `--check`, testar fisicamente Print -> Ctrl+V no navegador e Shift+Print -> arquivo, sobretudo após alterações da configuração do compositor.
 - Uma sessão já aberta com configuração antiga não recebe os novos atalhos automaticamente; deve usar `swaymsg` para habilitá-los no momento ou reiniciar a sessão ARANDU depois da atualização do Git.
+
+## Desktop 0.6.3 — Observatório de Desempenho (22/11/2026)
+
+- Painel `Desempenho` disponível dentro do ARANDU, leitura pontual de `/proc/meminfo`, `/proc/loadavg` e RSS dos principais processos.
+- Métricas: RAM total/disponível/estimada utilizada excluindo cache recuperável, swap, carga CPU 1/5/15 min e núcleos lógicos; explicitamente **não** confundir carga média com % de CPU nem RSS somável com RAM exclusiva.
+- Script `ARANDU-DESKTOP/performance.py` permite capturas JSON de sessões ARANDU/GNOME sob solicitação, com escrita apenas via `--save` e permissão 0600. Não coleta continuamente nem envia telemetria.
+- Comparação legítima exige mesmas condições de máquina/carga/programas, várias repetições e medidas adicionais de tempo de resposta e PSS; nenhum benchmark comparativo foi medido ainda.
+- Testes unitários acrescentados para parsing de RAM, processos e ausência de persistência automática. Execução efetiva e interface ainda requerem validação no VAIO.
