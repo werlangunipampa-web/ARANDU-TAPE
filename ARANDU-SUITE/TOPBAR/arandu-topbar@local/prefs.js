@@ -30,10 +30,10 @@ export default class AranduTopbarPreferences extends ExtensionPreferences {
             return row;
         };
 
-        combo('Grafismo','variant',
+        const variantRow=combo('Grafismo','variant',
             ['Arandu','Yvy','Kaaguy','Tape','Trama'],
             ['arandu','yvy','kaaguy','tape','trama']);
-        combo('Paleta de cores','accent',
+        const accentRow=combo('Paleta de cores','accent',
             ['Terra','Mate','Cinza'],
             ['terra','mate','cinza']);
 
@@ -84,28 +84,18 @@ export default class AranduTopbarPreferences extends ExtensionPreferences {
         reset.connect('clicked',()=>{
             for(const key of ['variant','accent','panel-height','panel-opacity','clock-capsule','portal-button'])
                 settings.reset(key);
-            const variants=['arandu','yvy','kaaguy','tape','trama'];
-            const palettes=['terra','mate','cinza'];
-            const comboRows=appearance;
-            // As linhas são atualizadas abaixo pelo sinal de mudança.
+            variantRow.set_selected(0);
+            accentRow.set_selected(0);
         });
         restore.add(reset);
 
-        const rows=appearance.get_first_child();
-        // Manter combos sincronizados após restauração por outro processo.
-        const comboItems=[];
-        let child=rows;
-        while(child){
-            if(child instanceof Adw.ComboRow)comboItems.push(child);
-            child=child.get_next_sibling();
-        }
         settings.connect('changed::variant',()=>{
-            const row=comboItems[0];
-            if(row)row.set_selected(Math.max(0,['arandu','yvy','kaaguy','tape','trama'].indexOf(settings.get_string('variant'))));
+            const index=Math.max(0,['arandu','yvy','kaaguy','tape','trama'].indexOf(settings.get_string('variant')));
+            if(variantRow.get_selected()!==index)variantRow.set_selected(index);
         });
         settings.connect('changed::accent',()=>{
-            const row=comboItems[1];
-            if(row)row.set_selected(Math.max(0,['terra','mate','cinza'].indexOf(settings.get_string('accent'))));
+            const index=Math.max(0,['terra','mate','cinza'].indexOf(settings.get_string('accent')));
+            if(accentRow.get_selected()!==index)accentRow.set_selected(index);
         });
     }
 }
