@@ -28,6 +28,7 @@ class TapeSession {
         this.helpSleepId=0; this.helpAwake=true;
         this.medallionSleepId=0; this.medallionsAwake=false;
         this.navRiver=null;this.navIndex=-1;this.navBindings=[];
+        this.scanTimer=0;this.scanning=false;
         this.tracker=Shell.WindowTracker.get_default();
         this.apps=Shell.AppSystem.get_default();
         this.privacy=new Gio.Settings({schema_id:'org.gnome.desktop.privacy'});
@@ -52,6 +53,7 @@ class TapeSession {
         });
         this.panel.menu.addAction('Centralizar a Semente',()=>this.Center());
         this.panel.menu.addAction('Guia dos Rios · atalhos',()=>this.toggleHelp());
+        this.panel.menu.addAction('Varredura assistiva: iniciar/parar',()=>this.scanning?this.stopScan():this.startScan());
         this.panel.menu.addAction('Mostrar/ocultar botão de ajuda',()=>this.toggleHelpButton());
         this.panel.menu.addAction('Barra: sempre visível',()=>this.setBarMode('visible'));
         this.panel.menu.addAction('Barra: sempre oculta',()=>this.setBarMode('hidden'));
@@ -74,6 +76,7 @@ class TapeSession {
             'arandu-no-proximo':()=>this.moveSelection(1),
             'arandu-no-ativar':()=>this.activateSelection(),
             'arandu-no-cancelar':()=>this.cancelSelection(),
+            'arandu-varredura-acionar':()=>this.scanSwitch(),
         };
         for(const [name,callback] of Object.entries(actions)){
             Main.wm.addKeybinding(name,this.settings,Meta.KeyBindingFlags.NONE,
@@ -111,11 +114,46 @@ class TapeSession {
                 if(!this.navRiver || this.navIndex<0)return false;
                 this.activateSelection();return true;
             case 'node:cancel':this.cancelSelection();return true;
+            case 'scan:start':return this.startScan();
+            case 'scan:stop':this.stopScan();return true;
+            case 'scan:switch':return this.scanSwitch();
             case 'seed:expand':this.setExpanded(true);return true;
             case 'seed:collapse':this.setExpanded(false);return true;
             case 'seed:toggle':this.setExpanded(!this.expanded);return true;
             default:return false;
         }
+    }
+    // Varredura opcional: nunca abre um programa automaticamente.
+    // Uma tecla ou acionador inicia a varredura e confirma o item destacado.
+    startScan() {
+        if(!this.allowed())return false;
+        this.stopScan();
+        if(!this.navRiver)this.selectRiver('open');
+        else if(!this.expanded)this.setExpanded(true);
+        const ids=this.selectableIndices(this.navRiver);
+        if(!ids.length)return false;
+        if(!ids.includes(this.navIndex))this.navIndex=ids[0];
+        this.highlightSelection();this.wakeSeed();
+        this.scanning=true;
+        const interval=limit(this.settings.get_int('scan-interval-ms'),2000,5000);
+        this.scanTimer=GLib.timeout_add(GLib.PRIORITY_DEFAULT,interval,()=>{
+            if(!this.scanning || !this.allowed() || !this.expanded){this.stopScan();return GLib.SOURCE_REMOVE;}
+            this.moveSelection(1);
+            return GLib.SOURCE_CONTINUE;
+        });
+        Main.notify('ARANDU TAPE','Varredura iniciada. Super + Alt + Espaço confirma o medalhão; Super + Alt + 0 cancela.');
+        return true;
+    }
+    stopScan() {
+        this.scanning=false;
+        if(this.scanTimer){stopSource(this.scanTimer);this.scanTimer=0;}
+    }
+    scanSwitch() {
+        if(!this.scanning)return this.startScan();
+        this.stopScan();
+        if(!this.navRiver || this.navIndex<0)return false;
+        this.activateSelection();
+        return true;
     }
     // Intent Router: os dispositivos de entrada chamam estas ações sem tocar no layout.
     selectRiver(river) {
@@ -159,6 +197,7 @@ class TapeSession {
         this.highlightSelection();
     }
     cancelSelection() {
+        this.stopScan();
         this.navRiver=null;this.navIndex=-1;this.highlightSelection();
         if(this.expanded)this.wakeMedallions();
     }
@@ -276,6 +315,7 @@ class TapeSession {
             ['ABRIR','Enter no foco / Super + Alt + Enter','Abrir ou focar o aplicativo escolhido'],
             ['SAIR','Super + Alt + 0','Limpar seleção'],
             ['AJUDA','F1','Ajuda no mapa aberto'],
+            ['VARREDURA','Super + Alt + Espaço','Iniciar varredura / confirmar medalhão'],
             ['VOLTAR','Esc','Fechar ou voltar'],
             ['TOPBAR','Super + Alt + B','Recuperar barra superior'],
         ];
@@ -698,6 +738,7 @@ class TapeSession {
     }
     setExpanded(on) {
         this.expanded=Boolean(on);
+        if(!this.expanded)this.stopScan();
         if(!this.root)return;
         this.wakeSeed();
         this.fabric.visible=this.expanded;
@@ -777,6 +818,7 @@ class TapeSession {
     }
     stop() {
         this.stopping=true;
+        this.stopScan();
         this.endDrag();
         for(const [obj,id] of this.links)obj.disconnect(id);
         this.links=[];
