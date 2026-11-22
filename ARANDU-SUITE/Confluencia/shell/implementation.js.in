@@ -189,9 +189,9 @@ class TapeSession {
         this.updateAccessibilityLabels();
     }
     toggleAccessibility() {
-        if(!this.controlBox)return;
-        this.controlBox.visible=!this.controlBox.visible;
-        if(this.controlBox.visible){this.wakeSeed();this.updateAccessibilityLabels();this.position();}
+        if(!this.controlScroll)return;
+        this.controlScroll.visible=!this.controlScroll.visible;
+        if(this.controlScroll.visible){this.wakeSeed();this.updateAccessibilityLabels();this.position();}
     }
     updateAccessibilityLabels() {
         if(!this.accessibilityLabels)return;
@@ -621,12 +621,14 @@ class TapeSession {
             this.setBarMode(mode==='visible'?'auto':'visible');
         });
         addAction('Restaurar padrões seguros',()=>this.resetAccessibility());
-        addAction('Fechar configurações',()=>this.controlBox.hide());
+        addAction('Fechar configurações',()=>this.controlScroll.hide());
         // Rolar em telas menores e manter ações alcançáveis por teclado.
         this.controlScroll=new St.ScrollView({style_class:'arandu-a11y-scroll',
             overlay_scrollbars:true,hscrollbar_policy:St.PolicyType.NEVER,
             vscrollbar_policy:St.PolicyType.AUTOMATIC});
         this.controlScroll.set_child(this.controlBox);
+        this.controlBox.visible=true;
+        this.controlScroll.visible=false;
         this.root.add_child(this.controlScroll);
         this.updateAccessibilityLabels();
         this.makeHelpPanel();
@@ -894,7 +896,7 @@ class TapeSession {
         if(!this.expanded){
             if(this.helpBox)this.helpBox.hide();
             if(this.helpHint)this.helpHint.hide();
-            if(this.controlBox)this.controlBox.hide();
+            if(this.controlScroll)this.controlScroll.hide();
         }
         this.scheduleSeedSleep();
         this.refresh();this.highlightSelection();
