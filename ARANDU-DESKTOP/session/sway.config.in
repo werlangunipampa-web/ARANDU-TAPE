@@ -15,6 +15,10 @@ output * bg #14221d solid_color
 bindsym Ctrl+Alt+Shift+q exit
 bindsym $mod+Shift+Escape exit
 # Navegação normal de janelas no compositor experimental.
+# Opy: visão ARANDU das janelas em Alt+Tab, apenas na sessão Sway.
+bindsym Mod1+Tab exec __ARANDU_OPY__
+# Janela Opy flutua sobre as aplicações; não é um painel religioso ou layer-shell.
+for_window [app_id="org.arandulab.OpySwitcher"] floating enable, resize set width 660 px height 460 px, move position center
 bindsym $mod+Tab focus next
 bindsym $mod+Shift+Tab focus prev
 # Estabilidade primeiro: a interface ARANDU inicia VISÍVEL como aba normal.
