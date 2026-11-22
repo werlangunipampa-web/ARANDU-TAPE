@@ -14,12 +14,13 @@ LABEL_POSITIONS = {"memory": (130, 290), "open": (770, 18), "frequent": (1040, 1
 
 
 class RiversCanvas(Gtk.ScrolledWindow):
-    def __init__(self, on_river, on_seed, on_app):
+    def __init__(self, on_river, on_seed, on_app, on_window):
         super().__init__(hexpand=True, vexpand=False)
-        self.on_river, self.on_seed, self.on_app = on_river, on_seed, on_app
+        self.on_river, self.on_seed, self.on_app, self.on_window = on_river, on_seed, on_app, on_window
         self.scale = DEFAULT_SCALE
         self.apps = ()
         self.marker_apps = {}
+        self.marker_windows = {}
         self.mode = "rivers"
         self._fit_source = 0
         self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)
@@ -116,10 +117,15 @@ class RiversCanvas(Gtk.ScrolledWindow):
     def _click_marker(self, button):
         app = self.marker_apps.get(button)
         if self.mode == "apps" and app is not None:
-            self.on_app(app)  # Apenas seleciona; não inicia processo.
+            self.on_app(app)  # Seleção sem iniciar processo.
+        if self.mode == "windows":
+            window = self.marker_windows.get(button)
+            if window is not None:
+                self.on_window(window)  # Confirmação antes de alterar o foco.
 
     def show_rivers(self):
         self.mode = "rivers"
+        self.marker_windows.clear()
         for marker, river, _, _ in self.markers:
             self.marker_apps.pop(marker, None)
             marker.set_focusable(False)
@@ -138,6 +144,7 @@ class RiversCanvas(Gtk.ScrolledWindow):
         """Distribui até 15 aplicativos instalados reais, sem ler janelas."""
         self.apps = choose_app_slots(apps)
         self.mode = "apps"
+        self.marker_windows.clear()
         for i, (marker, river, _, _) in enumerate(self.markers):
             app = self.apps[i] if i < len(self.apps) else None
             if app:
@@ -167,3 +174,25 @@ class RiversCanvas(Gtk.ScrolledWindow):
                 button.add_css_class("arandu-river-active")
             else:
                 button.remove_css_class("arandu-river-active")
+
+    def show_windows(self, windows):
+        """Medalhões representam somente janelas Sway verificadas, sem coleta periódica."""
+        self.mode = "windows"
+        self.marker_apps.clear()
+        self.marker_windows.clear()
+        for index, (marker, river, _, _) in enumerate(self.markers):
+            item = windows[index] if index < len(windows) else None
+            marker.set_visible(item is not None)
+            marker.set_sensitive(item is not None)
+            marker.set_focusable(item is not None)
+            if item is None:
+                continue
+            self.marker_windows[marker] = item
+            marker.set_tooltip_text(
+                "Selecionar janela: " + item["title"] + " · " + item["app"])
+            icon = Gtk.Picture.new_for_filename(str(ASSETS / f"{river}.svg"))
+            icon.set_can_shrink(True)
+            marker.set_child(icon)
+        for label in self.river_buttons.values():
+            label.set_visible(False)
+        self._layout(self.scale)
