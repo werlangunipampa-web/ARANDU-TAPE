@@ -132,3 +132,13 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - A consulta de janelas lista os nomes reais no painel e os expõe em medalhões, com confirmação anterior ao foco.
 - **Pendente:** abrir Foot, retornar ao ARANDU, escolher medalhão e confirmar foco; garantir que os eventos não alterem janelas do GNOME hospedeiro e sair pelo atalho do compositor.
 - Em hipótese alguma publicar esse marco como sessão ARANDU de login ou compositor próprio.
+
+## ARANDU Desktop 0.5.2 — Rios para janelas Sway, ida e volta (2026-11-22)
+
+- Corrigida a diferença entre `Rio ABERTOS` e botão auxiliar: durante laboratório Sway, clicar **ABERTOS** agora consulta janelas efetivamente abertas, sob demanda.
+- Acrescentado `Ctrl+Alt+A` na configuração temporária Sway para reencontrar a janela ARANDU sem instanciar programas.
+- Acrescentada lista acessível de janelas no painel contextual; cada seleção exige confirmação explícita antes do foco.
+- O estado de navegação permanece aberto enquanto a seleção estiver ativa, e `Recolher Rios` o limpa.
+- **Estado:** código e testes de contrato publicados; somente a presença de duas janelas foi validada no VAIO, não a troca por medalhão nesta revisão.
+- **Próximo teste:** Foot -> Ctrl+Alt+A -> ABERTOS -> selecionar Foot -> Focar -> verificar foco real -> Ctrl+Alt+A para retorno, sem modificar GNOME.
+- A ECA permanece desconectada, o compositor Sway não é substituído pelo ARANDU e nenhum registro automático de histórico é autorizado.
