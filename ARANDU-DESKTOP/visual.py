@@ -21,7 +21,7 @@ class RiversCanvas(Gtk.ScrolledWindow):
         self.apps = ()
         self.marker_apps = {}
         self.mode = "rivers"
-        self._refresh_scheduled = False
+        self._fit_source = 0
         self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)
         self.canvas = Gtk.Overlay()
         self.canvas.set_halign(Gtk.Align.CENTER)
@@ -54,7 +54,10 @@ class RiversCanvas(Gtk.ScrolledWindow):
             self.fixed.put(label, 0, 0)
             self.river_buttons[river] = label
 
-        self.connect("notify::width", self._on_width)
+        # GTK4 não oferece notify::width nos widgets; consulta discreta
+        # enquanto o canvas está mapeado (sem redimensionamento contínuo).
+        self.connect("map", self._on_map)
+        self.connect("unmap", self._on_unmap)
         self._layout(self.scale)
         self.show_rivers()
 
@@ -67,21 +70,24 @@ class RiversCanvas(Gtk.ScrolledWindow):
         button.set_child(picture)
         return button
 
-    def _on_width(self, *_args):
-        if self._refresh_scheduled:
-            return
-        self._refresh_scheduled = True
-        GLib.idle_add(self._fit_width)
+    def _on_map(self, *_args):
+        if not self._fit_source:
+            self._fit_width()
+            self._fit_source = GLib.timeout_add(450, self._fit_width)
+
+    def _on_unmap(self, *_args):
+        if self._fit_source:
+            GLib.Source.remove(self._fit_source)
+            self._fit_source = 0
 
     def _fit_width(self):
-        self._refresh_scheduled = False
         width = self.get_width()
         if width > 0:
             # Margem: o widget sempre preserva espaço antes de sua borda.
             candidate = scale_for_viewport(max(1, width - 24), 500)
             if abs(self.scale - candidate) > 0.015:
                 self._layout(candidate)
-        return GLib.SOURCE_REMOVE
+        return GLib.SOURCE_CONTINUE
 
     def _layout(self, scale):
         self.scale = scale
