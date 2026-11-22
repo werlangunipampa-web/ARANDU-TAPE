@@ -123,3 +123,12 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - Atalho `Super+Enter` abre Foot dentro do Sway para teste; saída aninhada `Ctrl+Alt+Shift+Q`.
 - **Limitação declarada:** GTK4 ARANDU continua janela cliente normal, não há overlay layer-shell nem recolhimento real sobre a janela do Foot. Ponte IPC não se conecta à Seed/ECA e não coleta histórico.
 - **Aceite:** testar abertura do Foot, lista de janelas, medalhão, confirmação de foco, recusa de janela removida, retorno seguro ao GNOME. Verificar 25+ testes Python e Rust.
+
+## ARANDU Desktop 0.5.1 — verificabilidade do foco (2026-11-22)
+
+- O VAIO confirmou o compositor Sway aninhado com ARANDU 0.5 aberto; 25 testes Python + 2 Rust aprovados. Não há ainda teste humano confirmando comutação entre duas janelas.
+- A captura exibiu somente ARANDU. Foram observados avisos do wlroots/GDK de mapeamento de superfícies, sem demonstrar falha fatal.
+- Criado botão **Abrir Foot no Sway**, disponível exclusivamente quando `ARANDU_SESSION_LAB=1` e `SWAYSOCK` está presente, sem ação automática.
+- A consulta de janelas lista os nomes reais no painel e os expõe em medalhões, com confirmação anterior ao foco.
+- **Pendente:** abrir Foot, retornar ao ARANDU, escolher medalhão e confirmar foco; garantir que os eventos não alterem janelas do GNOME hospedeiro e sair pelo atalho do compositor.
+- Em hipótese alguma publicar esse marco como sessão ARANDU de login ou compositor próprio.
