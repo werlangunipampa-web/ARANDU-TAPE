@@ -74,9 +74,9 @@ class TapeSession {
         this.panel.menu.addAction('Barra: automática',()=>this.setBarMode('auto'));
         this.panel.menu.addAction('Recuperar barra superior',()=>this.setBarMode('visible'));
         this.panel.menu.addAction('Alternar barra (Super+Alt+H)',()=>this.cycleBarMode());
+        this.panel.menu.addAction('Rios: recolher após 10 segundos',()=>this.setNavigationIdle(10000));
         this.panel.menu.addAction('Rios: recolher após 30 segundos',()=>this.setNavigationIdle(30000));
         this.panel.menu.addAction('Rios: recolher após 60 segundos',()=>this.setNavigationIdle(60000));
-        this.panel.menu.addAction('Rios: recolher após 120 segundos',()=>this.setNavigationIdle(120000));
         this.panel.menu.addAction('Rios: nunca recolher por tempo',()=>this.setNavigationIdle(0));
         Main.panel.addToStatusArea('arandu-tape-confluencia',this.panel);
         Main.wm.addKeybinding('arandu-tape-mapa',this.settings,Meta.KeyBindingFlags.NONE,
@@ -330,7 +330,7 @@ class TapeSession {
         });
     }
     setNavigationIdle(ms) {
-        if(![0,30000,60000,120000].includes(ms))return false;
+        if(![0,10000,30000,60000].includes(ms))return false;
         this.settings.set_int('navigation-idle-ms',ms);
         this.resetNavigationTimeout();
         Main.notify('ARANDU TAPE',ms?'Recolher rios após '+(ms/1000)+' s de inatividade.':'Recolhimento por inatividade desligado.');
