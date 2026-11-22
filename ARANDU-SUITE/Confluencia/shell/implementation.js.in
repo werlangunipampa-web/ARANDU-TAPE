@@ -31,6 +31,7 @@ class TapeSession {
         this.navRiver=null;this.navIndex=-1;this.navBindings=[];
         this.scanTimer=0;this.scanning=false;
         this.navigationOverlay=false;this.navigationMonitorIndex=null;
+        this.navigationIdleTimer=0;this.navigationLastWindow=null;
         this.tracker=Shell.WindowTracker.get_default();
         this.apps=Shell.AppSystem.get_default();
         this.privacy=new Gio.Settings({schema_id:'org.gnome.desktop.privacy'});
@@ -73,6 +74,10 @@ class TapeSession {
         this.panel.menu.addAction('Barra: automática',()=>this.setBarMode('auto'));
         this.panel.menu.addAction('Recuperar barra superior',()=>this.setBarMode('visible'));
         this.panel.menu.addAction('Alternar barra (Super+Alt+H)',()=>this.cycleBarMode());
+        this.panel.menu.addAction('Rios: recolher após 30 segundos',()=>this.setNavigationIdle(30000));
+        this.panel.menu.addAction('Rios: recolher após 60 segundos',()=>this.setNavigationIdle(60000));
+        this.panel.menu.addAction('Rios: recolher após 120 segundos',()=>this.setNavigationIdle(120000));
+        this.panel.menu.addAction('Rios: nunca recolher por tempo',()=>this.setNavigationIdle(0));
         Main.panel.addToStatusArea('arandu-tape-confluencia',this.panel);
         Main.wm.addKeybinding('arandu-tape-mapa',this.settings,Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL|Shell.ActionMode.OVERVIEW,()=>this.launch());
@@ -105,7 +110,11 @@ class TapeSession {
         this.buildDesktop();
         this.signal(global.stage,'captured-event',(_stage,event)=>this.helpGlobalEvent(event));
         this.signal(global.stage,'captured-event',(_stage,event)=>this.navigationKeyEvent(event));
-        this.signal(global.display,'notify::focus-window',()=>{this.record();this.schedule();});
+        this.signal(global.stage,'captured-event',(_stage,event)=>this.navigationOutsideEvent(event));
+        this.signal(global.display,'notify::focus-window',()=>{
+            this.onFocusWindowChanged();
+            this.record();this.schedule();
+        });
         this.signal(global.display,'window-created',()=>this.schedule());
         this.signal(global.window_manager,'destroy',()=>this.schedule());
         this.signal(Main.layoutManager,'monitors-changed',()=>this.position());
@@ -132,7 +141,8 @@ class TapeSession {
                 app:String(entry.app||'')}:null,
             intervalMs:this.settings.get_int('scan-interval-ms'),
             navigationOverlay:Boolean(this.navigationOverlay),
-            monitorIndex:this.navigationMonitorIndex
+            monitorIndex:this.navigationMonitorIndex,
+            idleTimeoutMs:this.settings.get_int('navigation-idle-ms')
         });
     }
     // Interface de acessibilidade única, independente do dispositivo de entrada.
@@ -231,6 +241,7 @@ class TapeSession {
         if(!ids.includes(this.navIndex))this.navIndex=ids[0];
         this.highlightSelection();this.wakeSeed();
         this.scanning=true;
+        this.cancelNavigationTimeout();
         const interval=limit(this.settings.get_int('scan-interval-ms'),2000,5000);
         this.scanTimer=GLib.timeout_add(GLib.PRIORITY_DEFAULT,interval,()=>{
             if(!this.scanning || !this.allowed() || !this.expanded){this.stopScan();return GLib.SOURCE_REMOVE;}
@@ -285,19 +296,74 @@ class TapeSession {
         if(this.controlScroll)this.controlScroll.hide();
         if(this.controlBox && !this.controlScroll)this.controlBox.hide();
     }
+    // O clique/toque externo devolve a janela ao trabalho sem consumir o evento.
+    navigationOutsideEvent(event) {
+        if(!this.navigationOverlay || this.scanning || !this.root)return Clutter.EVENT_PROPAGATE;
+        if(![Clutter.EventType.BUTTON_PRESS,Clutter.EventType.TOUCH_BEGIN].includes(event.type()))
+            return Clutter.EVENT_PROPAGATE;
+        const actor=typeof event.get_source==='function'?event.get_source():null;
+        if(actor && (actor===this.root || this.root.contains(actor)))return Clutter.EVENT_PROPAGATE;
+        if(actor && this.panel && (actor===this.panel || this.panel.contains(actor)))
+            return Clutter.EVENT_PROPAGATE;
+        this.finishNavigation();
+        return Clutter.EVENT_PROPAGATE;
+    }
+    onFocusWindowChanged() {
+        const focused=global.display.focus_window;
+        if(this.navigationOverlay && focused && focused!==this.navigationLastWindow) {
+            this.finishNavigation();
+        }
+    }
+    cancelNavigationTimeout() {
+        if(this.navigationIdleTimer)stopSource(this.navigationIdleTimer);
+        this.navigationIdleTimer=0;
+    }
+    resetNavigationTimeout() {
+        this.cancelNavigationTimeout();
+        if(!this.navigationOverlay || this.scanning)return;
+        const ms=this.settings.get_int('navigation-idle-ms');
+        if(ms<=0)return;
+        this.navigationIdleTimer=GLib.timeout_add(GLib.PRIORITY_DEFAULT,ms,()=>{
+            this.navigationIdleTimer=0;
+            if(this.navigationOverlay && !this.scanning)this.finishNavigation();
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+    setNavigationIdle(ms) {
+        if(![0,30000,60000,120000].includes(ms))return false;
+        this.settings.set_int('navigation-idle-ms',ms);
+        this.resetNavigationTimeout();
+        Main.notify('ARANDU TAPE',ms?'Recolher rios após '+(ms/1000)+' s de inatividade.':'Recolhimento por inatividade desligado.');
+        return true;
+    }
+    finishNavigation() {
+        this.cancelNavigationTimeout();
+        this.stopScan();
+        this.dismissNavigationPanels();
+        this.leaveNavigation();
+        if(this.expanded)this.setExpanded(false);
+        this.navRiver=null;
+        this.navIndex=-1;
+        this.highlightSelection();
+    }
     // Modo transitório: a Semente e os Rios sobem juntos e depois retornam ao desktop.
     enterNavigation() {
         if(!this.allowed())return;
         this.dismissNavigationPanels();
         if(!this.navigationOverlay)this.navigationMonitorIndex=this.pickMonitorIndex();
         this.navigationOverlay=true;
+        this.navigationLastWindow=global.display.focus_window;
         this.applyLayer();
+        this.dismissNavigationPanels();
+        this.resetNavigationTimeout();
     }
     leaveNavigation() {
+        this.cancelNavigationTimeout();
         this.dismissNavigationPanels();
         if(!this.navigationOverlay)return;
         this.navigationOverlay=false;
         this.navigationMonitorIndex=null;
+        this.navigationLastWindow=null;
         this.applyLayer();
     }
     // Intent Router: os dispositivos de entrada chamam estas ações sem tocar no layout.
@@ -312,6 +378,7 @@ class TapeSession {
         this.navIndex=this.firstSelectable(river);
         this.highlightSelection();
         this.focusSelectedNode();
+        this.resetNavigationTimeout();
     }
     firstSelectable(river) {
         return this.buttons[river].findIndex(n=>n.entry!==null && n.entry!==undefined);
@@ -331,6 +398,7 @@ class TapeSession {
         this.navIndex=ids[(ix+delta+ids.length)%ids.length];
         this.highlightSelection();
         this.focusSelectedNode();
+        this.resetNavigationTimeout();
     }
     activateSelection() {
         if(!this.allowed() || !this.navRiver || this.navIndex<0)return;
@@ -339,14 +407,13 @@ class TapeSession {
         this.wakeMedallions();
         this.wakeSeed();
         this.openNode(this.navRiver,this.navIndex);
-        this.leaveNavigation();
+        this.finishNavigation();
         // Rios permanecem expandidos no desktop, sem bloquear o aplicativo.
         this.highlightSelection();
     }
     cancelSelection() {
         this.stopScan();
-        this.navRiver=null;this.navIndex=-1;this.highlightSelection();
-        this.leaveNavigation();
+        this.finishNavigation();
         if(this.expanded)this.wakeMedallions();
     }
     // Enter simples e setas atuam SOMENTE quando o teclado está focado
@@ -628,7 +695,7 @@ class TapeSession {
                 const b=new St.Button({can_focus:true,reactive:true});
                 const stack=new St.Widget({layout_manager:new Clutter.FixedLayout()});stack.set_size(65,65);
                 const med=this.icon(r,60);stack.add_child(med);
-                b.set_child(stack);b.connect('clicked',()=>{this.wakeMedallions();this.openNode(r,i);this.leaveNavigation();});
+                b.set_child(stack);b.connect('clicked',()=>{this.wakeMedallions();this.openNode(r,i);this.finishNavigation();});
                 b.connect('notify::hover',()=>{if(b.hover)this.wakeMedallions();});
                 this.watchHover(b);this.root.add_child(b);
                 this.buttons[r].push({button:b,stack,badge:null,key:null,entry:null});
@@ -1046,6 +1113,7 @@ class TapeSession {
     stop() {
         this.stopping=true;
         this.stopScan();
+        this.cancelNavigationTimeout();
         this.endDrag();
         for(const [obj,id] of this.links)obj.disconnect(id);
         this.links=[];
