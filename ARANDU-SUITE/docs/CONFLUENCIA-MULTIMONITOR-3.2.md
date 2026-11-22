@@ -54,3 +54,18 @@ Testar com 1 monitor e 2–3 monitores:
 Se houver erro ou regressão, desativar apenas a Confluência ou TOPBAR afetada e restaurar seu arquivo a partir do backup criado em `~/ARANDU-BACKUP-INTEGRADO-*/`. As versões antigas não foram apagadas.
 
 **Status:** código publicado e testes simulados adicionados, mas não foi feita validação visual no VAIO ou com três monitores reais. Não tratar essa beta como versão estável.
+
+## Ajuste de navegação contextual (3.2.1 beta)
+
+Após testes visuais no VAIO, foi solicitado que a Confluência não permaneça sobre as janelas. O comportamento pretendido é:
+
+- **Ao clicar ou tocar fora da Confluência:** recolhe Semente/rios imediatamente e propaga o evento ao aplicativo (sem consumir o clique).
+- **Ao passar a utilizar outra janela:** o sinal `notify::focus-window` recolhe a navegação imediatamente.
+- **Na ausência de interação:** recolhe após **10 segundos** por padrão; o cronômetro reinicia ao escolher outro medalhão ou tocar nos controles.
+- **Durante varredura assistiva:** não recolhe automaticamente, mesmo após 10 segundos; a pessoa precisa confirmar ou cancelar.
+- **Ao abrir outro aplicativo ou cancelar:** recolhe a navegação, deixando apenas a Semente no plano de fundo.
+- **Guia e configurações:** devem permanecer fechados quando a navegação começar; abrir somente quando solicitados pelo usuário.
+
+Os tempos opcionais são 10, 30 ou 60 segundos, ou desativação por tempo, no menu da extensão. O modo `floating=true` (flutuação permanente) é uma preferência independente que pode impedir o retorno ao fundo; para o comportamento contextual descrito acima, definir `floating=false` na Confluência.
+
+**Status:** testes simulados ampliados, mas funcionamento real após esta correção ainda necessita ser verificado no VAIO.
