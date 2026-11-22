@@ -151,3 +151,15 @@ sudo bash ARANDU-DESKTOP/session/login/manage-login.sh --remove
 A opção de login aponta para o caminho absoluto **deste clone**: não apagar/mover a pasta até remover ou reinstalar a entrada. Não habilitar login automático para o ARANDU enquanto experimental. O instalador recusa sobrescrever sessão/launcher que não tenham marcador ARANDU.
 
 **Estado:** scripts e testes publicados no GitHub, sem teste físico da sessão nativa no VAIO. Os 34 testes relatados foram da versão 0.6.1 **aninhada**, não validam LightDM, seat, DRM, entrada ou a inicialização nativa.
+
+## Print Screen → Ctrl+V no ChatGPT (sessão ARANDU Wayland)
+
+Após `sudo apt install grim wl-clipboard`, **Print Screen** captura o monitor/saída padrão via `grim -` e envia um PNG diretamente a `wl-copy --type image/png` (área de transferência temporária). **Não há arquivo persistente por padrão** nem sincronização com Semente, Memória ou ECA. **Shift+Print** salva PNG na pasta Imagens explicitamente. O usuário decide onde colar, com `Ctrl+V`; a captura não é enviada à rede automaticamente.
+
+Para ativar sem sair da sessão real Sway, executar no Foot **após git pull**:
+```bash
+sudo apt install wl-clipboard
+swaymsg 'bindsym Print exec /bin/bash /home/oem/Downloads/ARANDU-TAPE-COMPLETO/ARANDU-DESKTOP/session/capture-screen.sh --clipboard'
+swaymsg 'bindsym Shift+Print exec /bin/bash /home/oem/Downloads/ARANDU-TAPE-COMPLETO/ARANDU-DESKTOP/session/capture-screen.sh --save'
+```
+O caminho acima é específico do VAIO oem: em outras máquinas usar o caminho absoluto do próprio clone. Novas sessões recebem os atalhos a partir dos modelos de configuração instalados no repositório. O compositor precisa estar rodando e `SWAYSOCK` válido. Se `wl-copy` não existir, instalar `wl-clipboard` primeiro. Em sessões de múltiplos monitores, `grim -` segue o comportamento de captura padrão do compositor.
