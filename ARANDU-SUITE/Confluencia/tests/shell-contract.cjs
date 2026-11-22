@@ -127,7 +127,13 @@ assert.equal(s.fabric.visible,true);
 s.wakeSeed();
 assert.equal(s.helpButton.opacity,255);
 assert.equal(s.helpButton.reactive,true);
+// Expandir pelo botão RIOS/Semente não ressuscita janelas auxiliares.
+s.toggleHelp();s.toggleAccessibility();
+assert.equal(s.helpBox.visible,true);
+assert.equal(s.controlScroll.visible,true);
 s.setExpanded(false);assert.equal(s.helpButton.visible,false);
+assert.equal(s.helpBox.visible,false);
+assert.equal(s.controlScroll.visible,false);
 assert(s.seedSleepId && pending.has(s.seedSleepId));
 const sleepingId=s.seedSleepId;const sleepTick=pending.get(sleepingId);pending.delete(sleepingId);sleepTick();
 assert.equal(s.seed.opacity,31);
