@@ -10,6 +10,10 @@ O ARANDU TAPE é um projeto experimental que organiza a navegação entre aplica
 
 Cada rio possui medalhões selecionáveis. O objetivo é desenvolver um ambiente visual limpo, com diferentes formas de controle para pessoas com variadas capacidades motoras e comunicativas.
 
+## 🚀 Instalação e downloads
+
+Veja as [instruções de instalação passo a passo](INSTALAR.md). O código da versão beta está disponível em **Code → Download ZIP**. Pacotes de distribuição na seção **Releases** serão disponibilizados separadamente; não confunda o código-fonte com um instalador assinado.
+
 ## Versão atual: ARANDU SUITE 2.8.3 (beta)
 
 - Semente expande/recolhe os rios por ação deliberada
