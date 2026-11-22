@@ -47,6 +47,18 @@ bash instalar-tudo.sh --experimental-topbar
 
 Reinicie a sessão. O instalador não substitui automaticamente uma TOPBAR existente por outra variante.
 
+## Barra que se oculta automaticamente
+
+No modo automático, a Confluência aguarda aproximadamente **8 segundos** depois que o ponteiro deixa o painel. A barra permanece visível enquanto um menu do painel estiver aberto ou um controle do painel tiver foco de teclado.
+
+Para garantir tempo ilimitado durante testes ou uso assistivo:
+
+```bash
+SCHEMA_DIR="$HOME/.local/share/gnome-shell/extensions/confluencia@arandulab/schemas"
+SCHEMA="org.gnome.shell.extensions.arandu-confluencia"
+gsettings --schemadir "$SCHEMA_DIR" set "$SCHEMA" panel-mode visible
+```
+
 ## Segurança e recuperação
 
 - Não execute como `sudo`.
