@@ -42,7 +42,7 @@ class SeedStatusContract(unittest.TestCase):
         self.assertIn('response != Gtk.ResponseType.ACCEPT', app)
         self.assertIn('"swaymsg", "-t", "command", "exit"', app)
         self.assertIn('Gtk.Button(label="Área de Trabalho")', app.replace('self.quick_action("Área de Trabalho", "desktop")', 'Gtk.Button(label="Área de Trabalho")'))
-        self.assertIn('Gio.UserDirectory.DIRECTORY_DESKTOP', app)
+        self.assertIn('GLib.UserDirectory.DIRECTORY_DESKTOP', app)
 
 
 if __name__ == "__main__":
