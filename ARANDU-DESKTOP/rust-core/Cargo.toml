@@ -1,0 +1,12 @@
+[package]
+name = "arandu-desktop-core"
+version = "0.1.0"
+edition = "2021"
+description = "Contratos locais e isolados para ARANDU Desktop, sem integração com a Semente oficial"
+license = "MIT"
+
+[lib]
+name = "arandu_desktop_core"
+path = "src/lib.rs"
+
+[dependencies]
