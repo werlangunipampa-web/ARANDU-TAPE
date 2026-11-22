@@ -22,6 +22,7 @@ from ai_gateway import PROVIDERS, model_for, complete, GatewayError
 from adaptation import Adaptation, observe as observe_resources, propose as propose_adaptation
 from eca_experiments import workflow as eca_workflow
 from eca_bridge import read_export, EcaBridgeError
+from ontology_contract import decide as ontology_decide
 from ai_gateway import ready as ai_ready
 from system_status import summary, clock_text, network_status, battery_status, bluetooth_status, volume_status
 
@@ -284,6 +285,9 @@ class Desktop(Gtk.Application):
 
     def capture_to_clipboard(self):
         """Captura só após clique; processo externo termina sozinho, sem histórico."""
+        decision = ontology_decide("clipboard_capture", user_intent=True)
+        if not decision.allowed:
+            return
         if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
             return
         target = Path(__file__).resolve().parent / "session" / "capture-screen.sh"
@@ -401,6 +405,10 @@ class Desktop(Gtk.Application):
 
     def send_tupa(self, provider, model, question):
         """Envia somente o texto digitado; nenhuma ação gerada é executada."""
+        decision = ontology_decide("ask_generative_ai", user_intent=True,
+                                   confirmation=True)
+        if not decision.allowed:
+            return
         if provider != self.tupa_provider:
             return
         ok, reason = ai_ready(provider, model)
@@ -455,6 +463,11 @@ class Desktop(Gtk.Application):
             return
         try:
             source, relations = read_export(Path(filename))
+            decision = ontology_decide("consult_eca_export", user_intent=True,
+                                       provenance=bool(source))
+            if not decision.allowed:
+                self.content.append(self.text("Consulta bloqueada: " + decision.why))
+                return
             self.content.append(self.text(
                 f"Origem declarada: {source}; relações experimentais: {len(relations)}"))
             for rel in relations[:8]:
@@ -504,6 +517,10 @@ class Desktop(Gtk.Application):
         self.apply_seed_adaptation(proposal)
 
     def apply_seed_adaptation(self, proposal):
+        decision = ontology_decide("apply_adaptation", user_intent=True,
+                                   confirmation=True)
+        if not decision.allowed:
+            return
         if self.adaptation.apply(proposal, confirmed=True):
             self.update_seed_adaptation()
         self.show_adaptation()
@@ -583,6 +600,12 @@ class Desktop(Gtk.Application):
 
     def bluetooth_action(self, address, operation):
         """Só Connect/Disconnect de endereço pareado validado no adaptador."""
+        action = {"connect": "bluetooth_connect",
+                  "disconnect": "bluetooth_disconnect"}.get(operation, "")
+        decision = ontology_decide(action, user_intent=True, confirmation=True)
+        if not decision.allowed:
+            self.content.append(self.text("Operação bloqueada: " + decision.why))
+            return
         self.content.append(self.text("Solicitando operação Bluetooth..."))
         import threading
         token = self._bluetooth_token
@@ -1138,6 +1161,10 @@ class Desktop(Gtk.Application):
         self.detail_revealer.set_reveal_child(True)
 
     def launch_app(self, application):
+        decision = ontology_decide("launch_app", user_intent=True,
+                                   confirmation=True)
+        if not decision.allowed:
+            return
         try:
             application.launch([], None)
             self.retract()
