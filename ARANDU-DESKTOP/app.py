@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ARANDU Desktop 0.1 — laboratório GTK4 independente do GNOME Shell.
+"""ARANDU Desktop 0.2 — laboratório GTK4 independente do GNOME Shell.
 
 É um aplicativo de prototipação, NÃO um compositor nem sessão gráfica.
 Não conecta à ECA, não coleta janelas e não modifica atalhos do sistema.
