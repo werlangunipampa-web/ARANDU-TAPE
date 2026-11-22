@@ -40,7 +40,7 @@ class Actor {
 class Panel extends Actor {
     constructor(){super();this.menu={addAction:(s,f)=>({label:{set_text(){}},click:f})};}
 }
-const prefs=new Map([['recent','[]'],['frequency','{}'],['medallion-scale',1],['high-contrast',false],['scan-interval-ms',3500],['panel-mode','visible']]);
+const prefs=new Map([['recent','[]'],['frequency','{}'],['medallion-scale',1],['high-contrast',false],['scan-interval-ms',3500],['panel-mode','visible'],['monitor-target','focused'],['fixed-monitor-index',0]]);
 const settings={get_string:k=>prefs.get(k),set_string:(k,v)=>prefs.set(k,v),
     get_double:k=>prefs.get(k)||0,set_double:(k,v)=>prefs.set(k,v),
     get_boolean:k=>!!prefs.get(k),set_boolean:(k,v)=>prefs.set(k,v),
@@ -51,7 +51,9 @@ class Privacy extends Actor {get_boolean(){return privacy;}}
 let service=false, key=false, actions=[], windowList=[], focused=null;
 const tracked=new Set();const bg=new Actor();const chrome=new Actor();
 const layout=Object.assign(new Actor(),{
-    _backgroundGroup:bg,primaryMonitor:{index:0,x:0,y:0},getWorkAreaForMonitor:()=>({x:0,y:30,width:1366,height:738}),
+    _backgroundGroup:bg,primaryMonitor:{index:0,x:0,y:0,width:1366,height:768},
+    monitors:[{index:0,x:0,y:0,width:1366,height:768},{index:1,x:1366,y:0,width:1080,height:900},{index:2,x:2446,y:0,width:1200,height:900}],
+    getWorkAreaForMonitor:i=>({x:layout.monitors[i].x,y:30,width:layout.monitors[i].width,height:layout.monitors[i].height-30}),
     addChrome(actor){chrome.add_child(actor);},removeChrome(actor){chrome.remove_child(actor);},
     trackChrome(actor){tracked.add(actor);},untrackChrome(actor){assert(tracked.delete(actor));}
 });
@@ -66,7 +68,7 @@ const apps=new Map();
 function win(id,title,appId,space=0) {
     if (!apps.has(appId))apps.set(appId,{get_id:()=>appId,get_name:()=>appId,create_icon_texture:()=>new Actor(),activate:()=>actions.push(appId)});
     return {get_title:()=>title,get_stable_sequence:()=>id,get_window_type:()=>0,
-        get_wm_class:()=>appId,get_workspace:()=>({index:()=>space}),app:apps.get(appId)};
+        get_wm_class:()=>appId,get_workspace:()=>({index:()=>space}),get_monitor:()=>space,app:apps.get(appId)};
 }
 const display=Object.assign(new Actor(),{get_tab_list:()=>windowList});
 Object.defineProperty(display,'focus_window',{get:()=>focused});
@@ -157,8 +159,32 @@ assert.equal(snap.frequency.find(x=>x[0]==='editor.desktop')[1],3);
 assert(s.Activate('32'));assert.equal(focused,b);assert.equal(s.Activate('200'),false);
 s.setExpanded(true);assert.equal(s.buttons.open[0].button.visible,true);
 // Assistive global navigation selects real medalhões without opening GTK.
+// 3 monitores: o rio deve surgir na tela da janela ativa.
+focused=b; // janela simulada no monitor 2
 s.selectRiver('open');
-assert.equal(s.navRiver,'open');assert(s.navIndex>=0);
+assert.equal(s.navRiver,'open');
+assert.equal(s.navigationOverlay,true);
+assert.equal(s.navigationMonitorIndex,1);
+assert.equal(s.root.get_parent(),chrome);
+assert.equal(s.root.pos[0],1366);
+s.cancelSelection();
+assert.equal(s.navigationOverlay,false);
+assert.equal(s.root.get_parent(),bg);
+focused=a;
+assert.equal(s.setMonitorTarget('fixed',2),true);
+s.selectRiver('open');
+assert.equal(s.navigationMonitorIndex,2);
+assert.equal(s.root.pos[0],2446);
+s.cancelSelection();
+assert.equal(s.setMonitorTarget('pointer'),true);
+pointer=[1400,200];
+s.selectRiver('open');
+assert.equal(s.navigationMonitorIndex,1);
+s.cancelSelection();
+pointer=[10,1];
+assert.equal(s.setMonitorTarget('focused'),true);
+s.selectRiver('open');
+assert.equal(s.navigationMonitorIndex,0);assert(s.navIndex>=0);
 assert(s.buttons.open[s.navIndex].button.classes.has('arandu-node-selected'));
 assert.equal(stage.get_key_focus(),s.buttons.open[s.navIndex].button);
 assert(s.fabric.style.includes('-open.svg'));
@@ -166,6 +192,8 @@ const beforeEnter=focused;
 assert.equal(s.navigationKeyEvent({type:()=>3,get_key_symbol:()=>13}),true);
 assert.equal(s.expanded,true);
 assert.equal(focused,a);
+assert.equal(s.navigationOverlay,false);
+assert.equal(s.root.get_parent(),bg);
 assert.equal(s.navigationKeyEvent({type:()=>3,get_key_symbol:()=>65363}),true);
 assert.notEqual(stage.get_key_focus(),null);
 const retained=s.navIndex;
@@ -212,6 +240,7 @@ assert.equal(s.scanning,false);
 s.selectRiver('open');
 assert.equal(s.AssistiveCommand('scan:start'),true);
 assert.equal(s.scanning,true);
+assert.equal(s.navigationOverlay,true);
 assistive=JSON.parse(s.AssistiveStatus());
 assert.equal(assistive.scanning,true);
 assert.equal(assistive.river,'open');
@@ -236,6 +265,7 @@ assert.notEqual(s.navIndex,beforeTick);
 assert.equal(focused,focusedBeforeScan); // varredura não abre aplicativos sozinha
 assert.equal(s.AssistiveCommand('scan:switch'),true);
 assert.equal(s.scanning,false);
+assert.equal(s.navigationOverlay,false);
 assert.equal(s.scanTimer,0);
 assert.equal(s.AssistiveCommand('scan:start'),true);
 s.setExpanded(false);
@@ -243,6 +273,7 @@ assert.equal(s.scanning,false); // recolher cancela a varredura
 assert.equal(s.AssistiveCommand('scan:start'),true);
 assert.equal(s.AssistiveCommand('node:cancel'),true);
 assert.equal(s.scanning,false);
+assert.equal(s.navigationOverlay,false);
 assert.equal(s.AssistiveCommand('scan:unknown'),false);
 assert.equal(s.setScanInterval(3500),true);
 const fixedRoot=s.root;
