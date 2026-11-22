@@ -225,6 +225,7 @@ class TapeSession {
         this.stopScan();
         if(!this.navRiver)this.selectRiver('open');
         else if(!this.expanded)this.setExpanded(true);
+        this.enterNavigation();
         const ids=this.selectableIndices(this.navRiver);
         if(!ids.length)return false;
         if(!ids.includes(this.navIndex))this.navIndex=ids[0];
