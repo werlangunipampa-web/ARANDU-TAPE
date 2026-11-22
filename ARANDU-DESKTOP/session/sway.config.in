@@ -44,6 +44,6 @@ bindsym $mod+Shift+h scratchpad show
 bindsym Print exec __ARANDU_CAPTURE__
 # Shift+Print salva PNG explicitamente em Imagens.
 bindsym Shift+Print exec __ARANDU_CAPTURE_SAVE__
-bindsym $mod+Return exec foot
+bindsym $mod+Return exec __ARANDU_TERMINAL__
 # Exibe o programa de controle ARANDU; substituído por caminho absoluto temporário.
 exec __ARANDU_LAUNCHER__
