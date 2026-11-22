@@ -54,6 +54,7 @@ class TapeSession {
         });
         this.panel.menu.addAction('Centralizar a Semente',()=>this.Center());
         this.panel.menu.addAction('Guia dos Rios · atalhos',()=>this.toggleHelp());
+        this.panel.menu.addAction('Acessibilidade · configurar na Semente',()=>this.toggleAccessibility());
         this.panel.menu.addAction('Varredura assistiva: iniciar/parar',()=>this.scanning?this.stopScan():this.startScan());
         this.panel.menu.addAction('Varredura: lenta · 5 segundos',()=>this.setScanInterval(5000));
         this.panel.menu.addAction('Varredura: normal · 3,5 segundos',()=>this.setScanInterval(3500));
@@ -151,10 +152,59 @@ class TapeSession {
     setScanInterval(ms) {
         if(!this.allowed() || ![2000,3500,5000].includes(ms))return false;
         this.settings.set_int('scan-interval-ms',ms);
+        this.updateAccessibilityLabels();
         const running=this.scanning;
         if(running)this.startScan();
         Main.notify('ARANDU TAPE',`Varredura: ${(ms/1000).toLocaleString('pt-BR')} segundos por medalhão.`);
         return true;
+    }
+    // Preferências de acessibilidade por usuário, sem captura de teclas globais.
+    setMedallionScale(scale) {
+        if(![0.85,1,1.2].includes(scale))return false;
+        this.settings.set_double('medallion-scale',scale);
+        this.refresh();
+        return true;
+    }
+    setHighContrast(on) {
+        this.settings.set_boolean('high-contrast',Boolean(on));
+        this.highlightSelection();
+    }
+    setSwitchShortcut(choice) {
+        const bindings={
+            space:['<Super><Alt>space'],
+            s:['<Super><Alt>s']
+        };
+        if(!bindings[choice])return false;
+        this.settings.set_strv('arandu-varredura-acionar',bindings[choice]);
+        Main.notify('ARANDU TAPE','Tecla do acionador alterada. Se houver conflito com outros atalhos, restaure a opção Espaço.');
+        return true;
+    }
+    resetAccessibility() {
+        this.stopScan();
+        this.setScanInterval(3500);
+        this.setMedallionScale(1);
+        this.setHighContrast(false);
+        this.setSwitchShortcut('space');
+        this.setBarMode('visible');
+        this.updateAccessibilityLabels();
+    }
+    toggleAccessibility() {
+        if(!this.controlBox)return;
+        this.controlBox.visible=!this.controlBox.visible;
+        if(this.controlBox.visible){this.wakeSeed();this.updateAccessibilityLabels();this.position();}
+    }
+    updateAccessibilityLabels() {
+        if(!this.accessibilityLabels)return;
+        const scale=this.settings.get_double('medallion-scale');
+        const contrast=this.settings.get_boolean('high-contrast');
+        const interval=this.settings.get_int('scan-interval-ms');
+        const shortcuts=this.settings.get_strv('arandu-varredura-acionar');
+        const switchName=shortcuts.includes('<Super><Alt>s')?'Super+Alt+S':'Super+Alt+Espaço';
+        this.accessibilityLabels.speed.set_text('Varredura: '+(interval/1000).toLocaleString('pt-BR')+' s');
+        this.accessibilityLabels.size.set_text('Medalhões: '+Math.round(scale*100)+'%');
+        this.accessibilityLabels.contrast.set_text('Alto contraste: '+(contrast?'ligado':'desligado'));
+        this.accessibilityLabels.switch.set_text('Acionador: '+switchName);
+        this.accessibilityLabels.bar.set_text('Barra: '+this.settings.get_string('panel-mode'));
     }
     // Varredura opcional: nunca abre um programa automaticamente.
     // Uma tecla ou acionador inicia a varredura e confirma o item destacado.
@@ -268,6 +318,8 @@ class TapeSession {
             }
             for(const [index,node] of this.buttons[river].entries()){
                 const chosen=active && index===this.navIndex && !!node.entry && this.expanded;
+                if(this.settings.get_boolean('high-contrast'))node.button.add_style_class_name('arandu-node-high-contrast');
+                else node.button.remove_style_class_name('arandu-node-high-contrast');
                 if(chosen)node.button.add_style_class_name('arandu-node-selected');
                 else node.button.remove_style_class_name('arandu-node-selected');
             }
@@ -384,6 +436,7 @@ class TapeSession {
             return;
         }
         this.settings.set_string('panel-mode',mode);
+        this.updateAccessibilityLabels();
         this.barLastNear=Date.now();
         this.updateBar();
         Main.notify('ARANDU TAPE',`Barra superior: ${mode==='visible'?'visível':mode==='hidden'?'oculta':'automática'}. Recuperar: Super + Alt + B`);
@@ -515,7 +568,7 @@ class TapeSession {
         this.seed.set_child(this.icon('semente',149));this.seed.set_position(642-75,355-75);
         this.seed.connect('button-press-event',(_s,e)=>{
             if (e.get_button()===3) {
-                this.controlBox.visible=!this.controlBox.visible;
+                this.toggleAccessibility();
                 return Clutter.EVENT_STOP;
             }
             if (e.get_button()!==1) return Clutter.EVENT_PROPAGATE;
@@ -532,12 +585,50 @@ class TapeSession {
         });
         this.root.add_child(this.seed);
         this.controlBox=new St.BoxLayout({vertical:true,style_class:'arandu-seed-controls',visible:false});
-        for(const [mode,label] of [['visible','◉ Barra visível'],['hidden','◌ Ocultar barra'],['auto','◐ Barra automática']]) {
-            const b=new St.Button({label,style_class:'arandu-seed-control',can_focus:true,reactive:true});
-            b.connect('clicked',()=>{this.setBarMode(mode);this.controlBox.hide();});
-            this.controlBox.add_child(b);
-        }
-        this.root.add_child(this.controlBox);
+        this.accessibilityLabels={};
+        const addTitle=text=>this.controlBox.add_child(new St.Label({
+            text,style_class:'arandu-a11y-section'
+        }));
+        const addAction=(label,callback)=> {
+            const button=new St.Button({label,style_class:'arandu-seed-control',
+                can_focus:true,reactive:true});
+            button.connect('clicked',()=>{callback();this.updateAccessibilityLabels();});
+            this.controlBox.add_child(button);
+            return button;
+        };
+        addTitle('ACESSIBILIDADE · ARANDU');
+        addTitle('Varredura');
+        this.accessibilityLabels.speed=addAction('Varredura: 3,5 s',()=>{
+            const current=this.settings.get_int('scan-interval-ms');
+            this.setScanInterval(current===5000?3500:current===3500?2000:5000);
+        });
+        addTitle('Tamanho dos medalhões');
+        this.accessibilityLabels.size=addAction('Medalhões: 100%',()=>{
+            const current=this.settings.get_double('medallion-scale');
+            this.setMedallionScale(current<0.95?1:current<1.1?1.2:0.85);
+        });
+        this.accessibilityLabels.contrast=addAction('Alto contraste: desligado',()=>{
+            this.setHighContrast(!this.settings.get_boolean('high-contrast'));
+        });
+        addTitle('Acionador de varredura');
+        this.accessibilityLabels.switch=addAction('Acionador: Super+Alt+Espaço',()=>{
+            const selected=this.settings.get_strv('arandu-varredura-acionar');
+            this.setSwitchShortcut(selected.includes('<Super><Alt>s')?'space':'s');
+        });
+        addTitle('TOPBAR');
+        this.accessibilityLabels.bar=addAction('Barra: visible',()=>{
+            const mode=this.settings.get_string('panel-mode');
+            this.setBarMode(mode==='visible'?'auto':'visible');
+        });
+        addAction('Restaurar padrões seguros',()=>this.resetAccessibility());
+        addAction('Fechar configurações',()=>this.controlBox.hide());
+        // Rolar em telas menores e manter ações alcançáveis por teclado.
+        this.controlScroll=new St.ScrollView({style_class:'arandu-a11y-scroll',
+            overlay_scrollbars:true,hscrollbar_policy:St.PolicyType.NEVER,
+            vscrollbar_policy:St.PolicyType.AUTOMATIC});
+        this.controlScroll.set_child(this.controlBox);
+        this.root.add_child(this.controlScroll);
+        this.updateAccessibilityLabels();
         this.makeHelpPanel();
         this.applyLayer();this.setExpanded(false);this.position();
     }
@@ -560,7 +651,7 @@ class TapeSession {
                 layout.addChrome(this.root,{affectsStruts:false,affectsInputRegion:false,trackFullscreen:true});
                 this.layer=desired;
                 if(typeof layout.trackChrome==='function' && typeof layout.untrackChrome==='function') {
-                    const controls=[this.seed,this.controlBox,this.helpButton,this.helpBox,...Object.values(this.riverLabels)];
+                    const controls=[this.seed,this.controlScroll,this.helpButton,this.helpBox,...Object.values(this.riverLabels)];
                     for(const r of RIVERS)for(const n of this.buttons[r])controls.push(n.button);
                     for(const actor of controls) {
                         layout.trackChrome(actor,{affectsStruts:false,affectsInputRegion:true,trackFullscreen:true});
@@ -669,9 +760,14 @@ class TapeSession {
         this.seedPoint=[seedX,seedY];
         this.seed.set_position(Math.round(seedX-75),Math.round(seedY-75));
         if(this.helpButton)this.positionHelp();
-        if(this.controlBox)this.controlBox.set_position(
-            Math.round(limit(seedX+75,4,Math.max(4,w-180))),
-            Math.round(limit(seedY-100,4,Math.max(4,h-140))));
+        if(this.controlScroll){
+            const panelW=Math.max(180,Math.min(310,w-16));
+            const panelH=Math.max(140,Math.min(410,h-16));
+            this.controlScroll.set_size(panelW,panelH);
+            this.controlScroll.set_position(
+                Math.round(limit(seedX+75,8,Math.max(8,w-panelW-8))),
+                Math.round(limit(seedY-panelH/2,8,Math.max(8,h-panelH-8))));
+        }
         this.transforms={
             memory:this.makeTransform('memory',-34,seedY),
             open:this.makeTransform('open',limit(seedX+w*.09,60,w-60),-34),
@@ -833,7 +929,10 @@ class TapeSession {
                 node.slot=slots[i];
                 const [x,y]=this.riverPoint(r,(node.slot+1)/6);
                 const w=this.area?this.area.width:1200,h=this.area?this.area.height:500;
-                node.button.set_position(Math.round(limit(x-30,2,w-62)),Math.round(limit(y-30,2,h-62)));
+                const scale=this.settings.get_double('medallion-scale');
+                node.button.set_scale(scale,scale);
+                node.button.set_position(Math.round(limit(x-30*scale,2,w-62*scale)),
+                    Math.round(limit(y-30*scale,2,h-62*scale)));
                 const app=entry?this.apps.lookup_app(entry.app):null;
                 if(node.key!==(entry?entry.app:'')){
                     if(node.badge){node.badge.destroy();node.badge=null;}
