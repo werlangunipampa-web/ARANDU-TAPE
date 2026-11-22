@@ -21,7 +21,9 @@ except (ImportError, ValueError) as error:
     print(error, file=sys.stderr)
     raise SystemExit(2)
 
-VERSION = "0.1.0"
+from visual import RiversCanvas
+
+VERSION = "0.2.0"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -42,6 +44,14 @@ window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-subpanel {background:#1c3128;padding:18px;border-radius:16px;}
 .arandu-action {background:#506d54;color:#fff;border-radius:10px;padding:10px;}
 .arandu-note {color:#cfdbcf;font-size:13px;}
+.arandu-seed-image {padding:0;background:transparent;border:0;box-shadow:none;}
+.arandu-seed-image:hover {background:rgba(181,174,111,.10);}
+.arandu-river-map {
+ background:rgba(20,34,29,.94);color:#ebdfb6;
+ border:1px solid #c6b27c;border-radius:11px;
+ font-weight:800;font-size:12px;padding:7px 12px;
+}
+.arandu-river-active {background:#516f54;border-color:#eff0bd;}
 entry {background:#f7f7f4;color:#14221d;}
 """
 
@@ -63,8 +73,8 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.1")
-        self.window.set_default_size(1040, 680)
+        self.window.set_title("ARANDU Desktop · Laboratório 0.2")
+        self.window.set_default_size(1180, 800)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
         provider.load_from_data(CSS.encode("utf-8"))
@@ -74,7 +84,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.1.0 · AMBIENTE EXPERIMENTAL", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.2.0 · ARQUITETURA VISUAL INDEPENDENTE", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         about = Gtk.Button(label="Sobre")
@@ -92,18 +102,9 @@ class Desktop(Gtk.Application):
             label="Interface independente do GNOME Shell · protótipo seguro sobre Linux Mint",
             xalign=0), "arandu-muted"))
 
-        rivers = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=18)
-        rivers.set_halign(Gtk.Align.CENTER)
-        for name in RIVERS:
-            btn = add_style(Gtk.Button(label="◇  " + NAMES[name]), "arandu-river")
-            btn.connect("clicked", lambda _button, river=name: self.select(river))
-            rivers.append(btn)
-        main.append(rivers)
-
-        seed = add_style(Gtk.Button(label="✥\nSEMENTE"), "arandu-seed")
-        seed.set_halign(Gtk.Align.CENTER)
-        seed.connect("clicked", lambda *_: self.toggle_seed())
-        main.append(seed)
+        # Reutiliza SVG e geometria reais da Confluência, sem extensão GNOME.
+        self.visual = RiversCanvas(self.select, self.toggle_seed)
+        main.append(self.visual)
 
         self.content = add_style(Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL, spacing=10), "arandu-subpanel")
@@ -143,6 +144,7 @@ class Desktop(Gtk.Application):
     def select(self, river):
         self.session.select(river)
         self.clear_content()
+        self.visual.highlight(river)
         self.content.append(self.text(NAMES[river], "arandu-title"))
         messages = {
             "memory": "Memória ainda não conectada. Procedência e consentimento serão obrigatórios.",
@@ -159,10 +161,12 @@ class Desktop(Gtk.Application):
 
     def retract(self):
         self.session.retract()
+        self.visual.highlight(None)
         self.show_intro()
 
     def show_apps(self):
         self.session.retract()
+        self.visual.highlight(None)
         self.clear_content()
         self.content.append(self.text("Aplicativos instalados · execução somente após clique",
                                       "arandu-title"))
@@ -210,7 +214,7 @@ class Desktop(Gtk.Application):
     def show_about(self, *_args):
         self.clear_content()
         self.content.append(self.text("Sobre o ARANDU Desktop", "arandu-title"))
-        self.content.append(self.text("Versão: " + VERSION + " (protótipo GTK4)"))
+        self.content.append(self.text("Versão: " + VERSION + " (protótipo GTK4 com SVG originais)"))
         self.content.append(self.text("Desenvolvimento: Rafhael Brum Werlang"))
         self.content.append(self.text("ARANDU TAPE, TOPBAR e ECA são projetos distintos."))
         self.content.append(self.text("Contrato de sessão:\n" +
