@@ -16,6 +16,9 @@ from pathlib import Path
 from core import Session, NAMES, RIVERS
 from performance import collect
 from updates import snapshot_updates, official_updater
+from seed_presentation import SeedPresentation
+from bluetooth_devices import paired_devices, device_action, pairing_manager
+from ai_gateway import PROVIDERS, model_for, complete, GatewayError
 from system_status import summary, clock_text, network_status, battery_status, bluetooth_status, volume_status
 
 try:
@@ -30,7 +33,7 @@ except (ImportError, ValueError) as error:
 from visual import RiversCanvas
 from session.windows import list_windows, focus_window, list_outputs, move_arandu_to_output, window_action, show_scratchpad
 
-VERSION = "0.7.5"
+VERSION = "0.7.6"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -80,13 +83,16 @@ class Desktop(Gtk.Application):
         self.detail_revealer = None
         self.selected_app = None
         self.selected_window = None
+        self.seed_state = SeedPresentation()
+        self.tupa_provider = "chatgpt"
+        self.tupa_output = None
 
     def do_activate(self):
         if self.window:
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.7.5")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.7.6")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -97,7 +103,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.7.5 · AUTONOMIA", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.7.6 · TUPÃ", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         performance = Gtk.Button(label="Desempenho")
@@ -106,6 +112,10 @@ class Desktop(Gtk.Application):
         updates = Gtk.Button(label="Atualizações")
         updates.connect("clicked", lambda *_: self.show_updates())
         bar.append(updates)
+        tupa = Gtk.Button(label="Tupã · IA")
+        tupa.set_tooltip_text("ChatGPT e outras IAs; ECA isolada por segurança")
+        tupa.connect("clicked", lambda *_: self.show_tupa())
+        bar.append(tupa)
         roadmap = Gtk.Button(label="Evolução")
         roadmap.connect("clicked", lambda *_: self.show_development())
         bar.append(roadmap)
@@ -118,14 +128,6 @@ class Desktop(Gtk.Application):
         main.set_hexpand(True)
         main.set_vexpand(True)
         root.append(main)
-        if os.environ.get("ARANDU_SESSION_LAB") == "1":
-            quick = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-            quick.append(self.quick_action("Arquivos (Nemo)", "nemo"))
-            quick.append(self.quick_action("Terminal ARANDU", "terminal"))
-            quick.append(self.quick_action("Área de Trabalho", "desktop"))
-            quick.append(self.quick_action("Navegador", "firefox"))
-            quick.append(self.quick_action("Opy · Janelas", "opy"))
-            main.append(quick)
         main.append(add_style(Gtk.Label(
             label="A Semente organiza o encontro entre os Rios.", xalign=0), "arandu-title"))
         main.append(add_style(Gtk.Label(
@@ -135,7 +137,21 @@ class Desktop(Gtk.Application):
         # Reutiliza SVG e geometria reais da Confluência, sem extensão GNOME.
         self.visual = RiversCanvas(self.select, self.toggle_seed, self.select_app, self.select_window)
         main.append(self.visual)
-        # Indicadores ao pé da Semente, substituindo progressivamente a barra superior.
+        # A Semente original começa recolhida; controles surgem somente após intenção.
+        self.tools_revealer = Gtk.Revealer()
+        self.tools_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
+        self.tools_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=9)
+        self.tools_revealer.set_child(self.tools_box)
+        main.append(self.tools_revealer)
+        if os.environ.get("ARANDU_SESSION_LAB") == "1":
+            quick = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            quick.append(self.quick_action("Arquivos (Nemo)", "nemo"))
+            quick.append(self.quick_action("Terminal ARANDU", "terminal"))
+            quick.append(self.quick_action("Área de Trabalho", "desktop"))
+            quick.append(self.quick_action("Navegador", "firefox"))
+            quick.append(self.quick_action("Opy · Janelas", "opy"))
+            self.tools_box.append(quick)
+        # Indicadores contextuais da Semente, sem polling de Bluetooth.
         self.seed_status = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         self.seed_status.set_halign(Gtk.Align.CENTER)
         self.clock_button = Gtk.Button(label="--:--")
@@ -145,16 +161,16 @@ class Desktop(Gtk.Application):
         for label, callback in (
             ("Rede", lambda: self.show_seed_status()),
             ("Bateria", lambda: self.show_seed_status()),
-            ("Bluetooth", lambda: self.show_seed_status()),
+            ("Bluetooth", lambda: self.show_bluetooth()),
             ("Som", lambda: self.show_seed_status()),
             ("Sessão", lambda: self.show_session_menu()),
         ):
             button = Gtk.Button(label=label)
             button.connect("clicked", lambda _b, cb=callback: cb())
             self.seed_status.append(button)
-        main.append(self.seed_status)
+        self.tools_box.append(self.seed_status)
         self.clock_button.set_label(clock_text())
-        GLib.timeout_add_seconds(30, self.update_seed_clock)
+        GLib.timeout_add_seconds(60, self.update_seed_clock)
 
         self.detail_revealer = Gtk.Revealer()
         self.detail_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
@@ -196,18 +212,21 @@ class Desktop(Gtk.Application):
         toggle.connect("clicked", lambda *_: self.detail_revealer.set_reveal_child(
             not self.detail_revealer.get_reveal_child()))
         actions.append(toggle)
-        main.append(actions)
+        self.tools_box.append(actions)
 
         controller = Gtk.EventControllerKey.new()
         controller.connect("key-pressed", self.on_key)
         self.window.add_controller(controller)
+        self.tools_revealer.set_reveal_child(False)
+        self.visual.show_compact()
         self.show_intro()
         self.window.present()
 
     def update_seed_clock(self):
         if self.window is None:
             return False
-        self.clock_button.set_label(clock_text())
+        if self.tools_revealer.get_reveal_child():
+            self.clock_button.set_label(clock_text())
         return True
 
     def show_seed_status(self):
@@ -567,8 +586,11 @@ class Desktop(Gtk.Application):
 
     def show_intro(self):
         self.clear_content()
-        self.visual.show_rivers()
-        self.content.append(self.text("Escolha um Rio ou abra a lista de aplicativos instalados."))
+        if self.seed_state.expanded:
+            self.visual.show_rivers()
+        else:
+            self.visual.show_compact()
+        self.content.append(self.text("Toque a Semente para revelar Memória, Abertos e Frequentes."))
         self.content.append(self.text(
             "MEMÓRIA e FREQUENTES não coletam dados. Abertos consulta janelas "
             "da sessão Sway somente mediante ação explícita."))
@@ -576,6 +598,7 @@ class Desktop(Gtk.Application):
             "ARANDU Seed / ECA: desconectado por padrão. Nenhuma identidade é migrada."))
 
     def select(self, river):
+        self.expand_seed()
         if river == "open" and os.environ.get("ARANDU_SESSION_LAB") == "1":
             self.session.select(river)
             self.show_windows()
@@ -593,14 +616,24 @@ class Desktop(Gtk.Application):
         }
         self.content.append(self.text(messages[river]))
 
+    def expand_seed(self):
+        """Apenas intenção local, sem sensores ou motor cognitivo."""
+        self.seed_state.expand()
+        self.tools_revealer.set_reveal_child(True)
+        self.clock_button.set_label(clock_text())
+        self.visual.show_rivers()
+
     def toggle_seed(self):
-        if self.session.active:
+        if self.seed_state.expanded:
             self.retract()
         else:
-            self.select("open")
+            self.expand_seed()
+            self.show_intro()
 
     def retract(self):
         self.session.retract()
+        self.seed_state.collapse(force=True)
+        self.tools_revealer.set_reveal_child(False)
         self.visual.highlight(None)
         self.selected_app = None
         self.selected_window = None
@@ -609,6 +642,7 @@ class Desktop(Gtk.Application):
 
     def show_apps(self):
         """Medalhões representam aplicativos instalados, não janelas abertas."""
+        self.expand_seed()
         self.session.retract()
         self.selected_app = None
         self.clear_content()
@@ -696,6 +730,7 @@ class Desktop(Gtk.Application):
 
     def show_windows(self):
         """Consulta janelas somente mediante pedido; não toca no GNOME hospedeiro."""
+        self.expand_seed()
         self.session.select("open")
         self.selected_window = None
         self.clear_content()
