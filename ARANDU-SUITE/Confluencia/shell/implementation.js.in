@@ -64,6 +64,7 @@ class TapeSession {
         this.panel.menu.addAction('Barra: sempre oculta',()=>this.setBarMode('hidden'));
         this.panel.menu.addAction('Barra: automática',()=>this.setBarMode('auto'));
         this.panel.menu.addAction('Recuperar barra superior',()=>this.setBarMode('visible'));
+        this.panel.menu.addAction('Alternar barra (Super+Alt+H)',()=>this.cycleBarMode());
         Main.panel.addToStatusArea('arandu-tape-confluencia',this.panel);
         Main.wm.addKeybinding('arandu-tape-mapa',this.settings,Meta.KeyBindingFlags.NONE,
             Shell.ActionMode.NORMAL|Shell.ActionMode.OVERVIEW,()=>this.launch());
@@ -82,6 +83,7 @@ class TapeSession {
             'arandu-no-ativar':()=>this.activateSelection(),
             'arandu-no-cancelar':()=>this.cancelSelection(),
             'arandu-varredura-acionar':()=>this.scanSwitch(),
+            'arandu-alternar-barra':()=>this.cycleBarMode(),
         };
         for(const [name,callback] of Object.entries(actions)){
             Main.wm.addKeybinding(name,this.settings,Meta.KeyBindingFlags.NONE,
@@ -429,6 +431,11 @@ class TapeSession {
             return !!ext && ext.state===1; // GNOME ExtensionState.ENABLED
         } catch (_) {return false;}
     }
+    // Alternar visibilidade sem mouse: sempre é possível restaurar com Super+Alt+B.
+    cycleBarMode() {
+        const mode=this.settings.get_string('panel-mode');
+        this.setBarMode(mode==='visible'?'auto':mode==='auto'?'hidden':'visible');
+    }
     setBarMode(mode) {
         if(!['visible','hidden','auto'].includes(mode))return;
         if(mode!=='visible' && this.hideTopBarConflict()) {
@@ -616,10 +623,7 @@ class TapeSession {
             this.setSwitchShortcut(selected.includes('<Super><Alt>s')?'space':'s');
         });
         addTitle('TOPBAR');
-        this.accessibilityLabels.bar=addAction('Barra: visible',()=>{
-            const mode=this.settings.get_string('panel-mode');
-            this.setBarMode(mode==='visible'?'auto':'visible');
-        });
+        this.accessibilityLabels.bar=addAction('Barra: visible',()=>this.cycleBarMode());
         addAction('Restaurar padrões seguros',()=>this.resetAccessibility());
         addAction('Fechar configurações',()=>this.controlScroll.hide());
         // Rolar em telas menores e manter ações alcançáveis por teclado.
