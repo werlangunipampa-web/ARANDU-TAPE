@@ -82,3 +82,13 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - **Status:** arquivos publicados no GitHub. Testes e execução GTK4 no Linux Mint **pendentes de validação pelo usuário**.
 - Avanço posterior somente após avaliação visual, acessibilidade, comportamento ao abrir apps e medição de desempenho, com o TAPE atual intocado.
 
+
+## ARANDU Desktop 0.2.0 — Confluência visual desacoplada
+
+- Preserva `ARANDU-DESKTOP/0.1` no histórico Git e a versão funcional do GNOME/TOPBAR.
+- Reutiliza **diretamente** `ARANDU-SUITE/Confluencia/app/assets/rios.svg`, `semente.svg`, `memory.svg`, `open.svg`, `frequent.svg` e `geometria.json`.
+- Interface `GTK4` isolada com caminhos e Semente reais, rótulos clicáveis e marcadores visuais; motor ECA e provedor de janelas **não conectados**.
+- Testes adicionais de geometria e integridade visual sem dependências externas em `ARANDU-DESKTOP/tests/test_layout.py`.
+- **Status:** arquivos publicados; não houve validação visual no VAIO ainda. Verificar comportamento do layout em 1366×768, tela cheia e HiDPI antes de aceitar.
+- **Próximo marco:** medalhões somente quando houver entidades reais autorizadas, renderização responsiva sem rolagem horizontal e adaptador de leitura de janelas separado do núcleo cognitivo.
+
