@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.7.4 — Semente, Opy e Centro de Atualizações
+# ARANDU Desktop 0.7.5 — autonomia, Terminal ARANDU e evolução
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -284,3 +284,26 @@ python3 ARANDU-DESKTOP/benchmark.py --compare CAMINHO-GNOME.json CAMINHO-ARANDU.
 **Limites metodológicos:** essas medições observam o computador inteiro; NÃO medem a memória exclusiva da shell nem provam superioridade. Adicionar posteriormente PSS por processo, consumo de energia (medidores adequados), tempo real de login, latência de Opy/Alt+Tab, inicialização de aplicações e estabilidade de sessões. Não atribuir métricas inventadas a GNOME ou Cinnamon. Monitorar também acessibilidade, recuperação de falhas e comportamento do clipboard. A comparação não é automática entre dois desktops simultâneos: cada ambiente precisa de seu próprio login e relatório.
 
 **Estado:** versão 0.7.4 publicada no código. Testes e usabilidade na máquina do usuário pendentes; o GNOME permanece o ambiente principal recomendado.
+
+## 0.7.5 — Terminal ARANDU e atualização interna consentida
+
+- Terminal ARANDU = emulador Foot maduro, configurado com `session/foot-arandu.ini`: paleta verde floresta/dourado, tipografia monoespaçada, contraste e padding. Não é um emulador proprietário reimplementado.
+- `Super+Enter` nas sessões Sway inicia `session/terminal-arandu.sh` via config temporária gerada; o botão **Terminal ARANDU** também o abre.
+- **Evolução → Consultar e atualizar ARANDU no Terminal** lança `session/evolve-arandu.sh --update` em uma janela do Terminal ARANDU. O script só procede em `main`, árvore limpa e após digitar exatamente **ATUALIZAR**. `git pull --ff-only origin main`, testes e registro do commit anterior; sem sudo, upgrades APT ou reiniciar GNOME.
+- O comando `bash session/evolve-arandu.sh --check` consulta estado local sem rede nem alterações. Para atualizar os pacotes Linux, usar **Atualizações → Gerenciador oficial** e revisar as confirmações do Mint.
+- O Git atualiza arquivos, mas **não substitui automaticamente o processo da interface ARANDU já aberto**. Para interface renovada, reiniciar a aplicação ou entrar em sessão ARANDU nova depois de validar testes, salvando trabalho.
+- `.github/workflows/arandu-desktop-tests.yml` executa testes Python e validação sintática Bash em pushes. Isso não substitui teste real de sessão Sway no VAIO.
+- Caminho do clone no VAIO: `~/Downloads/ARANDU-TAPE-COMPLETO`. GNOME continua como ambiente de segurança e desenvolvimento.
+
+### Atualização recomendada a partir do GNOME
+
+```bash
+cd "$HOME/Downloads/ARANDU-TAPE-COMPLETO"
+git pull --ff-only
+python3 -m compileall -q ARANDU-DESKTOP
+python3 -m unittest discover -s ARANDU-DESKTOP/tests -v
+bash ARANDU-DESKTOP/session/verify-essentials.sh
+bash ARANDU-DESKTOP/session/start-nested.sh
+```
+
+A opção existente de sessão no login usa os mesmos arquivos do clone. **Não selecionar o login ARANDU como ambiente principal até validar a 0.7.5 no Sway aninhado.**
