@@ -302,7 +302,10 @@ class TapeSession {
         if(![Clutter.EventType.BUTTON_PRESS,Clutter.EventType.TOUCH_BEGIN].includes(event.type()))
             return Clutter.EVENT_PROPAGATE;
         const actor=typeof event.get_source==='function'?event.get_source():null;
-        if(actor && (actor===this.root || this.root.contains(actor)))return Clutter.EVENT_PROPAGATE;
+        if(actor && (actor===this.root || this.root.contains(actor))){
+            this.resetNavigationTimeout();
+            return Clutter.EVENT_PROPAGATE;
+        }
         if(actor && this.panel && (actor===this.panel || this.panel.contains(actor)))
             return Clutter.EVENT_PROPAGATE;
         this.finishNavigation();
