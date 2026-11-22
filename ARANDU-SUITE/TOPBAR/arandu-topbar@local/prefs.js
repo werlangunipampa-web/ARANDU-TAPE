@@ -99,6 +99,54 @@ export default class AranduTopbarPreferences extends ExtensionPreferences {
             if(accentRow.get_selected()!==index)accentRow.set_selected(index);
         });
 
+        // Página Sobre: versões de fato instaladas, nunca uma versão presumida.
+        const aboutPage=new Adw.PreferencesPage({
+            title:'Sobre o ARANDU',icon_name:'help-about-symbolic'
+        });
+        window.add(aboutPage);
+        const credits=new Adw.PreferencesGroup({
+            title:'ARANDU · Identidade e desenvolvimento',
+            description:'Informações e acompanhamento da instalação atual.'
+        });
+        aboutPage.add(credits);
+        const author=new Adw.ActionRow({
+            title:'Desenvolvimento',
+            subtitle:'Rafhael Brum Werlang'
+        });
+        credits.add(author);
+        const versionOf=(uuid,fallback)=>{
+            try {
+                const file=Gio.File.new_for_path(GLib.build_filenamev([
+                    GLib.get_user_data_dir(),'gnome-shell','extensions',uuid,'metadata.json'
+                ]));
+                const [ok,bytes]=file.load_contents(null);
+                if(!ok)return fallback;
+                const meta=JSON.parse(new TextDecoder().decode(bytes));
+                const version=meta['version-name']||String(meta.version||fallback);
+                const number=meta.version?' ('+meta.version+')':'';
+                return version+number;
+            } catch(e){return fallback;}
+        };
+        credits.add(new Adw.ActionRow({
+            title:'ARANDU TOPBAR',
+            subtitle:versionOf('arandu-topbar@local','Versão não identificada')
+        }));
+        credits.add(new Adw.ActionRow({
+            title:'ARANDU TAPE · Confluência',
+            subtitle:versionOf('confluencia@arandulab','Não instalada')
+        }));
+        const release=new Adw.PreferencesGroup({
+            title:'Histórico e evolução',
+            description:'Versões e plano diretor publicados no repositório oficial. O número mostrado indica os arquivos instalados; a versão ativa deve ser confirmada no GNOME Shell.'
+        });
+        aboutPage.add(release);
+        const repoLink=new Gtk.LinkButton({
+            label:'Abrir projeto ARANDU no GitHub',
+            uri:'https://github.com/werlangunipampa-web/ARANDU-TAPE',
+            halign:Gtk.Align.START,margin_top:6,margin_bottom:6
+        });
+        release.add(repoLink);
+
         // Os controles dos medalhões pertencem à Confluência, não à TOPBAR.
         // Abrimos o schema instalado da Confluência sem duplicar preferências.
         const riverPage=new Adw.PreferencesPage({
