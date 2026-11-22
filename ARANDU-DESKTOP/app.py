@@ -30,7 +30,7 @@ except (ImportError, ValueError) as error:
 from visual import RiversCanvas
 from session.windows import list_windows, focus_window, list_outputs, move_arandu_to_output, window_action, show_scratchpad
 
-VERSION = "0.7.4"
+VERSION = "0.7.5"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -86,7 +86,7 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.7.4")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.7.5")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -97,7 +97,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.7.4 · ATUALIZAÇÕES", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.7.5 · AUTONOMIA", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         performance = Gtk.Button(label="Desempenho")
@@ -121,7 +121,7 @@ class Desktop(Gtk.Application):
         if os.environ.get("ARANDU_SESSION_LAB") == "1":
             quick = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
             quick.append(self.quick_action("Arquivos (Nemo)", "nemo"))
-            quick.append(self.quick_action("Terminal (Foot)", "foot"))
+            quick.append(self.quick_action("Terminal ARANDU", "terminal"))
             quick.append(self.quick_action("Área de Trabalho", "desktop"))
             quick.append(self.quick_action("Navegador", "firefox"))
             quick.append(self.quick_action("Opy · Janelas", "opy"))
@@ -473,11 +473,35 @@ class Desktop(Gtk.Application):
         except OSError as error:
             self.content.append(self.text("Não foi possível abrir atualizador: " + str(error)))
 
+    def launch_evolution_console(self):
+        """Abre a consulta/atualização opcional num terminal ARANDU de modo interativo."""
+        if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
+            return
+        script = Path(__file__).resolve().parent / "session" / "evolve-arandu.sh"
+        terminal = Path(__file__).resolve().parent / "session" / "terminal-arandu.sh"
+        if not script.is_file() or not terminal.is_file():
+            self.content.append(self.text("Ferramentas de evolução indisponíveis."))
+            return
+        try:
+            subprocess.Popen(
+                ["/bin/bash", str(terminal), "/bin/bash", str(script), "--update"],
+                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL, close_fds=True, start_new_session=True)
+            self.content.append(self.text(
+                "Console de evolução aberto. Atualização só após digitar ATUALIZAR. "
+                "Esta interface permanece na versão atual até reinício manual."))
+        except OSError as error:
+            self.content.append(self.text("Console indisponível: " + str(error)))
+
     def show_development(self):
         """Painel local de estado; nenhuma atualização automática de código."""
         self.clear_content()
         self.detail_revealer.set_reveal_child(True)
         self.content.append(self.text("EVOLUÇÃO DO ARANDU · " + VERSION, "arandu-title"))
+        if os.environ.get("ARANDU_SESSION_LAB") == "1":
+            upgrade = Gtk.Button(label="Consultar e atualizar ARANDU no Terminal")
+            upgrade.connect("clicked", lambda *_: self.launch_evolution_console())
+            self.content.append(upgrade)
         for line in (
             "Atual: iniciar com janelas visíveis; abrir Nemo e Foot por dentro do ambiente.",
             "Disponível: Rios, Semente, aplicativos instalados, ABERTOS e até 3 saídas virtuais.",
@@ -498,10 +522,11 @@ class Desktop(Gtk.Application):
         """Abre aplicativos locais conhecidos no Sway, nunca comandos arbitrários."""
         if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
             return
-        if program not in ("nemo", "foot", "desktop", "firefox", "opy"):
+        if program not in ("nemo", "foot", "desktop", "firefox", "opy", "terminal"):
             return
         path = shutil.which("nemo" if program == "desktop" else
-                            ("python3" if program == "opy" else program))
+                            ("python3" if program == "opy" else
+                             "bash" if program == "terminal" else program))
         if not path:
             self.clear_content()
             self.content.append(self.text(f"{program} não encontrado no Mint."))
@@ -511,6 +536,8 @@ class Desktop(Gtk.Application):
             command = [path]
             if program == "opy":
                 command.append(str(Path(__file__).resolve().parent / "opy.py"))
+            if program == "terminal":
+                command.append(str(Path(__file__).resolve().parent / "session" / "terminal-arandu.sh"))
             if program == "desktop":
                 desktop_dir = (GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP)
                                or str(Path.home() / "Área de Trabalho"))
