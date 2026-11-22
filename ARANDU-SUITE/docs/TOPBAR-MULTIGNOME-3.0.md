@@ -71,3 +71,9 @@ gsettings --schemadir "$SCHEMA_DIR" set "$SCHEMA" panel-mode visible
 ## Testes pendentes
 
 Verificar GNOME 45, 47, 48, 49, 50 e 51 em sessão real, X11/Wayland quando suportado, segurança de foco, restaurar estilo do painel, teclas assistivas e retorno da barra após atualização. Esses testes são necessários antes de habilitar por padrão em outros ambientes.
+
+## Separação funcional no GNOME 46 (revisão)
+
+No painel GNOME 46, o botão **ARANDU** abre a grade nativa de aplicativos do GNOME via `Main.overview.showApps()`. O botão **◈ RIOS** envia `AssistiveCommand('seed:toggle')` à Confluência pela sessão D-Bus, expandindo ou recolhendo os rios sem abrir outra janela. São funções deliberadamente distintas. Se Confluência não estiver ativa, RIOS avisa que a extensão precisa ser habilitada.
+
+**Cuidado ao atualizar:** o código da TOPBAR no GitHub mudou, mas uma TOPBAR já instalada não é sobrescrita pelo instalador unificado (proteção intencional). Para aplicar a revisão a uma máquina com a extensão instalada, guardar cópia de `extension.js`, validar a sintaxe do arquivo fonte e copiá-lo somente para o caminho da TOPBAR instalada. Desabilitar/habilitar somente `arandu-topbar@local`; se o GNOME 46 conservar módulo antigo em memória, terminar a sessão e entrar novamente. Não remover a TOPBAR nem a Confluência e não reativar extensões históricas.
