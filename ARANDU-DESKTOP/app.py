@@ -19,6 +19,8 @@ from updates import snapshot_updates, official_updater
 from seed_presentation import SeedPresentation
 from bluetooth_devices import paired_devices, device_action, pairing_manager
 from ai_gateway import PROVIDERS, model_for, complete, GatewayError
+from adaptation import Adaptation, observe as observe_resources, propose as propose_adaptation
+from eca_experiments import workflow as eca_workflow
 from system_status import summary, clock_text, network_status, battery_status, bluetooth_status, volume_status
 
 try:
@@ -33,7 +35,7 @@ except (ImportError, ValueError) as error:
 from visual import RiversCanvas
 from session.windows import list_windows, focus_window, list_outputs, move_arandu_to_output, window_action, show_scratchpad
 
-VERSION = "0.7.6"
+VERSION = "0.7.7"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -86,13 +88,16 @@ class Desktop(Gtk.Application):
         self.seed_state = SeedPresentation()
         self.tupa_provider = "chatgpt"
         self.tupa_output = None
+        self.adaptation = Adaptation()
+        self._bluetooth_token = None
+        self._tupa_token = None
 
     def do_activate(self):
         if self.window:
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.7.6")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.7.7")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -103,7 +108,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.7.6 · TUPÃ", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.7.7 · ECA/TUPÃ", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         performance = Gtk.Button(label="Desempenho")
@@ -169,6 +174,7 @@ class Desktop(Gtk.Application):
             button.connect("clicked", lambda _b, cb=callback: cb())
             self.seed_status.append(button)
         self.tools_box.append(self.seed_status)
+        self.tools_box.append(self.quick_action("Tupã · ChatGPT / modelos", "tupa"))
         self.clock_button.set_label(clock_text())
         GLib.timeout_add_seconds(60, self.update_seed_clock)
 
@@ -372,6 +378,9 @@ class Desktop(Gtk.Application):
         self.clear_content()
         self.detail_revealer.set_reveal_child(True)
         self.content.append(self.text("OBSERVATÓRIO · USO ATUAL", "arandu-title"))
+        adapt = Gtk.Button(label="Adaptação germinativa · energia e recursos")
+        adapt.connect("clicked", lambda *_: self.show_adaptation())
+        self.content.append(adapt)
         try:
             report = collect(limit=8)
             mem = report["memory"]
@@ -578,6 +587,8 @@ class Desktop(Gtk.Application):
             self.detail_revealer.set_reveal_child(True)
 
     def clear_content(self):
+        self._bluetooth_token = None
+        self._tupa_token = None
         while self.content.get_first_child():
             self.content.remove(self.content.get_first_child())
 
