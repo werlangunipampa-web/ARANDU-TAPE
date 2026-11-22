@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.7.5 — autonomia, Terminal ARANDU e evolução
+# ARANDU Desktop 0.7.7 — Semente ontológica, Tupã e adaptação experimental
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -307,3 +307,24 @@ bash ARANDU-DESKTOP/session/start-nested.sh
 ```
 
 A opção existente de sessão no login usa os mesmos arquivos do clone. **Não selecionar o login ARANDU como ambiente principal até validar a 0.7.5 no Sway aninhado.**
+
+## 0.7.7 — Ontologia transversal; atualização a partir do VAIO
+
+A Semente recolhida/expandida usa os SVG originais e `seed_presentation.py`, sem alterar o arandu-core canônico. `ontology_contract.py` mapeia algumas intenções a fontes ontológicas e rejeita ações sensíveis sem intenção/confirmação. **É um guardrail parcial**, não uma auditoria completa da AO nem prova de equivalência com a máquina de estados Rust.
+
+**Tupã**: ChatGPT (no navegador) é a opção inicial. Outras APIs ou Ollama só funcionam mediante escolha explícita e configuração; não existe incorporação automática desta conversa nem leitura da ECA. A ponte `eca_bridge.py` permite examinar exportações experimentais JSON somente leitura, nunca a Semente oficial. `adaptation.py` observa indicadores locais sob demanda, sugere modo econômico e permite aplicar/desfazer alterações exclusivamente na apresentação GTK. O adaptador de Bluetooth lista dispositivos pareados sob clique e permite conectar/desconectar; o fone Philips depende de pareamento real no VAIO.
+
+**Atenção:** a interface 0.7.7 e os contratos novos estão publicados, mas não foram validados na sessão gráfica VAIO. Antes de trabalho diário, validar suíte unitária completa, Sway aninhado, Opy, fechamento, saída, ChatGPT, Bluetooth, captura/clipboard, áudio e fallback para GNOME. Não chamar 0.7.7 de estável sem esses ensaios.
+
+```bash
+cd "$HOME/Downloads/ARANDU-TAPE-COMPLETO"
+git pull --ff-only
+python3 -m compileall -q ARANDU-DESKTOP
+python3 -m unittest discover -s ARANDU-DESKTOP/tests -v
+for file in ARANDU-DESKTOP/session/*.sh ARANDU-DESKTOP/session/login/*.sh; do bash -n "$file"; done
+bash ARANDU-DESKTOP/session/verify-essentials.sh
+# Só se tudo estiver OK:
+bash ARANDU-DESKTOP/session/start-nested.sh
+```
+
+`git pull` renova arquivos no clone, não substitui janela GTK já aberta. A sessão ARANDU nativa permanece opcional, nunca padrão automaticamente. **Sem login nativo antes da verificação visual**.
