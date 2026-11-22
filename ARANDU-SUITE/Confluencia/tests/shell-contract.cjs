@@ -202,6 +202,25 @@ stage.set_key_focus(new Actor()); // campo de edição do aplicativo
 assert.equal(s.navigationOutsideEvent({type:()=>3,get_source:()=>new Actor()}),false);
 assert.equal(s.navigationOverlay,false);
 assert.equal(s.expanded,false);
+// Clicar na mesma janela: o foco da janela NÃO mudou, mas o foco do teclado sim.
+focused=b;
+s.selectRiver('open');
+const activeWindow=focused;
+stage.set_key_focus(new Actor());
+s.onKeyFocusChanged();
+assert.equal(focused,activeWindow);
+assert.equal(s.navigationOverlay,false);
+assert.equal(s.expanded,false);
+// A navegação interna mantém os rios abertos.
+s.selectRiver('open');
+s.focusSelectedNode();
+s.onKeyFocusChanged();
+assert.equal(s.navigationOverlay,true);
+s.cancelSelection();
+// Também recolher no evento de soltar botão externo.
+s.selectRiver('open');
+assert.equal(s.navigationOutsideEvent({type:()=>2,get_source:()=>new Actor()}),false);
+assert.equal(s.navigationOverlay,false);
 // Um toque na superfície transparente (root) também libera o aplicativo.
 s.selectRiver('open');
 assert.equal(s.navigationOutsideEvent({type:()=>4,get_source:()=>s.root}),false);
