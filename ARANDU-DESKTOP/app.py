@@ -24,9 +24,9 @@ except (ImportError, ValueError) as error:
     raise SystemExit(2)
 
 from visual import RiversCanvas
-from session.windows import list_windows, focus_window
+from session.windows import list_windows, focus_window, hide_arandu
 
-VERSION = "0.5.2"
+VERSION = "0.6.0"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -82,7 +82,7 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.5.2")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.6")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -93,7 +93,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.5.2 · RIO ABERTOS FUNCIONAL", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.6.0 · SEMENTE RETRÁTIL", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         about = Gtk.Button(label="Sobre")
@@ -302,6 +302,13 @@ class Desktop(Gtk.Application):
                     "Janela indisponível ou foco recusado pelo compositor."))
                 return
             self.retract()
+            # Recolhe o ARANDU por IPC sem fechar a interface ou a sessão.
+            # O foco no destino já foi confirmado antes desta etapa.
+            try:
+                if not hide_arandu():
+                    self.content.append(self.text("Não foi possível recolher o ARANDU; use Ctrl+Alt+A."))
+            except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as hide_error:
+                self.content.append(self.text("Falha ao recolher: " + str(hide_error)))
         except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
             self.content.append(self.text("Erro ao focar janela: " + str(error)))
 
