@@ -100,6 +100,14 @@ class NestedSessionContract(unittest.TestCase):
         self.assertNotIn('os.system(', development)
         self.assertNotIn('git pull', development)
 
+    def test_nested_print_bindings_are_rendered(self):
+        config = (SESSION / "sway.config.in").read_text()
+        script = (SESSION / "start-nested.sh").read_text()
+        self.assertIn('bindsym Print exec __ARANDU_CAPTURE__', config)
+        self.assertIn('bindsym Shift+Print exec __ARANDU_CAPTURE_SAVE__', config)
+        self.assertIn("template.replace('__ARANDU_CAPTURE__'", script)
+        self.assertIn("template.replace('__ARANDU_CAPTURE_SAVE__'", script)
+
     def test_no_automatic_eca_connection(self):
         for name in ("start-nested.sh", "launch-arandu.sh", "sway.config.in"):
             source = (SESSION / name).read_text(encoding="utf-8")
