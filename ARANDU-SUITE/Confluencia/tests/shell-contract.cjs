@@ -40,7 +40,7 @@ class Actor {
 class Panel extends Actor {
     constructor(){super();this.menu={addAction:(s,f)=>({label:{set_text(){}},click:f})};}
 }
-const prefs=new Map([['recent','[]'],['frequency','{}'],['medallion-scale',1],['high-contrast',false],['scan-interval-ms',3500],['panel-mode','visible'],['monitor-target','focused'],['fixed-monitor-index',0]]);
+const prefs=new Map([['recent','[]'],['frequency','{}'],['medallion-scale',1],['high-contrast',false],['scan-interval-ms',3500],['panel-mode','visible'],['monitor-target','focused'],['fixed-monitor-index',0],['navigation-idle-ms',10000]]);
 const settings={get_string:k=>prefs.get(k),set_string:(k,v)=>prefs.set(k,v),
     get_double:k=>prefs.get(k)||0,set_double:(k,v)=>prefs.set(k,v),
     get_boolean:k=>!!prefs.get(k),set_boolean:(k,v)=>prefs.set(k,v),
@@ -73,7 +73,7 @@ function win(id,title,appId,space=0) {
 const display=Object.assign(new Actor(),{get_tab_list:()=>windowList});
 Object.defineProperty(display,'focus_window',{get:()=>focused});
 const fake={
-    Main:main,PanelMenu:{Button:Panel},Clutter:{FixedLayout:class{},EventType:{MOTION:1,BUTTON_RELEASE:2,KEY_PRESS:3},KEY_Return:13,KEY_KP_Enter:65421,KEY_space:32,KEY_Right:65363,KEY_Left:65361,KEY_Escape:65307,EVENT_PROPAGATE:false,EVENT_STOP:true},
+    Main:main,PanelMenu:{Button:Panel},Clutter:{FixedLayout:class{},EventType:{MOTION:1,BUTTON_RELEASE:2,KEY_PRESS:3,BUTTON_PRESS:4,TOUCH_BEGIN:5},KEY_Return:13,KEY_KP_Enter:65421,KEY_space:32,KEY_Right:65363,KEY_Left:65361,KEY_Escape:65307,EVENT_PROPAGATE:false,EVENT_STOP:true},
     GLib:{get_user_cache_dir:()=>'/tmp',mkdir_with_parents:()=>0,file_test:()=>false,FileTest:{EXISTS:1},file_set_contents:()=>{},get_monotonic_time:()=>0,Source:{remove:id=>pending.delete(id)},build_filenamev:xs=>xs.join('/'),
         timeout_add:(_priority,_ms,fn)=>{const id=next++;pending.set(id,fn);return id;},SOURCE_REMOVE:false,SOURCE_CONTINUE:true},
     Gio:{DBus:{session:{}},Settings:Privacy,DBusExportedObject:{wrapJSObject:()=>({export(){service=true;},unexport(){service=false;}})},
@@ -183,6 +183,38 @@ assert.equal(s.navigationOverlay,true);
 assert.equal(s.navigationMonitorIndex,1);
 assert.equal(s.root.get_parent(),chrome);
 assert.equal(s.root.pos[0],1366);
+assert.equal(s.navigationOverlay,true);
+assert.equal(settings.get_int('navigation-idle-ms'),10000);
+assert.equal(JSON.parse(s.AssistiveStatus()).idleTimeoutMs,10000);
+assert(s.navigationIdleTimer && pending.has(s.navigationIdleTimer));
+const previousTimer=s.navigationIdleTimer;
+s.navigationOutsideEvent({type:()=>4,get_source:()=>s.buttons.open[0].button});
+assert.equal(pending.has(previousTimer),false);
+assert(s.navigationIdleTimer && pending.has(s.navigationIdleTimer));
+// Clique fora do ARANDU: recolher imediatamente, sem consumir o clique.
+assert.equal(s.navigationOutsideEvent({type:()=>4,get_source:()=>new Actor()}),true);
+assert.equal(s.navigationOverlay,false);
+assert.equal(s.expanded,false);
+assert.equal(s.navigationIdleTimer,0);
+// Foco na janela já em uso não deve encerrar; trocar de janela sim.
+s.selectRiver('open');
+s.onFocusWindowChanged();
+assert.equal(s.navigationOverlay,true);
+focused=c;
+s.onFocusWindowChanged();
+assert.equal(s.navigationOverlay,false);
+assert.equal(s.expanded,false);
+focused=b;
+s.selectRiver('open');
+// Dez segundos sem ação: recolhimento seguro.
+const timeoutTick=pending.get(s.navigationIdleTimer);
+assert.equal(timeoutTick(),false);
+assert.equal(s.navigationOverlay,false);
+assert.equal(s.expanded,false);
+s.selectRiver('open');
+assert.equal(s.setNavigationIdle(0),true);
+assert.equal(s.navigationIdleTimer,0);
+assert.equal(s.setNavigationIdle(10000),true);
 s.cancelSelection();
 assert.equal(s.navigationOverlay,false);
 assert.equal(s.root.get_parent(),bg);
@@ -212,16 +244,17 @@ assert.equal(stage.get_key_focus(),s.buttons.open[s.navIndex].button);
 assert(s.fabric.style.includes('-open.svg'));
 const beforeEnter=focused;
 assert.equal(s.navigationKeyEvent({type:()=>3,get_key_symbol:()=>13}),true);
-assert.equal(s.expanded,true);
+assert.equal(s.expanded,false);
 assert.equal(focused,a);
 assert.equal(s.navigationOverlay,false);
 assert.equal(s.root.get_parent(),bg);
-assert.equal(s.navigationKeyEvent({type:()=>3,get_key_symbol:()=>65363}),true);
+assert.equal(s.navigationKeyEvent({type:()=>3,get_key_symbol:()=>65363}),false);
 assert.notEqual(stage.get_key_focus(),null);
 const retained=s.navIndex;
 stage.set_key_focus(new Actor());
 assert.equal(s.navigationKeyEvent({type:()=>3,get_key_symbol:()=>13}),false);
 assert.equal(s.navIndex,retained);
+s.selectRiver('open');
 s.focusSelectedNode();
 const first=s.navIndex;
 s.moveSelection(1);assert.notEqual(s.navIndex,first);
@@ -263,6 +296,7 @@ s.selectRiver('open');
 assert.equal(s.AssistiveCommand('scan:start'),true);
 assert.equal(s.scanning,true);
 assert.equal(s.navigationOverlay,true);
+assert.equal(s.navigationIdleTimer,0);
 assistive=JSON.parse(s.AssistiveStatus());
 assert.equal(assistive.scanning,true);
 assert.equal(assistive.river,'open');
