@@ -23,8 +23,9 @@ except (ImportError, ValueError) as error:
     raise SystemExit(2)
 
 from visual import RiversCanvas
+from session.windows import list_windows, focus_window
 
-VERSION = "0.3.0"
+VERSION = "0.5.0"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -73,13 +74,14 @@ class Desktop(Gtk.Application):
         self.content = None
         self.detail_revealer = None
         self.selected_app = None
+        self.selected_window = None
 
     def do_activate(self):
         if self.window:
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.3")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.5")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -90,7 +92,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.3.0 · NAVEGAÇÃO E MEDALHÕES", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.5.0 · JANELAS REAIS NO SWAY", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         about = Gtk.Button(label="Sobre")
@@ -109,7 +111,7 @@ class Desktop(Gtk.Application):
             xalign=0), "arandu-muted"))
 
         # Reutiliza SVG e geometria reais da Confluência, sem extensão GNOME.
-        self.visual = RiversCanvas(self.select, self.toggle_seed, self.select_app)
+        self.visual = RiversCanvas(self.select, self.toggle_seed, self.select_app, self.select_window)
         main.append(self.visual)
 
         self.detail_revealer = Gtk.Revealer()
@@ -124,6 +126,9 @@ class Desktop(Gtk.Application):
         apps = add_style(Gtk.Button(label="Aplicativos instalados"), "arandu-action")
         apps.connect("clicked", lambda *_: self.show_apps())
         actions.append(apps)
+        windows_btn = Gtk.Button(label="Janelas da sessão Sway")
+        windows_btn.connect("clicked", lambda *_: self.show_windows())
+        actions.append(windows_btn)
         retract = Gtk.Button(label="Recolher Rios")
         retract.connect("clicked", lambda *_: self.retract())
         actions.append(retract)
@@ -151,8 +156,8 @@ class Desktop(Gtk.Application):
         self.visual.show_rivers()
         self.content.append(self.text("Escolha um Rio ou abra a lista de aplicativos instalados."))
         self.content.append(self.text(
-            "MEMÓRIA e FREQUENTES não coletam dados nesta versão. "
-            "ABERTOS aguarda um adaptador de janelas independente do GNOME."))
+            "MEMÓRIA e FREQUENTES não coletam dados. Abertos consulta janelas "
+            "da sessão Sway somente mediante ação explícita."))
         self.content.append(self.text(
             "ARANDU Seed / ECA: desconectado por padrão. Nenhuma identidade é migrada."))
 
@@ -180,6 +185,7 @@ class Desktop(Gtk.Application):
         self.session.retract()
         self.visual.highlight(None)
         self.selected_app = None
+        self.selected_window = None
         self.detail_revealer.set_reveal_child(False)
         self.show_intro()
 
@@ -203,6 +209,61 @@ class Desktop(Gtk.Application):
         self.detail_revealer.set_reveal_child(True)
         if not apps:
             self.content.append(self.text("Nenhum aplicativo disponível nesta sessão."))
+
+    def show_windows(self):
+        """Consulta janelas somente mediante pedido; não toca no GNOME hospedeiro."""
+        self.session.retract()
+        self.selected_window = None
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        self.content.append(self.text("JANELAS ABERTAS · SWAY", "arandu-title"))
+        if os.environ.get("ARANDU_SESSION_LAB") != "1":
+            self.visual.show_rivers()
+            self.content.append(self.text(
+                "Disponível somente no laboratório Sway aninhado. "
+                "Nenhuma janela do GNOME foi consultada."))
+            return
+        try:
+            windows = list_windows()
+        except (OSError, ValueError, RuntimeError) as error:
+            self.visual.show_rivers()
+            self.content.append(self.text("Não foi possível consultar Sway: " + str(error)))
+            return
+        self.visual.show_windows(windows)
+        if not windows:
+            self.content.append(self.text(
+                "Nenhuma outra janela Sway encontrada. Use Super+Enter para "
+                "abrir o terminal Foot dentro do laboratório e consulte novamente."))
+        else:
+            self.content.append(self.text(
+                f"{len(windows)} janela(s) disponíveis. Selecione um medalhão "
+                "e confirme antes de mudar o foco."))
+
+    def select_window(self, window):
+        self.selected_window = window
+        self.clear_content()
+        self.content.append(self.text("Janela selecionada", "arandu-title"))
+        self.content.append(self.text(window["title"] + " · " + window["app"]))
+        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=9)
+        focus = Gtk.Button(label="Focar esta janela")
+        focus.add_css_class("arandu-action")
+        focus.connect("clicked", lambda *_: self.activate_window(window["id"]))
+        row.append(focus)
+        cancel = Gtk.Button(label="Cancelar")
+        cancel.connect("clicked", lambda *_: self.show_windows())
+        row.append(cancel)
+        self.content.append(row)
+        self.detail_revealer.set_reveal_child(True)
+
+    def activate_window(self, identifier):
+        try:
+            if not focus_window(identifier):
+                self.content.append(self.text(
+                    "Janela indisponível ou foco recusado pelo compositor."))
+                return
+            self.retract()
+        except (OSError, ValueError, RuntimeError) as error:
+            self.content.append(self.text("Erro ao focar janela: " + str(error)))
 
     def select_app(self, application):
         self.selected_app = application
