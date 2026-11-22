@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.7.0 — Opy, encontro das janelas
+# ARANDU Desktop 0.7.1 — controles essenciais antes do próximo login
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -221,3 +221,24 @@ Esse comando instala **somente o atalho da sessão atualmente aberta**, sem muda
 A barra de abas padrão do Sway ainda permanece nesta fase. Primeiro vamos validar que Opy encontra Firefox/Foot/Nemo e troca de foco corretamente; só depois consideraremos retirar/substituir a barra nativa, preservando alternativa acessível. A Opy não é uma camada layer-shell e não substitui o compositor Sway.
 
 **Estado:** versão e testes publicados no GitHub; ainda falta o teste real no VAIO.
+
+## 0.7.1 — Retorno temporário ao GNOME para amadurecimento
+
+A primeira experiência no login ARANDU mostrou lacunas em captura/clipboard, fechamento sem barra de título e organização de aplicativos. **Voltar ao GNOME é a decisão de teste recomendada** até a Opy e os atalhos estarem confirmados em sessão aninhada.
+
+Ambas as configurações Sway agora usam `default_border none` e `workspace_layout default`, removendo os títulos/abas próprios do Sway por padrão; janelas de aplicativos GTK com decoração própria podem continuar mostrando cabeçalho. `Super+T` oferece volta ao layout com abas, `Alt+Tab` abre Opy, `Super+Q` solicita fechamento da janela atual, `Super+H` move janela para o scratchpad e `Super+Shift+H` recupera. `Ctrl+Alt+A` retorna ao ARANDU e `Ctrl+Alt+Shift+Q` encerra a sessão Sway experimental.
+
+Esses atalhos não são idênticos a uma operação de encerramento de processo: `kill` é um comando de janela do Sway, e `scratchpad` não libera memória do aplicativo. Em layouts sem abas, várias janelas podem ficar lado a lado; `Super+F` dá tela cheia à janela selecionada. Não remover atalhos de recuperação antes da validação.
+
+### Banco de testes a partir do GNOME
+
+```bash
+cd "$HOME/Downloads/ARANDU-TAPE-COMPLETO"
+git pull --ff-only
+bash ARANDU-DESKTOP/session/verify-essentials.sh
+bash ARANDU-DESKTOP/session/start-nested.sh
+```
+
+Na janela Sway aninhada, validar `Alt+Tab`, seleção de Firefox/Foot/Nemo, `Super+Q`, `Super+H`, `Print` + colar e `Shift+Print` antes de voltar ao seletor de login ARANDU. O script de verificação é somente leitura e testes, não altera GNOME ou o login.
+
+**Importante:** `git pull` atualiza código-fonte; sessão Sway que já estava aberta não carrega a nova configuração sozinha. Testar sessão aninhada recém-aberta. A sessão de login registrada utiliza scripts da árvore atual mas não deve ser escolhida para trabalho principal até aceitação no VAIO.
