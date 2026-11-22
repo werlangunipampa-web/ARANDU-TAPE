@@ -118,6 +118,7 @@ class Desktop(Gtk.Application):
             quick = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
             quick.append(self.quick_action("Arquivos (Nemo)", "nemo"))
             quick.append(self.quick_action("Terminal (Foot)", "foot"))
+            quick.append(self.quick_action("Área de Trabalho", "desktop"))
             main.append(quick)
         main.append(add_style(Gtk.Label(
             label="A Semente organiza o encontro entre os Rios.", xalign=0), "arandu-title"))
@@ -247,20 +248,22 @@ class Desktop(Gtk.Application):
         """Dupla ação: diálogo e confirmação para não derrubar a sessão por acidente."""
         if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
             return
-        dialog = Gtk.AlertDialog()
-        dialog.set_message("Encerrar a sessão ARANDU?")
-        dialog.set_detail("Aplicativos serão fechados. Salve seu trabalho antes de continuar.")
-        dialog.set_buttons(["Cancelar", "Encerrar sessão"])
-        dialog.set_default_button(0)
-        dialog.set_cancel_button(0)
-        dialog.choose(self.window, None, self.finish_logout)
+        dialog = Gtk.MessageDialog(
+            transient_for=self.window, modal=True,
+            message_type=Gtk.MessageType.WARNING,
+            buttons=Gtk.ButtonsType.NONE,
+            text="Encerrar a sessão ARANDU?",
+        )
+        dialog.set_secondary_text("Aplicativos serão fechados. Salve seu trabalho antes de continuar.")
+        dialog.add_button("Cancelar", Gtk.ResponseType.CANCEL)
+        dialog.add_button("Encerrar sessão", Gtk.ResponseType.ACCEPT)
+        dialog.set_default_response(Gtk.ResponseType.CANCEL)
+        dialog.connect("response", self.finish_logout)
+        dialog.present()
 
-    def finish_logout(self, dialog, result):
-        try:
-            response = dialog.choose_finish(result)
-        except Exception:
-            return
-        if response != 1:
+    def finish_logout(self, dialog, response):
+        dialog.destroy()
+        if response != Gtk.ResponseType.ACCEPT:
             return
         try:
             subprocess.run(["swaymsg", "-t", "command", "exit"],
@@ -359,17 +362,24 @@ class Desktop(Gtk.Application):
         """Abre aplicativos locais conhecidos no Sway, nunca comandos arbitrários."""
         if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
             return
-        if program not in ("nemo", "foot"):
+        if program not in ("nemo", "foot", "desktop"):
             return
-        path = shutil.which(program)
+        path = shutil.which("nemo" if program == "desktop" else program)
         if not path:
             self.clear_content()
             self.content.append(self.text(f"{program} não encontrado no Mint."))
             self.detail_revealer.set_reveal_child(True)
             return
         try:
+            command = [path]
+            if program == "desktop":
+                desktop_dir = (Gio.get_user_special_dir(Gio.UserDirectory.DIRECTORY_DESKTOP)
+                               or str(Path.home() / "Área de Trabalho"))
+                if not Path(desktop_dir).is_dir():
+                    desktop_dir = str(Path.home())
+                command.append(desktop_dir)
             subprocess.Popen(
-                [path],
+                command,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
