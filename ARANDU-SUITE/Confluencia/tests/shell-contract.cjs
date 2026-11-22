@@ -207,7 +207,11 @@ assert.equal(s.expanded,false);
 focused=b;
 s.selectRiver('open');
 // Dez segundos sem ação: recolhimento seguro.
-const timeoutTick=pending.get(s.navigationIdleTimer);
+const elapsedNavigationTimer=s.navigationIdleTimer;
+const timeoutTick=pending.get(elapsedNavigationTimer);
+// O GLib remove automaticamente um timeout one-shot ao retornar SOURCE_REMOVE.
+// O mock registra timers em Map e deve reproduzir essa remoção.
+pending.delete(elapsedNavigationTimer);
 assert.equal(timeoutTick(),false);
 assert.equal(s.navigationOverlay,false);
 assert.equal(s.expanded,false);
