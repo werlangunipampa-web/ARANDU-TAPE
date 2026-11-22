@@ -19,6 +19,20 @@ if [[ "$ACTION" == "--check" ]]; then
     command -v "$exe" || true
   done
   python3 -c "import gi;gi.require_version('Gtk','4.0');from gi.repository import Gtk; print('GTK4 OK')" || true
+  echo "=== CAPTURA PRINT SCREEN (requisito permanente) ==="
+  for exe in grim wl-copy; do
+    if command -v "$exe" >/dev/null 2>&1; then
+      printf 'OK: %s\n' "$exe"
+    else
+      printf 'PENDENTE: %s (instalar grim e wl-clipboard para Print → Ctrl+V)\n' "$exe"
+    fi
+  done
+  if grep -qF 'bindsym Print exec __ARANDU_CAPTURE__' "$ROOT/session/login/sway-login.config.in" &&
+     grep -qF 'bindsym Shift+Print exec __ARANDU_CAPTURE_SAVE__' "$ROOT/session/login/sway-login.config.in"; then
+    echo "Atalhos de captura presentes no modelo de login."
+  else
+    echo "ALERTA: atalhos de captura ausentes no modelo de login."
+  fi
   if [[ -e "$ENTRY" ]]; then grep -F "$MARKER" "$ENTRY" || true; fi
   echo "O teste real de Wayland requer encerrar a sessão atual e selecionar ARANDU no login."
   echo "Nada foi instalado ou modificado."
