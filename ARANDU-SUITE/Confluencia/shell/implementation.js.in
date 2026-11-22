@@ -3,6 +3,7 @@ const DESKTOP = 'org.arandulab.Tape.desktop';
 const BUS_PATH = '/org/arandulab/Tape/Windows';
 const XML = '<node><interface name="org.arandulab.Tape.Windows1">' +
     '<method name="Snapshot"><arg direction="out" type="s"/></method>' +
+    '<method name="AssistiveStatus"><arg direction="out" type="s"/></method>' +
     '<method name="Activate"><arg direction="in" type="s"/><arg direction="out" type="b"/></method>' +
     '<method name="Clear"/><method name="Center"/><method name="AssistiveCommand"><arg direction="in" type="s"/><arg direction="out" type="b"/></method></interface></node>';
 const RIVERS = ['memory', 'open', 'frequent'];
@@ -98,6 +99,25 @@ class TapeSession {
         this.signal(Main.overview,'hidden',()=>this.schedule());
         this.signal(this.privacy,'changed::remember-recent-files',()=>{this.lastFocus='';this.schedule();});
         this.record(); this.refresh();
+    }
+    // Diagnóstico de estado somente leitura para testes e acionadores assistivos.
+    // Nunca executa uma ação ao consultar a seleção.
+    AssistiveStatus() {
+        if(!this.allowed())return JSON.stringify({available:false,scanning:false});
+        const river=this.navRiver;
+        const index=this.navIndex;
+        const node=river && index>=0 ? this.buttons[river]?.[index] : null;
+        const entry=node?.entry||null;
+        return JSON.stringify({
+            available:true,
+            expanded:Boolean(this.expanded),
+            scanning:Boolean(this.scanning),
+            river:river||null,
+            index:entry?index:-1,
+            selected:entry?{title:String(entry.title||entry.app||'Aplicativo'),
+                app:String(entry.app||'')}:null,
+            intervalMs:this.settings.get_int('scan-interval-ms')
+        });
     }
     // Interface de acessibilidade única, independente do dispositivo de entrada.
     // Apenas comandos de uma lista fechada. Não executa shell nem recebe nomes arbitrários.
