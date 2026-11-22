@@ -29,6 +29,7 @@ class Actor {
     set_position(x,y) {this.pos=[x,y];}
     set_scale(x,y) {this.scale=[x,y];}
     set_style(s){this.style=s;}
+    set_label(v){this.label=v;}
     add_style_class_name(s){this.classes??=new Set();this.classes.add(s);}
     remove_style_class_name(s){this.classes?.delete(s);}
     grab_key_focus(){this.focused=true;}
