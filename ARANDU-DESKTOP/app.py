@@ -185,8 +185,14 @@ class Desktop(Gtk.Application):
                 f'{mem["used_excluding_reclaimable_mib"]:.1f} MiB'))
             self.content.append(self.text(
                 f'Swap em uso: {mem["swap_used_mib"]:.1f} MiB'))
+            load = report["load_average"]
+            if load:
+                self.content.append(self.text(
+                    f'Carga CPU (1/5/15 min): {load["one_min"]:.2f} / '
+                    f'{load["five_min"]:.2f} / {load["fifteen_min"]:.2f} '
+                    f'(CPUs lógicas: {report["logical_cpus"] or "?"})'))
             self.content.append(self.text(
-                "Maiores processos por RSS (páginas compartilhadas podem duplicar):"))
+                "Carga não é % de CPU. Maiores processos por RSS:"))
             for item in report["top_processes"]:
                 self.content.append(self.text(
                     f'{item["name"]} · PID {item["pid"]} · '
