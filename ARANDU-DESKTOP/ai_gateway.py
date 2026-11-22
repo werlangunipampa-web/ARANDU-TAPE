@@ -14,6 +14,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, build_opener, ProxyHandler
 
 PROVIDERS = {
+    "chatgpt": {"label": "ChatGPT · navegador conectado"},
     "off": {"label": "Desligada · sem IA"},
     "ollama": {"label": "Ollama · local", "env": "ARANDU_OLLAMA_MODEL"},
     "openai": {"label": "OpenAI · API externa", "key": "OPENAI_API_KEY",
@@ -41,12 +42,14 @@ class GatewayError(RuntimeError):
 
 def model_for(provider: str) -> str:
     item = PROVIDERS.get(provider)
-    if not item or provider == "off":
+    if not item or provider in ("off", "chatgpt"):
         return ""
     return os.environ.get(item["env"], "").strip()
 
 
 def ready(provider: str, model: str) -> tuple[bool, str]:
+    if provider == "chatgpt":
+        return False, "ChatGPT é aberto no navegador; não disponibiliza API interna desta conversa."
     if provider not in PROVIDERS or provider == "off":
         return False, "Selecione explicitamente uma IA para conversar."
     if not isinstance(model, str) or not _MODEL.fullmatch(model):
