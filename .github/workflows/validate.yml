@@ -1,0 +1,31 @@
+name: Validar ARANDU SUITE
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sintaxe dos instaladores
+        run: |
+          bash -n ARANDU-SUITE/instalar-tudo.sh
+          bash -n ARANDU-SUITE/Confluencia/instalar.sh
+      - name: Contrato do pacote
+        run: python3 ARANDU-SUITE/verificar.py
+      - name: Contratos JavaScript do GNOME
+        run: |
+          node ARANDU-SUITE/Confluencia/tests/test-semente-contract.cjs
+          node ARANDU-SUITE/Confluencia/tests/shell-contract.cjs
+      - name: Construção e sintaxe Confluência (GNOME 46 e 47)
+        run: |
+          python3 ARANDU-SUITE/Confluencia/shell/build.py 46 /tmp/arandu-46
+          python3 ARANDU-SUITE/Confluencia/shell/build.py 47 /tmp/arandu-47
+          node --check /tmp/arandu-46/extension.js
+          node --check /tmp/arandu-47/extension.js
+          node --check ARANDU-SUITE/TOPBAR/arandu-topbar@local/extension.js
+          node --check ARANDU-SUITE/TOPBAR/modern/extension.js
