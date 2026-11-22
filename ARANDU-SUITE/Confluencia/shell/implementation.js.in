@@ -367,6 +367,17 @@ class TapeSession {
         }
         if(mode==='hidden'){Main.panel.hide();return;}
         if(mode!=='auto'){this.restorePanel();return;}
+        // Nunca ocultar o painel enquanto um menu está aberto ou um controle
+        // do próprio painel está focado pelo teclado assistivo.
+        const menu=Main.panel.menuManager?.activeMenu;
+        const focusedActor=global.stage?.get_key_focus?.();
+        const focusOnPanel=focusedActor &&
+            (focusedActor===Main.panel || Main.panel.contains?.(focusedActor));
+        if(menu || focusOnPanel || this.panel?.menu?.isOpen){
+            this.barLastNear=Date.now();
+            this.restorePanel();
+            return;
+        }
         const [x,y]=global.get_pointer();
         const mon=Main.layoutManager.primaryMonitor;
         if(!mon){this.restorePanel();return;}
