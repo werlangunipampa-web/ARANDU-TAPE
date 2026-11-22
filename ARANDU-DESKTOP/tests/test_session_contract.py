@@ -53,8 +53,10 @@ class NestedSessionContract(unittest.TestCase):
     def test_sway_can_return_to_arandu_directly(self):
         config = (SESSION / "sway.config.in").read_text(encoding="utf-8")
         self.assertIn(
-            'bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] focus', config
+            'bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] scratchpad show', config
         )
+        self.assertIn('for_window [title="^ARANDU Desktop"] floating enable', config)
+        self.assertIn('move scratchpad, scratchpad show', config)
 
     def test_open_river_requests_real_windows_and_confirms_focus(self):
         app = (ROOT / "app.py").read_text(encoding="utf-8")
@@ -64,6 +66,12 @@ class NestedSessionContract(unittest.TestCase):
         self.assertIn('entry.connect("clicked", lambda _button, selected=item: self.select_window(selected))', app)
         self.assertIn('focus.connect("clicked", lambda *_: self.activate_window(window["id"]))', app)
         self.assertIn('if not focus_window(identifier):', app)
+
+    def test_successful_focus_retracts_without_closing_session(self):
+        app = (ROOT / "app.py").read_text(encoding="utf-8")
+        self.assertIn('if not hide_arandu():', app)
+        self.assertIn('self.retract()', app)
+        self.assertIn('def activate_window(self, identifier):', app)
 
     def test_no_automatic_eca_connection(self):
         for name in ("start-nested.sh", "launch-arandu.sh", "sway.config.in"):
