@@ -34,6 +34,19 @@ class LoginContract(unittest.TestCase):
                        "loginctl terminate", "reboot"):
             self.assertNotIn(unsafe, source)
 
+    def test_print_to_clipboard_without_saving(self):
+        capture = (ROOT / "session" / "capture-screen.sh").read_text()
+        self.assertIn('grim - | wl-copy --type image/png', capture)
+        self.assertIn('--clipboard)', capture)
+        self.assertIn('--save)', capture)
+        self.assertNotIn('wl-paste', capture)
+        config = (LOGIN / "sway-login.config.in").read_text()
+        self.assertIn('bindsym Print exec __ARANDU_CAPTURE__', config)
+        self.assertIn('bindsym Shift+Print exec __ARANDU_CAPTURE_SAVE__', config)
+        source = (LOGIN / "start-login.sh").read_text()
+        self.assertIn('template.replace("__ARANDU_CAPTURE__"', source)
+        self.assertIn('template.replace("__ARANDU_CAPTURE_SAVE__"', source)
+
     def test_no_unrequested_cognitive_connection(self):
         for path in LOGIN.iterdir():
             content = path.read_text()
