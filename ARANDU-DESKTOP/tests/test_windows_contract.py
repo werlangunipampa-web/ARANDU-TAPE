@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "session"))
-from windows import flatten_windows, list_windows, focus_window, user_windows
+from windows import flatten_windows, list_windows, focus_window, user_windows, hide_arandu
 
 
 class WindowAdapterContract(unittest.TestCase):
@@ -71,6 +71,23 @@ class WindowAdapterContract(unittest.TestCase):
                        return_value=SimpleNamespace(stdout=json.dumps(tree))) as run:
                 self.assertFalse(focus_window(18))
                 self.assertEqual(run.call_count, 1)
+
+    def test_retract_requires_lab_and_never_uses_shell(self):
+        with patch.dict("os.environ", {}, clear=True):
+            with patch("subprocess.run") as run:
+                self.assertFalse(hide_arandu())
+                run.assert_not_called()
+        from types import SimpleNamespace
+        with patch.dict("os.environ", {"SWAYSOCK": "/tmp/sway-test.sock",
+                                       "ARANDU_SESSION_LAB": "1"}):
+            with patch("subprocess.run",
+                       return_value=SimpleNamespace(stdout='[{"success": true}]')) as run:
+                self.assertTrue(hide_arandu())
+                self.assertEqual(run.call_args.args[0], [
+                    "swaymsg", "-r", "-t", "command",
+                    '[title="^ARANDU Desktop"] move scratchpad'
+                ])
+                self.assertNotIn("shell", run.call_args.kwargs)
 
     def test_without_nested_session_does_not_run_subprocess(self):
         with patch.dict("os.environ", {}, clear=True):
