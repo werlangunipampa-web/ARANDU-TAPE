@@ -72,6 +72,21 @@ class VisualContract(unittest.TestCase):
         self.assertIn('launch.connect("clicked"', source)
         self.assertNotIn("self.launch_app(application)\n        self.detail_revealer", source)
 
+    def test_resizing_avoids_conflicting_gtk_min_max_limits(self):
+        source = (Path(__file__).resolve().parents[1] / "visual.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("set_min_content_height(", source)
+        self.assertNotIn("set_max_content_height(", source)
+        self.assertIn("self.set_size_request(-1, h)", source)
+
+    def test_river_labels_fit_inside_original_geometry(self):
+        source = (Path(__file__).resolve().parents[1] / "visual.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('"frequent": (1040, 120)', source)
+        self.assertLess(1040 + 150, WIDTH)
+
     def test_seed_is_inside_canvas(self):
         self.assertTrue(0 < SEED[0] < WIDTH)
         self.assertTrue(0 < SEED[1] < HEIGHT)
