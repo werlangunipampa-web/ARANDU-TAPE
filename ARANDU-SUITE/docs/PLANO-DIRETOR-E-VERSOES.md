@@ -151,3 +151,12 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - `start-nested.sh --outputs=1|2|3` ajusta `WLR_X11_OUTPUTS` e simula **saídas virtuais**, não a detecção de monitores físicos, que permanece um requisito futuro.
 - GNOME/Confluência/TOPBAR mantidos; serviços Mint (Nemo, NetworkManager, áudio etc.) são reaproveitáveis, mas uma sessão ARANDU completa ainda precisará prover integração de desktop, portais e serviços.
 - **Status:** código publicado e testes preparados; validação gráfica/funcional no VAIO pendente. Não afirmar que Sway virou um compositor escrito pelo ARANDU nem que suporte físico a três telas esteja concluído.
+
+## Desktop 0.6.2 — estabilidade do ambiente e aplicativos internos (2026-11-22)
+
+- Após relato de dificuldade para abrir aplicativos na revisão 0.6.1, regra de scratchpad automático foi removida da configuração temporária do Sway, porque ocultar a janela principal compromete a experiência.
+- ARANDU volta a iniciar **visível como uma aba normal**, com retorno direto via `Ctrl+Alt+A`; flutuação manual continua possível.
+- Interface incorpora botões **Arquivos (Nemo)** e **Terminal (Foot)** dentro do próprio ARANDU, somente sob clique em sessão aninhada, com executáveis locais permitidos, sem shell e sem alteração de login.
+- `Aplicativos instalados` continua disponível; seleção de medalhão não executa automaticamente por questão de validação e acessibilidade.
+- Teste de aceitação: ARANDU inicia visível -> clicar Foot -> voltar com Ctrl+Alt+A -> clicar Arquivos -> verificar se janela ficou dentro do Sway -> foco via ABERTOS. Aplicativos single-instance do Mint poderão reutilizar instância no GNOME; não presumir sessão separada.
+- Semente overlay layer-shell, modo desktop próprio no login, múltiplos monitores físicos e evolução da interface por ações próprias são marcos futuros; preservar GNOME e dados cognitivos.
