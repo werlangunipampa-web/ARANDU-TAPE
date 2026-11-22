@@ -73,6 +73,15 @@ class NestedSessionContract(unittest.TestCase):
         self.assertIn('self.retract()', app)
         self.assertIn('def activate_window(self, identifier):', app)
 
+    def test_virtual_outputs_one_to_three_only(self):
+        script = (SESSION / "start-nested.sh").read_text(encoding="utf-8")
+        self.assertIn("--outputs=1|--outputs=2|--outputs=3", script)
+        self.assertIn('export WLR_X11_OUTPUTS="$OUTPUTS"', script)
+        app = (ROOT / "app.py").read_text(encoding="utf-8")
+        self.assertIn("def show_displays(self):", app)
+        self.assertIn("def toggle_fullscreen(self):", app)
+        self.assertIn("move_arandu_to_output(output)", app)
+
     def test_no_automatic_eca_connection(self):
         for name in ("start-nested.sh", "launch-arandu.sh", "sway.config.in"):
             source = (SESSION / name).read_text(encoding="utf-8")
