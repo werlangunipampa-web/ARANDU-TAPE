@@ -10,6 +10,18 @@
 - **GNOME Wayland e outras versões:** comportamento ainda não validado integralmente.
 - A TOPBAR incluída possui compatibilidade específica com GNOME 46.
 
+## Um instalador para toda a suíte
+
+O pacote inclui **Confluência (Semente e três rios)** e **ARANDU TOPBAR**. Não é necessário executar dois instaladores. O mesmo `instalar-tudo.sh` instala/atualiza a Confluência e instala a TOPBAR quando ela ainda não existe. Uma TOPBAR já instalada é **preservada**, sem sobrescrita.
+
+No **GNOME 46**, ambos os componentes são preparados e habilitados após o Shell reconhecer as extensões. Fora do GNOME 46, a TOPBAR histórica **não é habilitada automaticamente**; a compatibilidade gráfica ainda precisa ser desenvolvida e testada para outras versões.
+
+Para consultar o estado dos dois componentes depois da instalação:
+
+```bash
+bash instalar-tudo.sh --status
+```
+
 ## Opção 1 — baixar pelo GitHub
 
 1. Acesse a [página do código](https://github.com/werlangunipampa-web/ARANDU-TAPE).
@@ -48,7 +60,7 @@ gnome-extensions info confluencia@arandulab
 gnome-extensions info arandu-topbar@local
 ```
 
-A Confluência deve exibir `ACTIVE`. Se o GNOME não a reconhecer imediatamente, reinicie a sessão e confira novamente.
+A Confluência deve exibir `ACTIVE`. No GNOME 46, a TOPBAR também deverá aparecer habilitada após reiniciar a sessão. Se o GNOME não a reconhecer imediatamente, reinicie a sessão e confira novamente.
 
 ## Ambiente limpo: janelas acima dos rios
 
