@@ -123,7 +123,27 @@ class RiversCanvas(Gtk.ScrolledWindow):
             if window is not None:
                 self.on_window(window)  # Confirmação antes de alterar o foco.
 
+    def show_compact(self):
+        """Em repouso, apenas o símbolo original da Semente permanece no mapa.
+
+        Rios, títulos e medalhões surgem mediante intenção explícita.
+        O tamanho da área é preservado para não causar saltos de layout.
+        """
+        self.mode = "compact"
+        self.marker_apps.clear()
+        self.marker_windows.clear()
+        self.background.set_visible(False)
+        self.seed.set_visible(True)
+        self.seed.set_tooltip_text("Abrir a Confluência: Memória, Abertos e Frequentes")
+        for marker, _, _, _ in self.markers:
+            marker.set_visible(False)
+            marker.set_sensitive(False)
+        for label in self.river_buttons.values():
+            label.set_visible(False)
+        self._layout(self.scale)
+
     def show_rivers(self):
+        self.background.set_visible(True)
         self.mode = "rivers"
         self.marker_windows.clear()
         for marker, river, _, _ in self.markers:
@@ -143,6 +163,7 @@ class RiversCanvas(Gtk.ScrolledWindow):
     def show_apps(self, apps):
         """Distribui até 15 aplicativos instalados reais, sem ler janelas."""
         self.apps = choose_app_slots(apps)
+        self.background.set_visible(True)
         self.mode = "apps"
         self.marker_windows.clear()
         for i, (marker, river, _, _) in enumerate(self.markers):
@@ -177,6 +198,7 @@ class RiversCanvas(Gtk.ScrolledWindow):
 
     def show_windows(self, windows):
         """Medalhões representam somente janelas Sway verificadas, sem coleta periódica."""
+        self.background.set_visible(True)
         self.mode = "windows"
         self.marker_apps.clear()
         self.marker_windows.clear()
