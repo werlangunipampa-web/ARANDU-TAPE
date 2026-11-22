@@ -82,8 +82,12 @@ class NestedSessionContract(unittest.TestCase):
         app = (ROOT / "app.py").read_text(encoding="utf-8")
         self.assertIn('quick_action("Arquivos (Nemo)", "nemo")', app)
         self.assertIn('quick_action("Terminal (Foot)", "foot")', app)
-        self.assertIn('program not in ("nemo", "foot")', app)
-        self.assertIn('path = shutil.which(program)', app)
+        self.assertIn('quick_action("Área de Trabalho", "desktop")', app)
+        self.assertIn('program not in ("nemo", "foot", "desktop")', app)
+        self.assertIn('path = shutil.which("nemo" if program == "desktop" else program)', app)
+        self.assertIn('GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP)', app)
+        self.assertIn('if not Path(desktop_dir).is_dir():', app)
+        self.assertIn('command.append(desktop_dir)', app)
         self.assertNotIn("shell=True", app)
 
     def test_virtual_outputs_one_to_three_only(self):
