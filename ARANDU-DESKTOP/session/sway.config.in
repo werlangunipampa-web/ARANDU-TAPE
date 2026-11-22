@@ -2,12 +2,18 @@
 # Este arquivo não deve ser colocado em ~/.config/sway e não substitui GNOME.
 set $mod Mod4
 font pango:Sans 10
-default_border pixel 2
-default_floating_border pixel 2
+# Bordas e barras de título do Sway ocultas por padrão (visual ARANDU).
+# Menus próprios dos aplicativos ainda podem ter cabeçalhos internos.
+default_border none
+default_floating_border none
 gaps inner 8
 gaps outer 6
 # Janelas aninhadas usam abas: o ARANDU não fica espremido ao abrir Foot.
-workspace_layout tabbed
+# Layout sem barra de abas. Opy (Alt+Tab) faz a navegação entre janelas.
+# Super+T restaura temporariamente o layout com abas, se necessário.
+workspace_layout default
+bindsym $mod+t layout tabbed
+bindsym $mod+e layout toggle split
 client.focused #bba66e #20372f #f4f0df #91b59f #bba66e
 client.unfocused #263e34 #192620 #b8c6b7 #263e34 #263e34
 output * bg #14221d solid_color
@@ -27,6 +33,12 @@ bindsym $mod+Shift+Tab focus prev
 bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] focus
 bindsym $mod+f fullscreen toggle
 bindsym $mod+Shift+space floating toggle
+# Ações explícitas para trabalhar sem botão X nem barra de título.
+# 'kill' solicita fechamento da janela focada; saída de sessão tem outro atalho.
+bindsym $mod+q kill
+# Recolher janela ao scratchpad; Super+Shift+H a recupera.
+bindsym $mod+h move scratchpad
+bindsym $mod+Shift+h scratchpad show
 # Terminal apenas nesta sessão aninhada; Foot instalado junto do Sway no Mint.
 # Print copia PNG para a área de transferência (Ctrl+V).
 bindsym Print exec __ARANDU_CAPTURE__
