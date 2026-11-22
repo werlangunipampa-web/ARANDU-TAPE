@@ -21,6 +21,13 @@ class VisualContract(unittest.TestCase):
                 self.assertGreaterEqual(y, 0)
                 self.assertLessEqual(y, HEIGHT)
 
+    def test_gtk4_does_not_use_unsupported_accessible_name_setter(self):
+        source = (Path(__file__).resolve().parents[1] / "visual.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn(".set_accessible_name(", source)
+        self.assertIn(".set_tooltip_text(", source)
+
     def test_seed_is_inside_canvas(self):
         self.assertTrue(0 < SEED[0] < WIDTH)
         self.assertTrue(0 < SEED[1] < HEIGHT)
