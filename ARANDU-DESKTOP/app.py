@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -24,9 +25,9 @@ except (ImportError, ValueError) as error:
     raise SystemExit(2)
 
 from visual import RiversCanvas
-from session.windows import list_windows, focus_window, hide_arandu, list_outputs, move_arandu_to_output
+from session.windows import list_windows, focus_window, list_outputs, move_arandu_to_output
 
-VERSION = "0.6.1"
+VERSION = "0.6.2"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -82,7 +83,7 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.6.1")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.6.2")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -93,7 +94,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.6.1 · SEMENTE E TELAS", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.6.2 · INICIAR E TRABALHAR", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         about = Gtk.Button(label="Sobre")
@@ -105,6 +106,11 @@ class Desktop(Gtk.Application):
         main.set_hexpand(True)
         main.set_vexpand(True)
         root.append(main)
+        if os.environ.get("ARANDU_SESSION_LAB") == "1":
+            quick = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            quick.append(self.quick_action("Arquivos (Nemo)", "nemo"))
+            quick.append(self.quick_action("Terminal (Foot)", "foot"))
+            main.append(quick)
         main.append(add_style(Gtk.Label(
             label="A Semente organiza o encontro entre os Rios.", xalign=0), "arandu-title"))
         main.append(add_style(Gtk.Label(
@@ -155,6 +161,38 @@ class Desktop(Gtk.Application):
         self.window.add_controller(controller)
         self.show_intro()
         self.window.present()
+
+    def quick_action(self, label, program):
+        button = add_style(Gtk.Button(label=label), "arandu-action")
+        button.connect("clicked", lambda *_: self.launch_known(program))
+        return button
+
+    def launch_known(self, program):
+        """Abre aplicativos locais conhecidos no Sway, nunca comandos arbitrários."""
+        if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
+            return
+        if program not in ("nemo", "foot"):
+            return
+        path = shutil.which(program)
+        if not path:
+            self.clear_content()
+            self.content.append(self.text(f"{program} não encontrado no Mint."))
+            self.detail_revealer.set_reveal_child(True)
+            return
+        try:
+            subprocess.Popen(
+                [path],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                close_fds=True,
+                start_new_session=True,
+            )
+            self.retract()
+        except OSError as error:
+            self.clear_content()
+            self.content.append(self.text(f"Falha ao abrir {program}: {error}"))
+            self.detail_revealer.set_reveal_child(True)
 
     def clear_content(self):
         while self.content.get_first_child():
@@ -351,13 +389,7 @@ class Desktop(Gtk.Application):
                     "Janela indisponível ou foco recusado pelo compositor."))
                 return
             self.retract()
-            # Recolhe o ARANDU por IPC sem fechar a interface ou a sessão.
-            # O foco no destino já foi confirmado antes desta etapa.
-            try:
-                if not hide_arandu():
-                    self.content.append(self.text("Não foi possível recolher o ARANDU; use Ctrl+Alt+A."))
-            except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as hide_error:
-                self.content.append(self.text("Falha ao recolher: " + str(hide_error)))
+            # O ARANDU continua vivo em outra aba, recuperável por Ctrl+Alt+A.
         except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
             self.content.append(self.text("Erro ao focar janela: " + str(error)))
 
