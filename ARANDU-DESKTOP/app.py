@@ -97,6 +97,9 @@ class Desktop(Gtk.Application):
         bar.append(add_style(Gtk.Label(label="0.6.2 · INICIAR E TRABALHAR", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
+        roadmap = Gtk.Button(label="Evolução")
+        roadmap.connect("clicked", lambda *_: self.show_development())
+        bar.append(roadmap)
         about = Gtk.Button(label="Sobre")
         about.connect("clicked", self.show_about)
         bar.append(about)
@@ -161,6 +164,22 @@ class Desktop(Gtk.Application):
         self.window.add_controller(controller)
         self.show_intro()
         self.window.present()
+
+    def show_development(self):
+        """Painel local de estado; nenhuma atualização automática de código."""
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        self.content.append(self.text("EVOLUÇÃO DO ARANDU · " + VERSION, "arandu-title"))
+        for line in (
+            "Atual: iniciar com janelas visíveis; abrir Nemo e Foot por dentro do ambiente.",
+            "Disponível: Rios, Semente, aplicativos instalados, ABERTOS e até 3 saídas virtuais.",
+            "Em teste: foco entre janelas, saída para tela cheia, integração Nemo no Sway.",
+            "Próximo: shell gráfico sobreposto e retrátil, navegação acessível e controles de sessão.",
+            "Futuro: login ARANDU opcional, compositor integrado, múltiplas telas físicas.",
+            "ECA e motor de aprendizagem: isolados até auditoria e autorização.",
+            "O código é atualizado pelo GitHub fora desta sessão; este painel não executa git nem instala nada.",
+        ):
+            self.content.append(self.text(line))
 
     def quick_action(self, label, program):
         button = add_style(Gtk.Button(label=label), "arandu-action")
