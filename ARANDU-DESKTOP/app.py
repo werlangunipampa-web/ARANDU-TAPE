@@ -224,6 +224,16 @@ class Desktop(Gtk.Application):
                 button = Gtk.Button(label=label)
                 button.connect("clicked", lambda _b, amount=volume: self.adjust_volume(amount))
                 self.content.append(button)
+        if os.environ.get("ARANDU_SESSION_LAB") == "1":
+            for label, program in (
+                ("Gerenciar redes", "nm-connection-editor"),
+                ("Gerenciar Bluetooth", "blueman-manager"),
+                ("Mixer de som", "pavucontrol"),
+                ("Calendário", "gnome-calendar"),
+            ):
+                button = Gtk.Button(label=label)
+                button.connect("clicked", lambda _b, app=program: self.launch_system_tool(app))
+                self.content.append(button)
         refresh = Gtk.Button(label="Atualizar indicadores")
         refresh.connect("clicked", lambda *_: self.show_seed_status())
         self.content.append(refresh)
@@ -272,6 +282,26 @@ class Desktop(Gtk.Application):
             "Arrastar e soltar sobre o fundo ARANDU ainda não foi implementado.",
         ):
             self.content.append(self.text(instruction))
+
+    def launch_system_tool(self, name):
+        """Abre somente controles gráficos conhecidos, se instalados; sem sudo."""
+        allowed = ("nm-connection-editor", "blueman-manager",
+                   "pavucontrol", "gnome-calendar")
+        if name not in allowed or os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
+            return
+        binary = shutil.which(name)
+        if not binary:
+            self.content.append(self.text(
+                name + " não está instalado. Nada foi instalado automaticamente."))
+            return
+        try:
+            subprocess.Popen(
+                [binary], stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                close_fds=True, start_new_session=True,
+            )
+        except OSError as error:
+            self.content.append(self.text("Não foi possível abrir controle: " + str(error)))
 
     def show_session_menu(self):
         self.clear_content()
