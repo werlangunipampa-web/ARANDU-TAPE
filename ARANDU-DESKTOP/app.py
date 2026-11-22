@@ -15,6 +15,7 @@ from pathlib import Path
 
 from core import Session, NAMES, RIVERS
 from performance import collect
+from system_status import summary, clock_text, network_status, battery_status, bluetooth_status, volume_status
 
 try:
     import gi
@@ -28,7 +29,7 @@ except (ImportError, ValueError) as error:
 from visual import RiversCanvas
 from session.windows import list_windows, focus_window, list_outputs, move_arandu_to_output
 
-VERSION = "0.7.1"
+VERSION = "0.7.2"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -84,7 +85,7 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.7.1")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.7.2")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -95,7 +96,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.7.1 · CONTROLES ESSENCIAIS", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.7.2 · SEMENTE ESSENCIAL", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         performance = Gtk.Button(label="Desempenho")
@@ -127,6 +128,27 @@ class Desktop(Gtk.Application):
         # Reutiliza SVG e geometria reais da Confluência, sem extensão GNOME.
         self.visual = RiversCanvas(self.select, self.toggle_seed, self.select_app, self.select_window)
         main.append(self.visual)
+        # Indicadores ao pé da Semente, substituindo progressivamente a barra superior.
+        self.seed_status = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self.seed_status.set_halign(Gtk.Align.CENTER)
+        self.clock_button = Gtk.Button(label="--:--")
+        self.clock_button.set_tooltip_text("Relógio da Semente")
+        self.clock_button.connect("clicked", lambda *_: self.show_seed_status())
+        self.seed_status.append(self.clock_button)
+        for label, callback in (
+            ("Rede", lambda: self.show_seed_status()),
+            ("Bateria", lambda: self.show_seed_status()),
+            ("Bluetooth", lambda: self.show_seed_status()),
+            ("Som", lambda: self.show_seed_status()),
+            ("Sessão", lambda: self.show_session_menu()),
+        ):
+            button = Gtk.Button(label=label)
+            button.connect("clicked", lambda _b, cb=callback: cb())
+            self.seed_status.append(button)
+        main.append(self.seed_status)
+        self.clock_button.set_label(clock_text())
+        from gi.repository import GLib
+        GLib.timeout_add_seconds(30, self.update_seed_clock)
 
         self.detail_revealer = Gtk.Revealer()
         self.detail_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
@@ -168,6 +190,84 @@ class Desktop(Gtk.Application):
         self.window.add_controller(controller)
         self.show_intro()
         self.window.present()
+
+    def update_seed_clock(self):
+        if self.window is None:
+            return False
+        self.clock_button.set_label(clock_text())
+        return True
+
+    def show_seed_status(self):
+        """Consulta status somente por solicitação; não rastreia conectividade remota."""
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        self.content.append(self.text("SEMENTE · ESTADO DO AMBIENTE", "arandu-title"))
+        for name, value in (
+            ("Hora", clock_text()),
+            ("Rede", network_status()),
+            ("Energia", battery_status()),
+            ("Bluetooth", bluetooth_status()),
+            ("Áudio", volume_status()),
+        ):
+            self.content.append(self.text(f"{name}: {value}"))
+        if os.environ.get("ARANDU_SESSION_LAB") == "1":
+            for label, volume in (("Diminuir som", "-5%"), ("Aumentar som", "+5%")):
+                button = Gtk.Button(label=label)
+                button.connect("clicked", lambda _b, amount=volume: self.adjust_volume(amount))
+                self.content.append(button)
+        refresh = Gtk.Button(label="Atualizar indicadores")
+        refresh.connect("clicked", lambda *_: self.show_seed_status())
+        self.content.append(refresh)
+
+    def adjust_volume(self, amount):
+        """Altera volume no máximo 5 pontos sob clique explícito."""
+        if os.environ.get("ARANDU_SESSION_LAB") != "1" or amount not in ("+5%", "-5%"):
+            return
+        try:
+            subprocess.run(["pactl", "set-sink-volume", "@DEFAULT_SINK@", amount],
+                           check=True, timeout=3, capture_output=True)
+            self.show_seed_status()
+        except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            self.content.append(self.text("Não foi possível ajustar o áudio."))
+
+    def show_session_menu(self):
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        self.content.append(self.text("SEMENTE · SESSÃO", "arandu-title"))
+        if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
+            self.content.append(self.text("Sair do ARANDU só está disponível na sessão própria."))
+            return
+        self.content.append(self.text(
+            "Encerrar sessão fecha os aplicativos desta sessão. Salve documentos primeiro."))
+        button = Gtk.Button(label="Solicitar saída do ARANDU")
+        button.connect("clicked", lambda *_: self.confirm_logout())
+        self.content.append(button)
+
+    def confirm_logout(self):
+        """Dupla ação: diálogo e confirmação para não derrubar a sessão por acidente."""
+        if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
+            return
+        dialog = Gtk.AlertDialog()
+        dialog.set_message("Encerrar a sessão ARANDU?")
+        dialog.set_detail("Aplicativos serão fechados. Salve seu trabalho antes de continuar.")
+        dialog.set_buttons(["Cancelar", "Encerrar sessão"])
+        dialog.set_default_button(0)
+        dialog.set_cancel_button(0)
+        dialog.choose(self.window, None, self.finish_logout)
+
+    def finish_logout(self, dialog, result):
+        try:
+            response = dialog.choose_finish(result)
+        except Exception:
+            return
+        if response != 1:
+            return
+        try:
+            subprocess.run(["swaymsg", "-t", "command", "exit"],
+                           timeout=3, check=True, capture_output=True)
+        except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            self.show_session_menu()
+            self.content.append(self.text("Não foi possível encerrar a sessão."))
 
     def show_performance(self):
         """Fotografia local sob clique; nenhuma amostragem contínua."""
