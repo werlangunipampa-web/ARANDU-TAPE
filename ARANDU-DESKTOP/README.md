@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.3 — navegação adaptativa e medalhões de aplicativos
+# ARANDU Desktop 0.5 — janelas reais do Sway, sessão experimental
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -79,3 +79,11 @@ A captura da versão 0.2 no VAIO mostrou os Rios cortados verticalmente porque o
 - **Versão 0.2.1 preservada no Git:** se houver regressão visual, permanecer na versão anterior até corrigir.
 
 **Status:** publicada no GitHub. Testes escritos, mas execução real e validação no Linux Mint ainda pendentes.
+
+## ARANDU Desktop 0.5 — abertura e foco na sessão Sway (laboratório)
+
+O aplicativo GTK4 ainda é uma janela dentro do Sway; **não existe camada layer-shell ou compositor ARANDU próprio**. O botão **Janelas da sessão Sway** consulta `swaymsg get_tree` somente no laboratório, quando acionado. A própria janela ARANDU é excluída. Medalhões exibem janelas verificadas e pedem confirmação antes de executar `swaymsg [con_id=N] focus`, com ID validado novamente imediatamente antes do comando. Não é possível selecionar janelas do GNOME hospedeiro.
+
+Em `sway.config.in`, **Super+Enter** executa o Foot (terminal) dentro do Sway para teste. `Super+Tab` alterna janelas; `Ctrl+Alt+Shift+Q` sai do compositor aninhado. O Rio da Memória, Frequentes e a ECA permanecem isolados.
+
+**Ainda falta validar graficamente** no VAIO a seleção, confirmação e retorno ao Foot. A operação IPC é síncrona com timeout de 3 segundos e pode causar pausa breve em erro de comunicação; não monitorar continuamente. A versão anterior permanece no histórico Git.
