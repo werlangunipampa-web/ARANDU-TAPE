@@ -54,12 +54,21 @@ def collect(proc_root: Path = Path("/proc"), limit: int = 12) -> dict:
             if item is not None:
                 processes.append(item)
     processes.sort(key=lambda x: x["rss_mib"], reverse=True)
+    try:
+        one, five, fifteen, *_ = (proc_root / "loadavg").read_text().split()
+        loads = {"one_min": float(one), "five_min": float(five),
+                 "fifteen_min": float(fifteen)}
+    except (OSError, ValueError):
+        loads = None
     return {
         "schema": 1,
         "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "session_desktop": os.environ.get("XDG_SESSION_DESKTOP", "desconhecido"),
         "session_type": os.environ.get("XDG_SESSION_TYPE", "desconhecido"),
         "memory": mem,
+        "load_average": loads,
+        "logical_cpus": os.cpu_count(),
+        "load_note": "Load average mede tarefas em espera/execução; NÃO é porcentagem de CPU.",
         "top_processes": processes[:limit],
         "process_rss_note": "RSS por processo pode compartilhar páginas; não somar como total único.",
         "comparison_note": "Comparar sessões com mesmo hardware, uptime, aplicativos e condições.",
