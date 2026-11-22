@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.5.1 — teste direto de duas janelas no Sway
+# ARANDU Desktop 0.5.2 — Rio dos Abertos conectado às janelas Sway
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -93,3 +93,14 @@ Em `sway.config.in`, **Super+Enter** executa o Foot (terminal) dentro do Sway pa
 No VAIO em 22/11/2026, 25 testes Python e 2 Rust passaram e a janela ARANDU abriu no Sway aninhado, **mas a captura ainda não confirmou foco entre duas janelas**. Apareceram avisos transitórios do wlroots (`xdg_surface`) e GDK sobre reposicionamento de pop-ups. Não há evidência de travamento fatal; evitar mascarar avisos. `Ctrl+C` gerou `Pipe quebrado` porque terminou abruptamente o compositor.
 
 A interface 0.5.1 oferece o botão **Abrir Foot no Sway** somente dentro do laboratório, por clique explícito; não usa `shell=True`, nem executa comandos como root. Depois de abrir o Foot, volte ao ARANDU com **Super+Tab** dentro do Sway, clique **Janelas da sessão Sway**, observe os nomes reais e selecione/confirme o medalhão Foot. A tecla Super pode ser interceptada pelo GNOME hospedeiro: o botão de abertura evita depender desse atalho para criar a segunda janela. Saia pelo atalho de encerramento do Sway, não por `Ctrl+C`.
+
+## Revisão 0.5.2 — navegação efetiva e retorno explícito
+
+Após a abertura comprovada de ARANDU e Foot lado a lado, melhoramos o caminho para validar **troca de foco entre janelas existentes**. Na sessão Sway:
+1. Clique **Abrir Foot no Sway** para criar a segunda janela.
+2. Com foco no Sway, pressione **Ctrl+Alt+A** para retornar ao ARANDU. Se o gerenciador de atalhos hospedeiro interceptar, use as abas Sway.
+3. Clique diretamente no rótulo/medalhão **ABERTOS** (ou no botão **Janelas da sessão Sway**), que agora solicita a árvore real de janelas Sway.
+4. Use o medalhão Foot ou a lista acessível de seleção de janelas. Clique **Focar esta janela** para mudar o foco.
+5. Volte com **Ctrl+Alt+A** e valide o retorno, sem abrir outro Foot.
+
+São mantidos os testes de segurança (sem janelas do GNOME, sem ECA e sem execução de comandos recebidos de títulos). O Sway ainda é compositor de terceiros dentro de janela GNOME. **Código publicado, teste físico 0.5.2 pendente.**
