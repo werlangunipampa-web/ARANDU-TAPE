@@ -19,6 +19,7 @@ class RiversCanvas(Gtk.ScrolledWindow):
         self.on_river, self.on_seed, self.on_app = on_river, on_seed, on_app
         self.scale = DEFAULT_SCALE
         self.apps = ()
+        self.marker_apps = {}
         self.mode = "rivers"
         self._refresh_scheduled = False
         self.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)
@@ -105,21 +106,25 @@ class RiversCanvas(Gtk.ScrolledWindow):
             self.fixed.move(label,scaled(x,scale),scaled(y,scale))
 
     def _click_marker(self, button):
-        app = getattr(button, "_arandu_app", None)
+        app = self.marker_apps.get(button)
         if self.mode == "apps" and app is not None:
             self.on_app(app)  # Apenas seleciona; não inicia processo.
 
     def show_rivers(self):
         self.mode = "rivers"
         for marker, river, _, _ in self.markers:
-            marker._arandu_app = None
+            self.marker_apps.pop(marker, None)
             marker.set_focusable(False)
             marker.set_sensitive(False)
             marker.set_visible(True)
             marker.set_tooltip_text(NAMES[river] + " · posição visual, sem dados")
-            marker.set_child(Gtk.Picture.new_for_filename(str(ASSETS / f"{river}.svg")))
+            picture = Gtk.Picture.new_for_filename(str(ASSETS / f"{river}.svg"))
+            picture.set_can_shrink(True)
+            picture.set_size_request(scaled(51, self.scale), scaled(51, self.scale))
+            marker.set_child(picture)
         for label in self.river_buttons.values():
             label.set_visible(True)
+        self._layout(self.scale)
 
     def show_apps(self, apps):
         """Distribui até 15 aplicativos instalados reais, sem ler janelas."""
@@ -127,7 +132,10 @@ class RiversCanvas(Gtk.ScrolledWindow):
         self.mode = "apps"
         for i, (marker, river, _, _) in enumerate(self.markers):
             app = self.apps[i] if i < len(self.apps) else None
-            marker._arandu_app = app
+            if app:
+                self.marker_apps[marker] = app
+            else:
+                self.marker_apps.pop(marker, None)
             marker.set_sensitive(app is not None)
             marker.set_focusable(app is not None)
             marker.set_visible(app is not None)
