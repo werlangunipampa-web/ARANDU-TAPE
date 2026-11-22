@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.6.1 — Semente retrátil e saídas Sway experimentais
+# ARANDU Desktop 0.6.2 — inicialização estável e lançador interno
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -112,3 +112,13 @@ São mantidos os testes de segurança (sem janelas do GNOME, sem ECA e sem execu
 No laboratório, `Ctrl+Alt+A` alterna exibir/ocultar a janela ARANDU flutuante por scratchpad do Sway; não é uma superfície layer-shell transparente. O botão `Tela cheia` expande/recolhe a própria janela ARANDU, enquanto `Telas do ARANDU` lista as saídas informadas via IPC e permite mover a janela por nome enumerado.
 
 A leitura de saídas é sob demanda. Sway permanece o compositor efetivo; ARANDU ainda é cliente GTK4. O GNOME hospedeiro, TOPBAR e ECA não são alterados. **Código e testes publicados; comportamento de 0.6.1 ainda depende de teste real no VAIO.** As opções de monitor preferido/foco/janela ativa da Confluência GNOME ainda não foram integralmente portadas.
+
+## Correção 0.6.2 — iniciar e trabalhar de dentro do ARANDU
+
+O 0.6.1 introduziu regra `for_window` de scratchpad automático que pode ocultar o ARANDU e interromper a experiência de abertura de programas. A 0.6.2 **restaura o lançamento visível como aba normal** no Sway aninhado e retorna ao ARANDU por `Ctrl+Alt+A`. O scratchpad automático foi desativado. `Super+Shift+Espaço` ainda permite flutuação manual.
+
+Na própria janela ARANDU há atalhos explícitos **Arquivos (Nemo)** e **Terminal (Foot)**. Executam apenas programas conhecidos instalados no Mint, por clique e sem `shell=True`; não criam serviços persistentes nem modificam GNOME. O botão existente `Aplicativos instalados` e medalhões permanece com seleção seguida de confirmação.
+
+**Nota de integração:** aplicativos de instância única, como gerenciadores de arquivos, podem ser redirecionados à sessão GNOME hospedeira; precisamos observar no VAIO se o Nemo aparece dentro do Sway antes de alegar integração completa. O Foot é o primeiro teste controlado. Testar uma saída virtual; tela cheia e saídas múltiplas permanecem opções experimentais.
+
+**Status:** correção publicada, testes unitários ainda não executados no VAIO após o update. Não temos sessão de login ARANDU nem motor Rust ligado à interface GTK.
