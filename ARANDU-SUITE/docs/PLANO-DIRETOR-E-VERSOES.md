@@ -142,3 +142,12 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - **Estado:** código e testes de contrato publicados; somente a presença de duas janelas foi validada no VAIO, não a troca por medalhão nesta revisão.
 - **Próximo teste:** Foot -> Ctrl+Alt+A -> ABERTOS -> selecionar Foot -> Focar -> verificar foco real -> Ctrl+Alt+A para retorno, sem modificar GNOME.
 - A ECA permanece desconectada, o compositor Sway não é substituído pelo ARANDU e nenhum registro automático de histórico é autorizado.
+
+## Desktop 0.6.1 — tela cheia, até três saídas virtuais e scratchpad (22/11/2026)
+
+- **Meta de integração GNOME:** Semente/Rios sobre janelas, recolher sem encerrar, adaptação multi-monitor e tela cheia, sem coletar histórico ou tocar na ECA.
+- `Ctrl+Alt+A` no Sway alterna `scratchpad show`; janela ARANDU passa a flutuante com regra temporária. É um **protótipo de sobreposição**, ainda sem transparência real ou layer-shell.
+- `Telas do ARANDU` consulta `swaymsg get_outputs` somente mediante clique; permite mover a janela para saída cujo nome exista no compositor. `Tela cheia` é opção do cliente GTK4.
+- `start-nested.sh --outputs=1|2|3` ajusta `WLR_X11_OUTPUTS` e simula **saídas virtuais**, não a detecção de monitores físicos, que permanece um requisito futuro.
+- GNOME/Confluência/TOPBAR mantidos; serviços Mint (Nemo, NetworkManager, áudio etc.) são reaproveitáveis, mas uma sessão ARANDU completa ainda precisará prover integração de desktop, portais e serviços.
+- **Status:** código publicado e testes preparados; validação gráfica/funcional no VAIO pendente. Não afirmar que Sway virou um compositor escrito pelo ARANDU nem que suporte físico a três telas esteja concluído.
