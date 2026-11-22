@@ -47,3 +47,12 @@
 
 /* 2.7.2 — seleção intensa dos medalhões e leitura visual */
 .arandu-node-selected { border: 4px solid #ffe1a0; border-radius: 40px; background-color: rgba(62,42,12,0.45); box-shadow: 0 0 18px 7px rgba(225,184,92,0.60); }
+
+/* Painel de acessibilidade vinculado à Semente. */
+.arandu-a11y-scroll {background-color:rgba(17,22,20,0.98);border:2px solid #d3b676;border-radius:12px;}
+.arandu-a11y-section {color:#f7dfac;font-size:12px;font-weight:bold;padding:7px 7px 2px;}
+.arandu-seed-controls {spacing:4px;padding:10px;}
+.arandu-seed-control {min-height:38px;color:#fff2d5;border:1px solid #9d895f;border-radius:7px;background-color:#27352f;}
+.arandu-seed-control:focus,.arandu-seed-control:hover {background-color:#4b573e;border:2px solid #ffe4a8;}
+.arandu-node-high-contrast {border:5px solid #ffffff;border-radius:44px;background-color:#000000;box-shadow:0 0 0 4px #ffda54;}
+.arandu-node-high-contrast.arandu-node-selected {border:6px solid #ffea00;box-shadow:0 0 0 5px #000000,0 0 0 9px #ffffff;}
