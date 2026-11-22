@@ -1,4 +1,4 @@
-# ARANDU TAPE — Confluência | ARANDU SUITE 2.8.3 (beta)
+# ARANDU TAPE — Confluência | ARANDU SUITE 3.0 (prévia experimental)
 
 **Um ambiente gráfico de navegação que se adapta às possibilidades humanas.**
 
@@ -14,11 +14,11 @@ O **ARANDU TAPE** é um projeto experimental de interface gráfica para o **GNOM
 - **Semente:** expande e recolhe os rios por ação explícita.
 - **Medalhões:** representam os itens navegáveis. Selecionar um rio realça seu caminho; navegar realça o medalhão escolhido; ativá-lo solicita abrir ou focar o aplicativo.
 
-### Repouso visual — versão 2.8.3
+### Repouso visual — Semente 7s / ajuda 6s
 
 Após **6 segundos** sem interação, o medalhão de ajuda `?` perde visibilidade; após **7 segundos**, a Semente central reduz sua opacidade a cerca de **12%**. **Os rios e os medalhões dos aplicativos permanecem visíveis** até o recolhimento explícito dos rios. A ajuda pode ser solicitada pelo menu ARANDU da barra superior. A intenção é manter os controles disponíveis sem poluir a área de trabalho.
 
-As janelas de trabalho devem ficar à frente dos rios com `floating=false`; validar o posicionamento na versão de GNOME usada. A TOPBAR histórica é um componente ornamental distinto, preservado pelo instalador.
+As janelas de trabalho devem ficar à frente dos rios com `floating=false`; validar o posicionamento na versão de GNOME usada. A TOPBAR histórica é um componente ornamental distinto, preservado pelo instalador. A suíte possui uma variante TOPBAR experimental para outros GNOMEs modernos, sem substituir a versão 46 em uso.
 
 ## Instalação
 
@@ -44,6 +44,7 @@ Não executar com `sudo`. O instalador faz backup da Confluência instalada e n�
 | `Super+Alt+0` | Limpar seleção |
 | `Super+Shift+T` | Abrir o aplicativo TAPE |
 | `Super+Alt+B` | Recuperar a barra superior (quando compatível) |
+| `Super+Alt+Espaço` | Iniciar varredura / confirmar medalhão (experimental) |
 
 As setas e Enter simples só atuam quando um medalhão ARANDU está com o foco; não devem interceptar a digitação em outros programas.
 
@@ -64,8 +65,8 @@ Um retorno `(true,)` confirma aceitação do comando pela extensão, **não comp
 
 - A Confluência possui variantes de implementação para **GNOME 40–44** e **GNOME 45–51**, com validação automatizada de código. Isso **não comprova** funcionamento visual em todas as versões, distribuições ou sessões X11/Wayland.
 - Os testes reais compartilhados até agora ocorreram no **Linux Mint 22.3 / GNOME 46 / X11**.
-- A **ARANDU TOPBAR v6.6.1.2** incorporada é histórica e declara suporte ao GNOME 46; não deve ser habilitada automaticamente em outras versões.
-- Voz em tempo real, gestos de mãos, movimentos de cabeça, varredura de uma tecla, controle integral de outros aplicativos e estudos de usabilidade são objetivos futuros, não funcionalidades entregues.
+- A **ARANDU TOPBAR v6.6.1.2** é preservada no GNOME 46. A variante experimental para GNOME 45, 47–51 exige habilitação explícita e testes; veja [TOPBAR multiversão](docs/TOPBAR-MULTIGNOME-3.0.md).
+- **Varredura por uma tecla** foi adicionada em caráter experimental, desligada por padrão, com confirmação explícita para ativar um programa. Reconhecimento de voz em tempo real, gestos de mãos, movimentos de cabeça e controle integral de outros aplicativos ainda não estão entregues.
 - Para um sistema assistivo confiável, serão necessários calibração individual, confirmação configurável, mecanismos de pausa e testes com pessoas usuárias.
 
 ## Documentação
@@ -74,6 +75,8 @@ Um retorno `(true,)` confirma aceitação do comando pela extensão, **não comp
 - [Arquitetura e acessibilidade](docs/ARQUITETURA-E-ACESSIBILIDADE.md)
 - [Guia de comandos e solução de problemas](docs/COMANDOS-E-DIAGNOSTICO.md)
 - [Estado atual e roteiro de desenvolvimento](docs/ROADMAP.md)
+- [Varredura assistiva 2.9](docs/VARREDURA-2.9.md)
+- [Instalador unificado e TOPBAR multiversão](docs/TOPBAR-MULTIGNOME-3.0.md)
 - [Notas da versão 2.8.3](NOTAS-2.8.3.md)
 
 ## Autoria e colaboração
