@@ -42,9 +42,17 @@ fi
 # Primeiro atualiza a Confluência (tem backup/transação própria).
 bash "$ROOT/Confluencia/instalar.sh"
 # TOPBAR histórica: não sobrescrever nem desativar sem autorização específica.
+# Variante moderna apenas em GNOME 45 a 51, não em GNOME 40-44.
+TOP_SUPPORTED=0
+if [[ "$SHELL_MAJOR" == "46" ]]; then TOP_SUPPORTED=1; fi
+if [[ "$SHELL_MAJOR" =~ ^[0-9]+$ ]] && (( SHELL_MAJOR >= 45 && SHELL_MAJOR <= 51 )); then TOP_SUPPORTED=1; fi
+if [[ "$ENABLE_EXPERIMENTAL" == "1" && "$SHELL_MAJOR" != "46" && "$TOP_SUPPORTED" != "1" ]]; then
+  echo 'ERRO: TOPBAR experimental restrita a GNOME 45-51.' >&2
+  exit 2
+fi
 if [[ -f "$TOP/metadata.json" ]]; then
   echo 'TOPBAR histórica já instalada: preservada integralmente.'
-elif [[ -f "$TOP_SRC/metadata.json" ]]; then
+elif [[ "$TOP_SUPPORTED" == "1" && -f "$TOP_SRC/metadata.json" ]]; then
   mkdir -p "$(dirname "$TOP")" "$BACK"
   STAGE="$(mktemp -d "$(dirname "$TOP")/.arandu-topbar-stage.XXXXXXXX")"
   trap 'rm -rf -- "$STAGE"' EXIT
@@ -72,7 +80,7 @@ elif [[ -f "$TOP_SRC/metadata.json" ]]; then
   if [[ ! -e "$TOP" ]]; then mv -- "$STAGE" "$TOP"; trap - EXIT; fi
   echo 'TOPBAR incorporada instalada. É necessário iniciar nova sessão GNOME.'
 else
-  echo 'AVISO: TOPBAR não incluída. A Confluência foi instalada; para instalador completo, executa incorporar-topbar.sh na máquina original.'
+  echo 'TOPBAR não instalada: esta versão GNOME não possui variante TOPBAR validada, ou o pacote está incompleto.'
 fi
 if command -v gnome-extensions >/dev/null; then
   gnome-extensions enable confluencia@arandulab 2>/dev/null || true
