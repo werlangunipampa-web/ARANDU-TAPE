@@ -65,6 +65,17 @@ class BenchmarkContract(unittest.TestCase):
         self.assertIn('subprocess.Popen(', section)
         self.assertNotIn('shell=True', section)
 
+    def test_desktop_benchmark_never_changes_gnome_or_installs(self):
+        script = (Path(__file__).resolve().parents[1] / "session" /
+                  "benchmark-desktop.sh").read_text()
+        self.assertIn('XDG_SESSION_DESKTOP', script)
+        self.assertIn('ARANDU-BENCHMARKS', script)
+        self.assertIn('benchmark.py', script)
+        self.assertIn('--count 10 --interval 1 --save', script)
+        for forbidden in ('sudo ', 'apt install', 'pkill ', 'killall ',
+                          'systemctl restart', 'swaymsg exit', 'reboot'):
+            self.assertNotIn(forbidden, script)
+
     def test_no_background_sampling_or_network(self):
         source = (Path(__file__).resolve().parents[1] / "benchmark.py").read_text()
         self.assertIn('mode.add_argument("--measure"', source)
