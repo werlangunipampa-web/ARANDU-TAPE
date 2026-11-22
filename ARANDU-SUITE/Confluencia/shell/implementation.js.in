@@ -30,6 +30,7 @@ class TapeSession {
         this.medallionSleepId=0; this.medallionsAwake=false;
         this.navRiver=null;this.navIndex=-1;this.navBindings=[];
         this.scanTimer=0;this.scanning=false;
+        this.navigationOverlay=false;this.navigationMonitorIndex=null;
         this.tracker=Shell.WindowTracker.get_default();
         this.apps=Shell.AppSystem.get_default();
         this.privacy=new Gio.Settings({schema_id:'org.gnome.desktop.privacy'});
@@ -53,6 +54,13 @@ class TapeSession {
             this.applyLayer();
         });
         this.panel.menu.addAction('Centralizar a Semente',()=>this.Center());
+        this.panel.menu.addAction('Monitor: acompanhar janela ativa',()=>this.setMonitorTarget('focused'));
+        this.panel.menu.addAction('Monitor: acompanhar ponteiro/toque',()=>this.setMonitorTarget('pointer'));
+        this.panel.menu.addAction('Monitor: principal',()=>this.setMonitorTarget('primary'));
+        for(let monitor=0;monitor<3;monitor++){
+            const i=monitor;
+            this.panel.menu.addAction(`Monitor fixo ${i+1}`,()=>this.setMonitorTarget('fixed',i));
+        }
         this.panel.menu.addAction('Guia dos Rios · atalhos',()=>this.toggleHelp());
         this.panel.menu.addAction('Acessibilidade · configurar na Semente',()=>this.toggleAccessibility());
         this.panel.menu.addAction('Varredura assistiva: iniciar/parar',()=>this.scanning?this.stopScan():this.startScan());
@@ -122,7 +130,9 @@ class TapeSession {
             index:entry?index:-1,
             selected:entry?{title:String(entry.title||entry.app||'Aplicativo'),
                 app:String(entry.app||'')}:null,
-            intervalMs:this.settings.get_int('scan-interval-ms')
+            intervalMs:this.settings.get_int('scan-interval-ms'),
+            navigationOverlay:Boolean(this.navigationOverlay),
+            monitorIndex:this.navigationMonitorIndex
         });
     }
     // Interface de acessibilidade única, independente do dispositivo de entrada.
@@ -240,10 +250,51 @@ class TapeSession {
         this.activateSelection();
         return true;
     }
+    // Destino da Confluência em configurações de múltiplos monitores.
+    setMonitorTarget(mode,index=0) {
+        if(!['focused','pointer','primary','fixed'].includes(mode))return false;
+        this.settings.set_string('monitor-target',mode);
+        if(mode==='fixed')this.settings.set_int('fixed-monitor-index',limit(index,0,7));
+        if(this.navigationOverlay)this.navigationMonitorIndex=this.pickMonitorIndex();
+        this.position();
+        return true;
+    }
+    pickMonitorIndex() {
+        const layout=Main.layoutManager;
+        const monitors=layout.monitors||[];
+        const fallback=layout.primaryMonitor?.index??0;
+        const valid=i=>Number.isInteger(i) && (monitors.length===0 ? i===fallback : monitors.some(m=>m.index===i));
+        const mode=this.settings.get_string('monitor-target');
+        let index=fallback;
+        if(mode==='fixed')index=this.settings.get_int('fixed-monitor-index');
+        else if(mode==='focused') {
+            const win=global.display.focus_window;
+            if(win && typeof win.get_monitor==='function')index=win.get_monitor();
+        } else if(mode==='pointer') {
+            const [x,y]=global.get_pointer();
+            const mon=monitors.find(m=>x>=m.x && x<m.x+m.width && y>=m.y && y<m.y+m.height);
+            if(mon)index=mon.index;
+        }
+        return valid(index)?index:fallback;
+    }
+    // Modo transitório: a Semente e os Rios sobem juntos e depois retornam ao desktop.
+    enterNavigation() {
+        if(!this.allowed())return;
+        if(!this.navigationOverlay)this.navigationMonitorIndex=this.pickMonitorIndex();
+        this.navigationOverlay=true;
+        this.applyLayer();
+    }
+    leaveNavigation() {
+        if(!this.navigationOverlay)return;
+        this.navigationOverlay=false;
+        this.navigationMonitorIndex=null;
+        this.applyLayer();
+    }
     // Intent Router: os dispositivos de entrada chamam estas ações sem tocar no layout.
     selectRiver(river) {
         if(!RIVERS.includes(river) || !this.allowed())return;
         if(!this.expanded)this.setExpanded(true);
+        this.enterNavigation();
         this.refresh();
         this.wakeMedallions();
         this.wakeSeed();
@@ -278,12 +329,14 @@ class TapeSession {
         this.wakeMedallions();
         this.wakeSeed();
         this.openNode(this.navRiver,this.navIndex);
-        // Deliberadamente não recolher os rios após a ativação.
+        this.leaveNavigation();
+        // Rios permanecem expandidos no desktop, sem bloquear o aplicativo.
         this.highlightSelection();
     }
     cancelSelection() {
         this.stopScan();
         this.navRiver=null;this.navIndex=-1;this.highlightSelection();
+        this.leaveNavigation();
         if(this.expanded)this.wakeMedallions();
     }
     // Enter simples e setas atuam SOMENTE quando o teclado está focado
@@ -565,7 +618,7 @@ class TapeSession {
                 const b=new St.Button({can_focus:true,reactive:true});
                 const stack=new St.Widget({layout_manager:new Clutter.FixedLayout()});stack.set_size(65,65);
                 const med=this.icon(r,60);stack.add_child(med);
-                b.set_child(stack);b.connect('clicked',()=>{this.wakeMedallions();this.openNode(r,i);});
+                b.set_child(stack);b.connect('clicked',()=>{this.wakeMedallions();this.openNode(r,i);this.leaveNavigation();});
                 b.connect('notify::hover',()=>{if(b.hover)this.wakeMedallions();});
                 this.watchHover(b);this.root.add_child(b);
                 this.buttons[r].push({button:b,stack,badge:null,key:null,entry:null});
@@ -649,7 +702,7 @@ class TapeSession {
     applyLayer() {
         if (!this.root) return;
         const layout=Main.layoutManager;
-        const floating=this.settings.get_boolean('floating') || !layout._backgroundGroup;
+        const floating=this.navigationOverlay || this.settings.get_boolean('floating') || !layout._backgroundGroup;
         const desired=floating?'floating':'desktop';
         if (this.layer!==desired) {
             this.detachLayer();
@@ -751,8 +804,16 @@ class TapeSession {
     }
     position(ax,ay) {
         if(!this.root || !Main.layoutManager.primaryMonitor)return;
-        const mon=Main.layoutManager.primaryMonitor;
-        const rect=Main.layoutManager.getWorkAreaForMonitor(mon.index);
+        const layout=Main.layoutManager;
+        const monitors=layout.monitors||[];
+        const requested=this.navigationOverlay
+            ? this.navigationMonitorIndex : this.pickMonitorIndex();
+        const mon=monitors.find(m=>m.index===requested)||layout.primaryMonitor;
+        if(!mon)return;
+        // Se uma tela for desligada durante a navegação, migrar ao monitor restante.
+        if(this.navigationOverlay && this.navigationMonitorIndex!==mon.index)
+            this.navigationMonitorIndex=mon.index;
+        const rect=layout.getWorkAreaForMonitor(mon.index);
         this.area=rect;
         const w=Math.max(1,rect.width),h=Math.max(1,rect.height);
         const px=ax===undefined?this.settings.get_double('anchor-x'):ax;
@@ -889,7 +950,7 @@ class TapeSession {
     }
     setExpanded(on) {
         this.expanded=Boolean(on);
-        if(!this.expanded)this.stopScan();
+        if(!this.expanded){this.stopScan();this.leaveNavigation();}
         if(!this.root)return;
         this.wakeSeed();
         this.fabric.visible=this.expanded;
