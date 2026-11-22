@@ -27,9 +27,9 @@ except (ImportError, ValueError) as error:
     raise SystemExit(2)
 
 from visual import RiversCanvas
-from session.windows import list_windows, focus_window, list_outputs, move_arandu_to_output
+from session.windows import list_windows, focus_window, list_outputs, move_arandu_to_output, window_action, show_scratchpad
 
-VERSION = "0.7.2"
+VERSION = "0.7.3"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -85,7 +85,7 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.7.2")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.7.3")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -96,7 +96,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.7.2 · SEMENTE ESSENCIAL", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.7.3 · FUNDAMENTOS", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         performance = Gtk.Button(label="Desempenho")
@@ -119,6 +119,8 @@ class Desktop(Gtk.Application):
             quick.append(self.quick_action("Arquivos (Nemo)", "nemo"))
             quick.append(self.quick_action("Terminal (Foot)", "foot"))
             quick.append(self.quick_action("Área de Trabalho", "desktop"))
+            quick.append(self.quick_action("Navegador", "firefox"))
+            quick.append(self.quick_action("Opy · Janelas", "opy"))
             main.append(quick)
         main.append(add_style(Gtk.Label(
             label="A Semente organiza o encontro entre os Rios.", xalign=0), "arandu-title"))
@@ -165,6 +167,13 @@ class Desktop(Gtk.Application):
         windows_btn = Gtk.Button(label="Janelas da sessão Sway")
         windows_btn.connect("clicked", lambda *_: self.show_windows())
         actions.append(windows_btn)
+        if os.environ.get("ARANDU_SESSION_LAB") == "1":
+            capture_button = Gtk.Button(label="Capturar → Colar")
+            capture_button.connect("clicked", lambda *_: self.capture_to_clipboard())
+            actions.append(capture_button)
+            clipboard_button = Gtk.Button(label="Área de transferência")
+            clipboard_button.connect("clicked", lambda *_: self.show_clipboard_help())
+            actions.append(clipboard_button)
         if os.environ.get("ARANDU_SESSION_LAB") == "1":
             displays = Gtk.Button(label="Telas do ARANDU")
             displays.connect("clicked", lambda *_: self.show_displays())
@@ -229,6 +238,40 @@ class Desktop(Gtk.Application):
             self.show_seed_status()
         except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
             self.content.append(self.text("Não foi possível ajustar o áudio."))
+
+    def capture_to_clipboard(self):
+        """Captura só após clique; processo externo termina sozinho, sem histórico."""
+        if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
+            return
+        target = Path(__file__).resolve().parent / "session" / "capture-screen.sh"
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        try:
+            # Execução em subprocesso evita travar a GUI durante captura.
+            subprocess.Popen(
+                ["/bin/bash", str(target), "--clipboard"],
+                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL, close_fds=True, start_new_session=True,
+            )
+            self.content.append(self.text(
+                "Captura solicitada. Use Ctrl+V no aplicativo de destino. "
+                "Se não colar, verifique grim e wl-clipboard."))
+        except OSError as error:
+            self.content.append(self.text("Captura indisponível: " + str(error)))
+
+    def show_clipboard_help(self):
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        self.content.append(self.text("SEMENTE · COPIAR E COLAR", "arandu-title"))
+        for instruction in (
+            "Texto: Ctrl+C para copiar, Ctrl+V para colar; Ctrl+X para recortar.",
+            "Arquivos: use Nemo, com Ctrl+C/Ctrl+X/Ctrl+V entre pastas.",
+            "Imagem da tela: Print copia PNG no Wayland; Ctrl+V cola no destino.",
+            "Alt+Tab abre Opy para alternar entre aplicativos.",
+            "Clipboard pertence à sessão: não é gravado na Memória ou ECA.",
+            "Arrastar e soltar sobre o fundo ARANDU ainda não foi implementado.",
+        ):
+            self.content.append(self.text(instruction))
 
     def show_session_menu(self):
         self.clear_content()
@@ -361,9 +404,10 @@ class Desktop(Gtk.Application):
         """Abre aplicativos locais conhecidos no Sway, nunca comandos arbitrários."""
         if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
             return
-        if program not in ("nemo", "foot", "desktop"):
+        if program not in ("nemo", "foot", "desktop", "firefox", "opy"):
             return
-        path = shutil.which("nemo" if program == "desktop" else program)
+        path = shutil.which("nemo" if program == "desktop" else
+                            ("python3" if program == "opy" else program))
         if not path:
             self.clear_content()
             self.content.append(self.text(f"{program} não encontrado no Mint."))
@@ -371,6 +415,8 @@ class Desktop(Gtk.Application):
             return
         try:
             command = [path]
+            if program == "opy":
+                command.append(str(Path(__file__).resolve().parent / "opy.py"))
             if program == "desktop":
                 desktop_dir = (GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP)
                                or str(Path.home() / "Área de Trabalho"))
@@ -547,6 +593,9 @@ class Desktop(Gtk.Application):
             self.content.append(self.text("Não foi possível consultar Sway: " + str(error)))
             return
         self.visual.show_windows(windows)
+        restore = Gtk.Button(label="Recuperar janela recolhida")
+        restore.connect("clicked", lambda *_: self.restore_recollected())
+        self.content.append(restore)
         if not windows:
             self.content.append(self.text(
                 "Nenhuma outra janela Sway encontrada. Clique em 'Abrir Foot no Sway', "
@@ -573,11 +622,55 @@ class Desktop(Gtk.Application):
         focus.add_css_class("arandu-action")
         focus.connect("clicked", lambda *_: self.activate_window(window["id"]))
         row.append(focus)
+        reclaim = Gtk.Button(label="Recolher à Opy")
+        reclaim.connect("clicked", lambda *_: self.act_on_window(window["id"], "recolher"))
+        row.append(reclaim)
+        close = Gtk.Button(label="Encerrar janela")
+        close.connect("clicked", lambda *_: self.confirm_close_window(window))
+        row.append(close)
         cancel = Gtk.Button(label="Cancelar")
         cancel.connect("clicked", lambda *_: self.show_windows())
         row.append(cancel)
         self.content.append(row)
         self.detail_revealer.set_reveal_child(True)
+
+    def act_on_window(self, identifier, action):
+        try:
+            if window_action(identifier, action):
+                self.show_windows()
+            else:
+                self.content.append(self.text("Ação indisponível. Atualize a Opy."))
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+            self.content.append(self.text("Não foi possível agir sobre a janela: " + str(error)))
+
+    def confirm_close_window(self, window):
+        dialog = Gtk.MessageDialog(
+            transient_for=self.window, modal=True,
+            message_type=Gtk.MessageType.WARNING,
+            buttons=Gtk.ButtonsType.NONE,
+            text="Encerrar esta janela?",
+        )
+        dialog.set_secondary_text(window["title"][:150] +
+                                  "\\nO aplicativo poderá pedir para salvar documentos.")
+        dialog.add_button("Cancelar", Gtk.ResponseType.CANCEL)
+        dialog.add_button("Encerrar janela", Gtk.ResponseType.ACCEPT)
+        dialog.set_default_response(Gtk.ResponseType.CANCEL)
+        dialog.connect("response", self.finish_close_window, window["id"])
+        dialog.present()
+
+    def finish_close_window(self, dialog, response, identifier):
+        dialog.destroy()
+        if response == Gtk.ResponseType.ACCEPT:
+            self.act_on_window(identifier, "encerrar")
+
+    def restore_recollected(self):
+        try:
+            if show_scratchpad():
+                self.retract()
+            else:
+                self.content.append(self.text("Nenhuma janela recolhida para recuperar."))
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+            self.content.append(self.text("Falha ao recuperar janela: " + str(error)))
 
     def activate_window(self, identifier):
         try:
