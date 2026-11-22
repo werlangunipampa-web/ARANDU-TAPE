@@ -28,11 +28,16 @@ class NestedSessionContract(unittest.TestCase):
         self.assertEqual(config.count("__ARANDU_LAUNCHER__"), 1)
         self.assertIn("exec __ARANDU_LAUNCHER__", config)
 
-    def test_windows_are_tabbed_not_squeezed(self):
+    def test_titleless_layout_with_recovery(self):
         config = (SESSION / "sway.config.in").read_text(encoding="utf-8")
-        self.assertIn("workspace_layout tabbed", config)
+        self.assertIn("default_border none", config)
+        self.assertIn("workspace_layout default", config)
+        self.assertIn("bindsym $mod+t layout tabbed", config)
         self.assertIn("bindsym $mod+Tab focus next", config)
         self.assertIn("bindsym $mod+Shift+Tab focus prev", config)
+        self.assertIn("bindsym $mod+q kill", config)
+        self.assertIn("bindsym $mod+h move scratchpad", config)
+        self.assertIn("bindsym $mod+Shift+h scratchpad show", config)
 
     def test_gapplication_identity_does_not_collide(self):
         app = (ROOT / "app.py").read_text(encoding="utf-8")
