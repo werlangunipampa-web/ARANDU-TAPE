@@ -160,3 +160,12 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - `Aplicativos instalados` continua disponível; seleção de medalhão não executa automaticamente por questão de validação e acessibilidade.
 - Teste de aceitação: ARANDU inicia visível -> clicar Foot -> voltar com Ctrl+Alt+A -> clicar Arquivos -> verificar se janela ficou dentro do Sway -> foco via ABERTOS. Aplicativos single-instance do Mint poderão reutilizar instância no GNOME; não presumir sessão separada.
 - Semente overlay layer-shell, modo desktop próprio no login, múltiplos monitores físicos e evolução da interface por ações próprias são marcos futuros; preservar GNOME e dados cognitivos.
+
+## ARANDU Desktop — candidato a sessão opcional de login (2026-11-22)
+
+- Criado diretório `ARANDU-DESKTOP/session/login` com configuração Sway exclusiva de sessão nativa, inicializador sem root e gerenciador opt-in `--check` / `--install` / `--remove`.
+- `--install` exige sudo manual e cria apenas dois arquivos próprios: `/usr/local/bin/arandu-login-session` e `/usr/share/wayland-sessions/arandu-desktop-lab.desktop`. Não altera GNOME, LightDM, padrão de login, configurações pessoais nem instala dependências.
+- `--remove` apaga apenas os dois itens marcados como gerenciados pelo ARANDU; recusa sobrescrever/apagar outros arquivos.
+- Ao contrário do ensaio aninhado, a sessão real remove flags de backend X11 do wlroots e executa Sway Wayland sobre o hardware. Precisa validação específica de seat, login manager, GPU, teclado, mouse, saídas, integração GTK/Nemo e retorno ao greeter.
+- Emergência: `Ctrl+Alt+Shift+Q` encerra a sessão experimental, volta ao seletor de login se compositor estiver operante. GNOME permanece outra opção.
+- **Não declarar pronta nem recomendar login automático**: o código e testes contratuais não substituem o teste físico do VAIO nem provam integração de desktop completa. A Semente GUI segue GTK4, Rust segue isolado, camada layer-shell e motor de aprendizagem ainda não conectados.
