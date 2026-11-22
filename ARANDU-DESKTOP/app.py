@@ -245,7 +245,7 @@ class Desktop(Gtk.Application):
 
     def show_windows(self):
         """Consulta janelas somente mediante pedido; não toca no GNOME hospedeiro."""
-        self.session.retract()
+        self.session.select("open")
         self.selected_window = None
         self.clear_content()
         self.detail_revealer.set_reveal_child(True)
