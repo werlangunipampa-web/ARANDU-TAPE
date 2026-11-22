@@ -39,7 +39,7 @@ class Session:
 
     def status(self) -> dict:
         return {
-            "prototype": "0.6.4",
+            "prototype": "0.7.0",
             "active": self.active,
             "river": self.river,
             "eca": "isolated",
