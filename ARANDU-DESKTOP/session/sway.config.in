@@ -24,6 +24,8 @@ bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] focus
 bindsym $mod+f fullscreen toggle
 bindsym $mod+Shift+space floating toggle
 # Terminal apenas nesta sessão aninhada; Foot instalado junto do Sway no Mint.
+# Print Screen salva PNG na pasta de imagens do usuário.
+bindsym Print exec __ARANDU_CAPTURE__
 bindsym $mod+Return exec foot
 # Exibe o programa de controle ARANDU; substituído por caminho absoluto temporário.
 exec __ARANDU_LAUNCHER__
