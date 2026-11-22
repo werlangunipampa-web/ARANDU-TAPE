@@ -8,6 +8,8 @@
     <key name="recent" type="s"><default>'[]'</default><summary>Janelas recentes</summary></key>
     <key name="frequency" type="s"><default>'{}'</default><summary>Contagem local de usos</summary></key>
     <key name="floating" type="b"><default>false</default><summary>Mostrar Semente sobre as janelas</summary></key>
+    <key name="monitor-target" type="s"><default>'focused'</default><summary>Destino da Confluência: focused, pointer, primary ou fixed</summary></key>
+    <key name="fixed-monitor-index" type="i"><default>0</default><range min="0" max="7"/><summary>Índice de monitor fixo, com fallback para o monitor principal</summary></key>
     <key name="anchor-x" type="d"><default>0</default><summary>Posição horizontal relativa da Semente</summary></key>
     <key name="anchor-y" type="d"><default>0</default><summary>Posição vertical relativa da Semente</summary></key>
     <key name="arandu-rio-memoria" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;1']</default><summary>Selecionar rio Memória</summary></key>
