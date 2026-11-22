@@ -215,3 +215,12 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - `session/verify-essentials.sh` audita dependências e executa testes sem sudo, instalações ou modificações de configuração. `tests/test_essentials_contract.py` verifica contratos em ambos templates de sessão.
 - **Aceitação pendente no VAIO:** 1) login GNOME seguro, 2) laboratório Sway inicia, 3) Opy alterna Firefox ↔ Foot, 4) fechamento e recolhimento funcionam, 5) Print → Ctrl+V envia imagem ao ChatGPT, 6) salvar via Shift+Print, 7) retornar ao GNOME sem reiniciar.
 - Não afirmar que Opy já substituiu totalmente a barra de janelas ou que todos os programas GTK não tenham cabeçalhos próprios. Preservar modo de reversão via `Super+T` e exit do Sway.
+
+## Desktop 0.7.2 — serviços essenciais próximos à Semente (22/11/2026)
+
+- Indicadores locais: relógio, estado de rota de rede, bateria, Bluetooth e áudio. Falta de dispositivo explicitamente indicada, sem inventar conectividade à Internet.
+- Centro de Sessão: controle visual com confirmação para sair do Sway ARANDU; GNOME hospedeiro não é encerrado.
+- Botão de Área de Trabalho abre pasta de desktop pelo Nemo; copiar/colar arquivos é inicialmente do gerenciador de arquivos, não do fundo da tela.
+- Indicadores próximos à Semente nesta etapa; a integração geométrica nos medalhões originais será feita após testes de usabilidade.
+- Nova proposta visual: fundo de paisagem/rio/mata em tons verdes e dourados, com Semente clara em primeiro plano e baixa interferência visual. Arte visual é conceito, não interface executada.
+- Testes de contrato publicados. Pendente validação visual no VAIO e verificação completa antes de entrar novamente na sessão ARANDU.
