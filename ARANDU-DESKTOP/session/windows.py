@@ -8,7 +8,7 @@ import json
 import os
 import subprocess
 
-OWN_APP_IDS = {"org.arandulab.DesktopSessionLab", "org.arandulab.DesktopPrototype"}
+OWN_APP_IDS = {"org.arandulab.DesktopSessionLab", "org.arandulab.DesktopPrototype", "org.arandulab.OpySwitcher"}
 
 
 def flatten_windows(node):
@@ -42,7 +42,8 @@ def flatten_windows(node):
 def user_windows(windows):
     """Descarta a própria janela ARANDU sem inventar que há outras janelas."""
     return tuple(w for w in windows if w["app"] not in OWN_APP_IDS
-                 and not w["title"].startswith("ARANDU Desktop · Laboratório"))
+                 and not w["title"].startswith("ARANDU Desktop · Laboratório")
+                 and not w["title"].startswith("Opy · Encontro das janelas"))
 
 
 def _sway_socket():
