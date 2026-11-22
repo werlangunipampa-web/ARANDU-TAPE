@@ -90,3 +90,15 @@ O resultado é uma string JSON com `scanning`, `river`, `index`,
 Depois consulte `AssistiveStatus`, confirme `scanning:false` e observe se
 a janela correta assumiu o foco. A resposta `true` não comprova,
 isoladamente, que o aplicativo ficou em primeiro plano.
+
+## Evolução experimental — velocidades no menu do GNOME
+
+No menu **ARANDU TAPE**, a pessoa pode escolher a velocidade de varredura sem abrir um terminal:
+
+- **Lenta:** 5 segundos por medalhão.
+- **Normal:** 3,5 segundos por medalhão.
+- **Rápida:** 2 segundos por medalhão.
+
+A escolha fica salva no perfil do usuário. Se a varredura já estiver ligada, o relógio de avanço é reiniciado no medalhão atual, **sem ativar o aplicativo**.
+
+Esta evolução está publicada no código-fonte e exige nova validação visual no GNOME 46/X11 antes da distribuição para outra máquina. Pessoas com dificuldades motoras devem começar pela opção lenta e ajustar conforme necessidade.
