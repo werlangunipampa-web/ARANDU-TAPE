@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ARANDU Desktop 0.1: apenas inicia aplicativo GTK4; não substitui login.
+# ARANDU Desktop 0.2: apenas inicia aplicativo GTK4; não substitui login.
 set -Eeuo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 command -v python3 >/dev/null || { echo "Python 3 não disponível"; exit 1; }
