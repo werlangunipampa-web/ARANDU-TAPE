@@ -139,6 +139,11 @@ assert(s.helpBox.pos[1]+s.helpBox.height<=s.area.height);
 
 s.setBarMode('hidden');assert.equal(panelActor.visible,false);
 s.setBarMode('visible');assert.equal(panelActor.visible,true);
+// Sem mouse: visible -> auto -> hidden -> visible.
+s.cycleBarMode();assert.equal(settings.get_string('panel-mode'),'auto');
+s.cycleBarMode();assert.equal(settings.get_string('panel-mode'),'hidden');
+s.cycleBarMode();assert.equal(settings.get_string('panel-mode'),'visible');
+
 s.setBarMode('auto');s.barLastNear=Date.now()-4000;s.updateBar();assert.equal(panelActor.visible,true);
 pointer=[150,240];s.barLastNear=Date.now()-9000;s.updateBar();assert.equal(panelActor.visible,false);
 hideConflict=true;s.updateBar();assert.equal(panelActor.visible,true);
