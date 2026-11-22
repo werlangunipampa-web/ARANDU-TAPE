@@ -94,3 +94,44 @@ def hide_arandu():
     return isinstance(answer, list) and bool(answer) and all(
         isinstance(part, dict) and part.get("success") is True for part in answer
     )
+
+
+def list_outputs():
+    """Saídas ativas do Sway aninhado sob consulta, sem depender do GNOME."""
+    if not _sway_socket():
+        return ()
+    result = subprocess.run(
+        ["swaymsg", "-r", "-t", "get_outputs"],
+        capture_output=True, text=True, timeout=3, check=True,
+    )
+    outputs = json.loads(result.stdout)
+    if not isinstance(outputs, list):
+        raise ValueError("Resposta de monitores inválida")
+    return tuple({
+        "name": item["name"],
+        "focused": item.get("focused") is True,
+        "width": int(item.get("rect", {}).get("width", 0)),
+        "height": int(item.get("rect", {}).get("height", 0)),
+    } for item in outputs if isinstance(item, dict) and item.get("active") is True
+        and isinstance(item.get("name"), str) and item["name"])
+
+
+def move_arandu_to_output(name):
+    """Só move para uma saída enumerada pelo compositor aninhado."""
+    if not _sway_socket() or not isinstance(name, str):
+        return False
+    valid = {item["name"] for item in list_outputs()}
+    if name not in valid:
+        return False
+    # Evita incorporar nomes de saída em sintaxe livre; só IDs de letras/números.
+    import re
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,48}", name):
+        return False
+    result = subprocess.run(
+        ["swaymsg", "-r", "-t", "command",
+         f'[title="^ARANDU Desktop"] move to output {name}'],
+        capture_output=True, text=True, timeout=3, check=True,
+    )
+    answer = json.loads(result.stdout)
+    return isinstance(answer, list) and bool(answer) and all(
+        isinstance(part, dict) and part.get("success") is True for part in answer)
