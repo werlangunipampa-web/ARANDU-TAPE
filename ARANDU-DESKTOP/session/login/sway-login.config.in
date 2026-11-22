@@ -18,8 +18,10 @@ bindsym $mod+Shift+Escape exit
 bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] focus
 bindsym $mod+Tab focus next
 bindsym $mod+Shift+Tab focus prev
-# Print Screen salva PNG na pasta de imagens do usuário.
+# Print copia PNG para a área de transferência (Ctrl+V).
 bindsym Print exec __ARANDU_CAPTURE__
+# Shift+Print salva PNG explicitamente em Imagens.
+bindsym Shift+Print exec __ARANDU_CAPTURE_SAVE__
 bindsym $mod+Return exec foot
 bindsym $mod+f fullscreen toggle
 bindsym $mod+Shift+space floating toggle
