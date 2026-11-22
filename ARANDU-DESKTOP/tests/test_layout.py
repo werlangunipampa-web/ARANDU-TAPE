@@ -28,6 +28,18 @@ class VisualContract(unittest.TestCase):
         self.assertNotIn(".set_accessible_name(", source)
         self.assertIn(".set_tooltip_text(", source)
 
+    def test_compact_canvas_keeps_seed_and_markers_visible(self):
+        from visual_contract import compact_geometry
+        contract = compact_geometry()
+        self.assertEqual(contract["size"], (900, 375))
+        self.assertEqual(contract["seed"], (481, 266))
+        for river in ("memory", "open", "frequent"):
+            for x, y in contract["markers"][river]:
+                self.assertGreaterEqual(x, 0)
+                self.assertLessEqual(x, contract["size"][0])
+                self.assertGreaterEqual(y, 0)
+                self.assertLessEqual(y, contract["size"][1])
+
     def test_seed_is_inside_canvas(self):
         self.assertTrue(0 < SEED[0] < WIDTH)
         self.assertTrue(0 < SEED[1] < HEIGHT)
