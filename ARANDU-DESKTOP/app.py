@@ -21,6 +21,8 @@ from bluetooth_devices import paired_devices, device_action, pairing_manager
 from ai_gateway import PROVIDERS, model_for, complete, GatewayError
 from adaptation import Adaptation, observe as observe_resources, propose as propose_adaptation
 from eca_experiments import workflow as eca_workflow
+from eca_bridge import read_export, EcaBridgeError
+from ai_gateway import ready as ai_ready
 from system_status import summary, clock_text, network_status, battery_status, bluetooth_status, volume_status
 
 try:
@@ -333,6 +335,191 @@ class Desktop(Gtk.Application):
             )
         except OSError as error:
             self.content.append(self.text("Não foi possível abrir controle: " + str(error)))
+
+    def show_tupa(self):
+        """Tupã: interface opcional, não é a identidade nem executor da ECA."""
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        self.content.append(self.text("TUPÃ · COMUNICAÇÃO", "arandu-title"))
+        self.content.append(self.text(
+            "Modelo selecionável, ChatGPT por padrão. A ECA permanece no ARANDU. "
+            "Nenhum conteúdo da máquina ou da ECA é enviado automaticamente."))
+        providers = list(PROVIDERS)
+        select = Gtk.DropDown.new_from_strings(
+            [PROVIDERS[k]["label"] for k in providers])
+        select.set_selected(providers.index(self.tupa_provider)
+                            if self.tupa_provider in providers else 0)
+        select.connect("notify::selected",
+                       lambda dropdown, *_: self.select_tupa_provider(
+                           providers[dropdown.get_selected()]))
+        self.content.append(select)
+        if self.tupa_provider == "chatgpt":
+            self.content.append(self.text(
+                "ChatGPT usa sua sessão do navegador. A assinatura do ChatGPT "
+                "não fornece, por si só, uma chave de API para o painel."))
+            button = Gtk.Button(label="Abrir ChatGPT no navegador")
+            button.connect("clicked", lambda *_: self.open_chatgpt())
+            self.content.append(button)
+        elif self.tupa_provider != "off":
+            provider = self.tupa_provider
+            model = Gtk.Entry()
+            model.set_placeholder_text("Identificador do modelo")
+            model.set_text(model_for(provider))
+            self.content.append(model)
+            prompt = Gtk.Entry()
+            prompt.set_placeholder_text("Sua pergunta para o modelo escolhido")
+            prompt.set_max_length(2000)
+            self.content.append(prompt)
+            self.content.append(self.text(
+                "A pergunta será enviada ao fornecedor somente após clicar Enviar. "
+                "Não inclua senhas ou dados privados."))
+            send = Gtk.Button(label="Enviar pergunta")
+            send.connect("clicked", lambda *_: self.send_tupa(
+                provider, model.get_text().strip(), prompt.get_text()))
+            self.content.append(send)
+            self.tupa_output = self.text("Aguardando pergunta.")
+            self.content.append(self.tupa_output)
+        else:
+            self.content.append(self.text("IA desligada. A Semente continua funcionando."))
+        eca = Gtk.Button(label="ECA · Experimentos de aprendizagem significativa")
+        eca.connect("clicked", lambda *_: self.show_eca())
+        self.content.append(eca)
+
+    def select_tupa_provider(self, provider):
+        if provider not in PROVIDERS:
+            return
+        self.tupa_provider = provider
+        self.show_tupa()
+
+    def open_chatgpt(self):
+        """URL constante, aberta somente ao clique. Não lê nem envia a sessão."""
+        try:
+            Gio.AppInfo.launch_default_for_uri("https://chatgpt.com/", None)
+        except Exception:
+            self.content.append(self.text(
+                "Não foi possível abrir ChatGPT. Abra https://chatgpt.com/ no navegador."))
+
+    def send_tupa(self, provider, model, question):
+        """Envia somente o texto digitado; nenhuma ação gerada é executada."""
+        if provider != self.tupa_provider:
+            return
+        ok, reason = ai_ready(provider, model)
+        if not ok:
+            self.tupa_output.set_label(reason)
+            return
+        if not question.strip():
+            self.tupa_output.set_label("Escreva uma pergunta antes de enviar.")
+            return
+        self.tupa_output.set_label("Consultando modelo escolhido...")
+        import threading
+        token = object()
+        self._tupa_token = token
+
+        def worker():
+            try:
+                response = complete(provider, model, question)
+            except GatewayError as error:
+                response = str(error)
+            GLib.idle_add(self.receive_tupa, token, response)
+        threading.Thread(target=worker, daemon=True).start()
+
+    def receive_tupa(self, token, response):
+        if token is self._tupa_token and self.tupa_output is not None:
+            self.tupa_output.set_label(response)
+        return False
+
+    def show_eca(self):
+        """Sem escrita na ECA; explica o contrato de aprendizagem significativa."""
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        self.content.append(self.text("ECA · APRENDIZAGEM SIGNIFICATIVA", "arandu-title"))
+        self.content.append(self.text(
+            "Integração atual: avaliação de contratos e exportações experimentais "
+            "selecionadas manualmente; sem leitura do estado oficial, "
+            "autoprogramação ou alteração geracional."))
+        for phase in eca_workflow():
+            self.content.append(self.text(phase))
+        self.content.append(self.text(
+            "Opcional: selecione o caminho de uma exportação JSON experimental "
+            "com campos source e relations. A leitura é local e não será enviada ao Tupã."))
+        entry = Gtk.Entry()
+        entry.set_placeholder_text("Caminho completo de um JSON experimental da ECA")
+        self.content.append(entry)
+        load = Gtk.Button(label="Examinar exportação em modo leitura")
+        load.connect("clicked", lambda *_: self.preview_eca(entry.get_text().strip()))
+        self.content.append(load)
+
+    def preview_eca(self, filename):
+        if not filename or not Path(filename).is_file():
+            self.content.append(self.text("Selecione um arquivo JSON existente."))
+            return
+        try:
+            source, relations = read_export(Path(filename))
+            self.content.append(self.text(
+                f"Origem declarada: {source}; relações experimentais: {len(relations)}"))
+            for rel in relations[:8]:
+                self.content.append(self.text(
+                    f"{rel.subject} · {rel.predicate} · {rel.object} "
+                    f"(origem declarada: {rel.origin}; {rel.status})"))
+            self.content.append(self.text(
+                "Uma origem declarada não é evidência validada. "
+                "Nenhuma relação foi escrita na Semente oficial."))
+        except EcaBridgeError as error:
+            self.content.append(self.text(str(error)))
+
+    def show_adaptation(self):
+        """Situação da máquina lida sob clique, sem rastreamento contínuo."""
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        self.content.append(self.text("SEMENTE · ADAPTAÇÃO GERMINATIVA", "arandu-title"))
+        snapshot = observe_resources()
+        battery = ("indisponível" if snapshot.battery_percent is None
+                   else str(snapshot.battery_percent) + "%")
+        memory = ("indisponível" if snapshot.available_memory_percent is None
+                  else str(snapshot.available_memory_percent) + "%")
+        self.content.append(self.text(
+            f"Apresentação: {self.adaptation.mode}. "
+            f"Bateria: {battery}; memória disponível: {memory}."))
+        suggestion = propose_adaptation(snapshot, current=self.adaptation.mode)
+        if suggestion:
+            self.content.append(self.text("Sugestão: " + suggestion.rationale))
+            button = Gtk.Button(label="Autorizar modo " + suggestion.mode)
+            button.connect("clicked", lambda *_: self.apply_seed_adaptation(suggestion))
+            self.content.append(button)
+        for mode in ("economico", "equilibrado"):
+            change = Gtk.Button(label="Selecionar apresentação " + mode)
+            change.connect("clicked", lambda _b, target=mode:
+                           self.choose_seed_mode(target))
+            self.content.append(change)
+        undo = Gtk.Button(label="Desfazer última adaptação")
+        undo.connect("clicked", lambda *_: self.undo_seed_adaptation())
+        self.content.append(undo)
+        self.content.append(self.text(
+            "Modo econômico reduz movimento e frequência de atualização gráfica "
+            "do próprio ARANDU; não muda governor, kernel ou aplicativos."))
+
+    def choose_seed_mode(self, mode):
+        from adaptation import Proposal
+        proposal = Proposal(mode, "Escolha explícita da pessoa", "usuario")
+        self.apply_seed_adaptation(proposal)
+
+    def apply_seed_adaptation(self, proposal):
+        if self.adaptation.apply(proposal, confirmed=True):
+            self.update_seed_adaptation()
+        self.show_adaptation()
+
+    def undo_seed_adaptation(self):
+        self.adaptation.undo()
+        self.update_seed_adaptation()
+        self.show_adaptation()
+
+    def update_seed_adaptation(self):
+        economical = self.adaptation.mode == "economico"
+        animation = (Gtk.RevealerTransitionType.NONE if economical
+                     else Gtk.RevealerTransitionType.SLIDE_DOWN)
+        self.tools_revealer.set_transition_type(animation)
+        self.detail_revealer.set_transition_type(animation)
+        self.visual.set_energy_mode(economical)
 
     def show_bluetooth(self):
         """Exibe fones pareados ao solicitar; nenhuma descoberta contínua."""
