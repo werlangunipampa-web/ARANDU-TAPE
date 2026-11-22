@@ -367,11 +367,16 @@ class TapeSession {
         }
         if(mode==='hidden'){Main.panel.hide();return;}
         if(mode!=='auto'){this.restorePanel();return;}
-        const [,y]=global.get_pointer();
+        const [x,y]=global.get_pointer();
         const mon=Main.layoutManager.primaryMonitor;
         if(!mon){this.restorePanel();return;}
-        if(y>=mon.y && y<=mon.y+14)this.barLastNear=Date.now();
-        const nearby=Date.now()-(this.barLastNear||0)<1800;
+        // Área de aproximação inclui toda a altura da barra, e não só 14 pixels.
+        // Uma pessoa com mobilidade reduzida precisa de tempo para encontrar o comando.
+        const panelHeight=Math.max(44,Main.panel.height||0);
+        const onPanel=x>=mon.x && x<=mon.x+mon.width &&
+            y>=mon.y && y<=mon.y+panelHeight+14;
+        if(onPanel)this.barLastNear=Date.now();
+        const nearby=Date.now()-(this.barLastNear||0)<8000;
         if(nearby)this.restorePanel();else Main.panel.hide();
     }
     allowed() {return !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;}
