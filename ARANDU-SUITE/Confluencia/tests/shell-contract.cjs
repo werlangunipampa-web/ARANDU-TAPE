@@ -168,11 +168,21 @@ assert.equal(s.seed.opacity,255);
 assert.equal(s.buttons[s.navRiver][s.navIndex].button.opacity,255);
 assert.equal(s.buttons[s.navRiver][s.navIndex].button.reactive,true);
 
+// Estado assistivo acessível sem ação: leitura não inicia nem ativa.
+let assistive=JSON.parse(s.AssistiveStatus());
+assert.equal(assistive.available,true);
+assert.equal(assistive.scanning,false);
+assert.equal(assistive.intervalMs,3500);
 // A varredura inicia desligada, avança sem ativar e confirma sob comando explícito.
 assert.equal(s.scanning,false);
 s.selectRiver('open');
 assert.equal(s.AssistiveCommand('scan:start'),true);
 assert.equal(s.scanning,true);
+assistive=JSON.parse(s.AssistiveStatus());
+assert.equal(assistive.scanning,true);
+assert.equal(assistive.river,'open');
+assert(assistive.index>=0);
+assert(assistive.selected && assistive.selected.title);
 assert(s.scanTimer && pending.has(s.scanTimer));
 const scanTick=pending.get(s.scanTimer);
 const beforeTick=s.navIndex;
@@ -198,6 +208,7 @@ s.layerItem.click();assert.equal(s.root.get_parent(),chrome);assert(tracked.size
 s.layerItem.click();assert.equal(s.root.get_parent(),bg);assert.equal(tracked.size,0);
 privacy=false;assert.equal(JSON.parse(s.Snapshot()).recent.length,0);
 main.sessionMode.isLocked=true;assert.equal(JSON.parse(s.Snapshot()).windows.length,0);assert.equal(s.Activate('12'),false);
+assert.equal(JSON.parse(s.AssistiveStatus()).available,false);
 main.sessionMode.isLocked=false;privacy=true;s.Clear();assert.equal(JSON.parse(s.Snapshot()).recent.length,0);
 const oldRoot=s.root;s.stop();assert.equal(panelActor.visible,true);assert(!key && !service && oldRoot.destroyed);assert.equal(pending.size,0);
 console.log('Contrato do Shell validado com objetos de teste: janelas, foco, contagens, privacidade, camadas e 60 ciclos de expansão.');
