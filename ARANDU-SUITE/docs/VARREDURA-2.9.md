@@ -68,3 +68,25 @@ A nova velocidade é aplicada na próxima vez que a varredura é iniciada. Evite
 ## Atualização e retorno
 
 Para instalar ou atualizar, consulte [INSTALAR.md](../../INSTALAR.md) e use o instalador do repositório. A TOPBAR histórica não deve ser modificada. Teste primeiro em GNOME 46/X11.
+
+## Diagnóstico de estado — complemento 3.0
+
+A ponte D-Bus oferece `AssistiveStatus`, operação **somente leitura**.
+Ela permite inspecionar a seleção sem abrir nem fechar aplicativos.
+
+```bash
+gdbus call --session \
+  --dest org.gnome.Shell \
+  --object-path /org/arandulab/Tape/Windows \
+  --method org.arandulab.Tape.Windows1.AssistiveStatus
+```
+
+O resultado é uma string JSON com `scanning`, `river`, `index`,
+`selected` e `intervalMs`. Quando a sessão está bloqueada, retorna apenas
+`available:false` e `scanning:false`, sem expor seleção ou janelas.
+
+**Teste da confirmação:** selecione primeiro um aplicativo de teste, inicie
+`scan:start` e, quando chegar ao medalhão desejado, use `scan:switch`.
+Depois consulte `AssistiveStatus`, confirme `scanning:false` e observe se
+a janela correta assumiu o foco. A resposta `true` não comprova,
+isoladamente, que o aplicativo ficou em primeiro plano.
