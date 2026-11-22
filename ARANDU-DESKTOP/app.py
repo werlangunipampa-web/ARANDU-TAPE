@@ -190,6 +190,11 @@ class Desktop(Gtk.Application):
             "Escolhe um dos medalhões para examinar; nenhum aplicativo abre automaticamente."))
         apps = [a for a in Gio.AppInfo.get_all() if a.should_show() and a.get_name()]
         apps.sort(key=lambda a: a.get_name().casefold())
+        finder = Gtk.SearchEntry()
+        finder.set_placeholder_text("Pesquisar aplicativos nos medalhões")
+        self.content.append(finder)
+        finder.connect("search-changed", lambda entry: self.visual.show_apps(
+            [a for a in apps if entry.get_text().casefold() in a.get_name().casefold()]))
         self.visual.show_apps(apps)
         self.detail_revealer.set_reveal_child(True)
         if not apps:
