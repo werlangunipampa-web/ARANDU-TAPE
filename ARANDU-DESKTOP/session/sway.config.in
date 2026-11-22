@@ -17,5 +17,7 @@ bindsym $mod+Tab focus next
 bindsym $mod+Shift+Tab focus prev
 bindsym $mod+f fullscreen toggle
 bindsym $mod+Shift+space floating toggle
+# Terminal apenas nesta sessão aninhada; Foot instalado junto do Sway no Mint.
+bindsym $mod+Return exec foot
 # Exibe o programa de controle ARANDU; substituído por caminho absoluto temporário.
 exec __ARANDU_LAUNCHER__
