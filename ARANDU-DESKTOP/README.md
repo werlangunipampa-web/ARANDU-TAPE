@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.7.1 — controles essenciais antes do próximo login
+# ARANDU Desktop 0.7.2 — Semente com indicadores e Centro de Sessão
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -242,3 +242,13 @@ bash ARANDU-DESKTOP/session/start-nested.sh
 Na janela Sway aninhada, validar `Alt+Tab`, seleção de Firefox/Foot/Nemo, `Super+Q`, `Super+H`, `Print` + colar e `Shift+Print` antes de voltar ao seletor de login ARANDU. O script de verificação é somente leitura e testes, não altera GNOME ou o login.
 
 **Importante:** `git pull` atualiza código-fonte; sessão Sway que já estava aberta não carrega a nova configuração sozinha. Testar sessão aninhada recém-aberta. A sessão de login registrada utiliza scripts da árvore atual mas não deve ser escolhida para trabalho principal até aceitação no VAIO.
+
+## 0.7.2 — Semente essencial: relógio, rede, bateria, Bluetooth, som e sessão
+
+Na interface ARANDU, logo abaixo do mapa gráfico da Semente, aparecem botões próprios: **relógio** (hora local, atualizada periodicamente), **Rede**, **Bateria**, **Bluetooth**, **Som** e **Sessão**. Ao clicar nos indicadores, abre-se um painel com dados reais do Linux: `/proc/net/route` mostra apenas presença de rota IPv4 (não comprova conexão com internet); bateria consulta `/sys/class/power_supply`; Bluetooth consulta `bluetoothctl show`; volume consulta `pactl`. Recursos ausentes aparecem como indisponíveis, não inventados. O som pode ser ajustado em passos explícitos de 5%.
+
+**Sessão → Solicitar saída → Encerrar sessão** tem diálogo de confirmação GTK4; usa `swaymsg exit` somente na sessão ARANDU Sway, preservando GNOME. É o equivalente visual à saída manual de emergência, que permanece via Ctrl+Alt+Shift+Q.
+
+**Área de Trabalho** abre a pasta desktop configurada do usuário no Nemo. Isso permite copiar, colar, renomear e movimentar arquivos com atalhos do próprio Nemo. **Não é ainda uma superfície com ícones e arrastar/soltar diretamente sobre o papel de parede**; essa função requer integração posterior com compositor/gerenciador da área de trabalho. Cópia de texto entre aplicativos segue a área de transferência Wayland/X11; `wl-clipboard` habilita integração CLI de imagens/texto, mas não deve ser executado no GNOME/X11 para simular a sessão Sway. `Print → Ctrl+V` ainda necessita validação real dentro do ARANDU.
+
+**Estado dos testes:** código e novos testes de contrato publicados; funcionamento da UI deve ser verificado no VAIO a partir da sessão aninhada, antes de voltar ao ARANDU como login principal. Indicadores da Semente são um primeiro painel horizontal **próximo à Semente**, não ícones embutidos no desenho SVG — a integração visual final ainda está pendente.
