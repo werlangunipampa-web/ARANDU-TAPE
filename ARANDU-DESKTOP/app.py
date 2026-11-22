@@ -26,7 +26,7 @@ except (ImportError, ValueError) as error:
 from visual import RiversCanvas
 from session.windows import list_windows, focus_window
 
-VERSION = "0.5.0"
+VERSION = "0.5.1"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -82,7 +82,7 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.5")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.5.1")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -93,7 +93,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.5.0 · JANELAS REAIS NO SWAY", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.5.1 · TESTE DE DUAS JANELAS", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         about = Gtk.Button(label="Sobre")
@@ -130,6 +130,10 @@ class Desktop(Gtk.Application):
         windows_btn = Gtk.Button(label="Janelas da sessão Sway")
         windows_btn.connect("clicked", lambda *_: self.show_windows())
         actions.append(windows_btn)
+        if os.environ.get("ARANDU_SESSION_LAB") == "1":
+            terminal_btn = Gtk.Button(label="Abrir Foot no Sway")
+            terminal_btn.connect("clicked", lambda *_: self.open_test_terminal())
+            actions.append(terminal_btn)
         retract = Gtk.Button(label="Recolher Rios")
         retract.connect("clicked", lambda *_: self.retract())
         actions.append(retract)
@@ -211,6 +215,30 @@ class Desktop(Gtk.Application):
         if not apps:
             self.content.append(self.text("Nenhum aplicativo disponível nesta sessão."))
 
+    def open_test_terminal(self):
+        """Só abre o Foot por solicitação explícita dentro da sessão experimental."""
+        if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
+            return
+        try:
+            subprocess.Popen(
+                ["foot"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+                close_fds=True,
+            )
+            self.clear_content()
+            self.content.append(self.text(
+                "Foot solicitado na sessão Sway. Volte ao ARANDU e clique "
+                "em Janelas da sessão Sway para localizar a janela.",
+                "arandu-note"))
+            self.detail_revealer.set_reveal_child(True)
+        except OSError as error:
+            self.clear_content()
+            self.content.append(self.text("Não foi possível abrir Foot: " + str(error)))
+            self.detail_revealer.set_reveal_child(True)
+
     def show_windows(self):
         """Consulta janelas somente mediante pedido; não toca no GNOME hospedeiro."""
         self.session.retract()
@@ -239,6 +267,9 @@ class Desktop(Gtk.Application):
             self.content.append(self.text(
                 f"{len(windows)} janela(s) disponíveis. Selecione um medalhão "
                 "e confirme antes de mudar o foco."))
+            for item in windows[:15]:
+                self.content.append(self.text(
+                    f"Medalhão · {item['title']} ({item['app']})"))
 
     def select_window(self, window):
         self.selected_window = window
