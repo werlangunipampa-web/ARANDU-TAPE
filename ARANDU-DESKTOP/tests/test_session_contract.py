@@ -53,10 +53,10 @@ class NestedSessionContract(unittest.TestCase):
     def test_sway_can_return_to_arandu_directly(self):
         config = (SESSION / "sway.config.in").read_text(encoding="utf-8")
         self.assertIn(
-            'bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] scratchpad show', config
+            'bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] focus', config
         )
-        self.assertIn('for_window [title="^ARANDU Desktop"] floating enable', config)
-        self.assertIn('move scratchpad, scratchpad show', config)
+        self.assertNotIn('for_window [title="^ARANDU Desktop"] floating enable', config)
+        self.assertNotIn('move scratchpad, scratchpad show', config)
 
     def test_open_river_requests_real_windows_and_confirms_focus(self):
         app = (ROOT / "app.py").read_text(encoding="utf-8")
@@ -67,11 +67,19 @@ class NestedSessionContract(unittest.TestCase):
         self.assertIn('focus.connect("clicked", lambda *_: self.activate_window(window["id"]))', app)
         self.assertIn('if not focus_window(identifier):', app)
 
-    def test_successful_focus_retracts_without_closing_session(self):
+    def test_focus_does_not_hide_the_app_in_scratchpad(self):
         app = (ROOT / "app.py").read_text(encoding="utf-8")
-        self.assertIn('if not hide_arandu():', app)
         self.assertIn('self.retract()', app)
         self.assertIn('def activate_window(self, identifier):', app)
+        self.assertNotIn('hide_arandu()', app)
+
+    def test_native_launchers_are_explicit_and_allowlisted(self):
+        app = (ROOT / "app.py").read_text(encoding="utf-8")
+        self.assertIn('quick_action("Arquivos (Nemo)", "nemo")', app)
+        self.assertIn('quick_action("Terminal (Foot)", "foot")', app)
+        self.assertIn('program not in ("nemo", "foot")', app)
+        self.assertIn('path = shutil.which(program)', app)
+        self.assertNotIn("shell=True", app)
 
     def test_virtual_outputs_one_to_three_only(self):
         script = (SESSION / "start-nested.sh").read_text(encoding="utf-8")
