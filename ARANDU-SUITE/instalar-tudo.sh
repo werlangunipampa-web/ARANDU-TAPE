@@ -11,7 +11,7 @@ SHELL_MAJOR="$(gnome-shell --version 2>/dev/null | grep -oE '[0-9]+' | head -1 |
 case "${1:-}" in
   --preflight)
     command -v gnome-shell >/dev/null || { echo 'GNOME Shell não encontrado.' >&2; exit 2; }
-    echo 'ARANDU SUITE 3.2.2 beta | Pré-verificação'
+    echo 'ARANDU SUITE 3.2.3 beta | Pré-verificação'
     gnome-shell --version
     echo "Sessão: ${XDG_SESSION_TYPE:-desconhecida}"
     echo 'Confluência:'; bash "$ROOT/Confluencia/instalar.sh" --preflight
