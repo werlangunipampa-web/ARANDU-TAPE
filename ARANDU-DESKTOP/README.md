@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.6.2 — inicialização estável e lançador interno
+# ARANDU Desktop 0.6.3 — observatório de desempenho sob demanda
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -163,3 +163,20 @@ swaymsg 'bindsym Print exec /bin/bash /home/oem/Downloads/ARANDU-TAPE-COMPLETO/A
 swaymsg 'bindsym Shift+Print exec /bin/bash /home/oem/Downloads/ARANDU-TAPE-COMPLETO/ARANDU-DESKTOP/session/capture-screen.sh --save'
 ```
 O caminho acima é específico do VAIO oem: em outras máquinas usar o caminho absoluto do próprio clone. Novas sessões recebem os atalhos a partir dos modelos de configuração instalados no repositório. O compositor precisa estar rodando e `SWAYSOCK` válido. Se `wl-copy` não existir, instalar `wl-clipboard` primeiro. Em sessões de múltiplos monitores, `grim -` segue o comportamento de captura padrão do compositor.
+
+## Observatório de Desempenho — versão 0.6.3
+
+Na GUI ARANDU, clicar **Desempenho** para obter uma fotografia local de RAM (MemAvailable, estimativa sem cache recuperável), swap, carga média do sistema em 1/5/15 minutos e processos ordenados por RSS. Clicar **Medir novamente** para atualizar. Sem vigilância em segundo plano, sem transmissão ou registro automático. **Load average não é porcentagem de CPU; RSS pode contabilizar memória compartilhada em diversos processos.**
+
+Para preparar uma comparação entre sessões do mesmo computador, usar o Foot:
+```bash
+cd "$HOME/Downloads/ARANDU-TAPE-COMPLETO"
+python3 ARANDU-DESKTOP/performance.py
+# Salvar APENAS se desejar, em arquivo privado e novo:
+python3 ARANDU-DESKTOP/performance.py --save "$HOME/arandu-baseline.json"
+```
+Em cada sessão (ARANDU, GNOME, Cinnamon etc.), medir no mesmo VAIO, após igual período de inicialização, com mesmos programas abertos e carga semelhante. A coleta no terminal permite amostras de sessões diferentes, mas **não separa automaticamente o consumo exclusivo do ambiente gráfico do sistema todo**; comparar apenas MemAvailable e RSS isolados não permite afirmar que um desktop é mais rápido.
+
+Para testar um aplicativo específico já aberto: `ps -C firefox -o pid,rss,%cpu,comm` (RSS em KiB por processo; `%CPU` é média desde início do processo, não taxa instantânea). Alternativamente procurar `firefox`, `nemo` ou `foot` na lista do Observatório, que mostra os 8 maiores processos por RSS. Para experimentos reproduzíveis de tempo de resposta, medir a mesma tarefa em ambas sessões, com cache quente/frio controlado e ao menos 5 repetições; não comparar somente a abertura de uma instância já em execução.
+
+**Métricas futuras:** latência de abertura de aplicativos, FPS/composição, consumo PSS proporcional (smaps_rollup), amostragem temporal de CPU/temperatura, energia e gráficos históricos com consentimento. Nenhum resultado comparativo foi medido ou reivindicado no VAIO ainda.
