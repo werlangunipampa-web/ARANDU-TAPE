@@ -39,7 +39,7 @@ class Actor {
 class Panel extends Actor {
     constructor(){super();this.menu={addAction:(s,f)=>({label:{set_text(){}},click:f})};}
 }
-const prefs=new Map([['recent','[]'],['frequency','{}']]);
+const prefs=new Map([['recent','[]'],['frequency','{}'],['medallion-scale',1],['high-contrast',false],['scan-interval-ms',3500],['panel-mode','visible']]);
 const settings={get_string:k=>prefs.get(k),set_string:(k,v)=>prefs.set(k,v),
     get_double:k=>prefs.get(k)||0,set_double:(k,v)=>prefs.set(k,v),
     get_boolean:k=>!!prefs.get(k),set_boolean:(k,v)=>prefs.set(k,v),
