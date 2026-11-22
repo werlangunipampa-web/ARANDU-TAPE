@@ -6,6 +6,8 @@ default_border pixel 2
 default_floating_border pixel 2
 gaps inner 8
 gaps outer 6
+# Janelas aninhadas usam abas: o ARANDU não fica espremido ao abrir Foot.
+workspace_layout tabbed
 client.focused #bba66e #20372f #f4f0df #91b59f #bba66e
 client.unfocused #263e34 #192620 #b8c6b7 #263e34 #263e34
 output * bg #14221d solid_color
