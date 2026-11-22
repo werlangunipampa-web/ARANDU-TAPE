@@ -21,7 +21,7 @@ def _read(command: list[str], timeout: int = 8):
 
 
 def apt_cached_updates():
-    """Cache APT somente leitura, não faz apt update nem toca na configuração."""
+    """Cache APT somente leitura, não atualiza índices nem toca na configuração."""
     raw, error = _read(["apt", "list", "--upgradable"])
     if error:
         return {"available": None, "detail": error}
