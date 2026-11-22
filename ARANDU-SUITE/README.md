@@ -1,4 +1,4 @@
-# ARANDU TAPE — Confluência | ARANDU SUITE 3.0 (prévia experimental)
+# ARANDU TAPE — Confluência | ARANDU SUITE 3.1 (prévia experimental)
 
 **Um ambiente gráfico de navegação que se adapta às possibilidades humanas.**
 
@@ -31,6 +31,12 @@ bash instalar-tudo.sh
 ```
 
 Não executar com `sudo`. O instalador faz backup da Confluência instalada e não substitui a TOPBAR histórica. Na sessão GNOME X11 pode ser necessário salvar o trabalho e reiniciar o GNOME Shell com `Alt+F2`, `r`, Enter; no Wayland, normalmente é necessário encerrar a sessão e entrar novamente. Veja [instalação](docs/INSTALACAO.md).
+
+## Painel de acessibilidade na Semente (3.1 beta)
+
+Clique com o botão direito na **Semente** ou abra **ARANDU TAPE → Acessibilidade · configurar na Semente**. Ajuste velocidade da varredura (2 / 3,5 / 5 s), tamanho dos medalhões (85% / 100% / 120%), alto contraste, acionador (Super+Alt+Espaço ou Super+Alt+S) e visibilidade da TOPBAR. Existe uma ação para restaurar os padrões seguros.
+
+Este painel é uma **prévia experimental**, ainda não validada visualmente na máquina de referência. Veja [manual de acessibilidade](docs/PAINEL-ACESSIBILIDADE.md).
 
 ## Navegação por teclado
 
