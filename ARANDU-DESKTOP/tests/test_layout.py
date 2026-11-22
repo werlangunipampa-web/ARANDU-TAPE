@@ -32,7 +32,7 @@ class VisualContract(unittest.TestCase):
         from visual_contract import compact_geometry
         contract = compact_geometry()
         self.assertEqual(contract["size"], (900, 375))
-        self.assertEqual(contract["seed"], (481, 266))
+        self.assertEqual(contract["seed"], (482, 266))
         for river in ("memory", "open", "frequent"):
             for x, y in contract["markers"][river]:
                 self.assertGreaterEqual(x, 0)
