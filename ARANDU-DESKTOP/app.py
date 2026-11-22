@@ -28,7 +28,7 @@ except (ImportError, ValueError) as error:
 from visual import RiversCanvas
 from session.windows import list_windows, focus_window, list_outputs, move_arandu_to_output
 
-VERSION = "0.6.3"
+VERSION = "0.6.4"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -84,7 +84,7 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.6.3")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.6.4")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -95,7 +95,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.6.3 · OBSERVATÓRIO", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.6.4 · COMPARAÇÕES", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         performance = Gtk.Button(label="Desempenho")
@@ -205,6 +205,34 @@ class Desktop(Gtk.Application):
         refresh = Gtk.Button(label="Medir novamente")
         refresh.connect("clicked", lambda *_: self.show_performance())
         self.content.append(refresh)
+        if os.environ.get("ARANDU_SESSION_LAB") == "1":
+            benchmark = Gtk.Button(label="Ensaio comparativo (5 medições)")
+            benchmark.connect("clicked", lambda *_: self.start_benchmark())
+            self.content.append(benchmark)
+        self.content.append(self.text(
+            "Os relatórios de outras sessões só podem ser comparados após medi-las "
+            "na mesma máquina. Ensaio de CPU/RAM mede o sistema todo."))
+
+    def start_benchmark(self):
+        """Inicia uma medição finita em Foot, somente por clique, sem shell."""
+        if os.environ.get("ARANDU_SESSION_LAB") != "1":
+            return
+        target = Path(__file__).resolve().parent / "benchmark.py"
+        if not target.is_file():
+            self.content.append(self.text("Módulo de benchmark indisponível."))
+            return
+        try:
+            subprocess.Popen(
+                ["foot", "-e", sys.executable, str(target), "--measure",
+                 "--count", "5", "--interval", "1"],
+                stdin=subprocess.DEVNULL,
+                close_fds=True, start_new_session=True,
+            )
+            self.content.append(self.text(
+                "Ensaio iniciado no Foot: cinco amostras, "
+                "sem gravar automaticamente resultados."))
+        except OSError as error:
+            self.content.append(self.text("Não foi possível abrir o ensaio: " + str(error)))
 
     def show_development(self):
         """Painel local de estado; nenhuma atualização automática de código."""
