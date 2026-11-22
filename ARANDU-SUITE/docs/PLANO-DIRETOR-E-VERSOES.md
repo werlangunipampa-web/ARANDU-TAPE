@@ -92,3 +92,13 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - **Status:** arquivos publicados; não houve validação visual no VAIO ainda. Verificar comportamento do layout em 1366×768, tela cheia e HiDPI antes de aceitar.
 - **Próximo marco:** medalhões somente quando houver entidades reais autorizadas, renderização responsiva sem rolagem horizontal e adaptador de leitura de janelas separado do núcleo cognitivo.
 
+
+## ARANDU Desktop 0.3.0 — rios adaptativos e aplicativos instalados (2026-11-22)
+
+- **Experimento publicado, sem teste GTK real ainda:** canvas redimensionável até 100%, em tela estreita mínimo 48%, mantendo geometria original.
+- Painel informativo retrátil para priorizar a Semente e os Rios; o botão Sobre preserva o crédito Rafhael Brum Werlang e a numeração.
+- Até quinze medalhões ligados a `Gio.AppInfo` (aplicativos instalados), com pesquisa e **confirmação explícita** antes de iniciar. Não representam janelas abertas, memórias ou frequência de utilização.
+- Medallhões sem aplicativo válido ficam indisponíveis.
+- Segurança: sem alterar login/compositor/GNOME, sem coleta de uso, sem integrar ou migrar ECA.
+- **Aceite pendente:** executar testes Python/Rust e abrir GTK4 no Linux Mint. Conferir escala ao reduzir/restaurar janela, seleção, pesquisa, confirmação e recolhimento. Registrar regressões antes de evoluir para provedor de janelas.
+
