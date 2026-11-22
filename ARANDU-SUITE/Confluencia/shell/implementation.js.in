@@ -278,14 +278,23 @@ class TapeSession {
         }
         return valid(index)?index:fallback;
     }
+    // Painéis de auxílio são sempre opcionais: não acompanhar os rios ao entrar.
+    dismissNavigationPanels() {
+        if(this.helpBox)this.helpBox.hide();
+        if(this.helpHint)this.helpHint.hide();
+        if(this.controlScroll)this.controlScroll.hide();
+        if(this.controlBox && !this.controlScroll)this.controlBox.hide();
+    }
     // Modo transitório: a Semente e os Rios sobem juntos e depois retornam ao desktop.
     enterNavigation() {
         if(!this.allowed())return;
+        this.dismissNavigationPanels();
         if(!this.navigationOverlay)this.navigationMonitorIndex=this.pickMonitorIndex();
         this.navigationOverlay=true;
         this.applyLayer();
     }
     leaveNavigation() {
+        this.dismissNavigationPanels();
         if(!this.navigationOverlay)return;
         this.navigationOverlay=false;
         this.navigationMonitorIndex=null;
