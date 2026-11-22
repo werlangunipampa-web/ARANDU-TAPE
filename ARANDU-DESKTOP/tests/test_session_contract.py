@@ -90,6 +90,16 @@ class NestedSessionContract(unittest.TestCase):
         self.assertIn("def toggle_fullscreen(self):", app)
         self.assertIn("move_arandu_to_output(output)", app)
 
+    def test_evolution_panel_does_not_run_updates_or_migrations(self):
+        app = (ROOT / "app.py").read_text(encoding="utf-8")
+        self.assertIn('roadmap = Gtk.Button(label="Evolução")', app)
+        self.assertIn('def show_development(self):', app)
+        development = app.split('    def show_development(self):', 1)[1].split(
+            '    def quick_action(', 1)[0]
+        self.assertNotIn('subprocess.', development)
+        self.assertNotIn('os.system(', development)
+        self.assertNotIn('git pull', development)
+
     def test_no_automatic_eca_connection(self):
         for name in ("start-nested.sh", "launch-arandu.sh", "sway.config.in"):
             source = (SESSION / name).read_text(encoding="utf-8")
