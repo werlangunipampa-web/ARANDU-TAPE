@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist><schema id="org.gnome.shell.extensions.arandu-topbar" path="/org/gnome/shell/extensions/arandu-topbar/">
+<key name="variant" type="s"><default>'arandu'</default></key>
+<key name="accent" type="s"><default>'terra'</default></key>
+<key name="panel-height" type="i"><default>50</default><range min="46" max="58"/></key>
+<key name="panel-opacity" type="d"><default>0.96</default><range min="0.72" max="1.0"/></key>
+<key name="clock-capsule" type="b"><default>true</default></key>
+<key name="portal-button" type="b"><default>true</default></key>
+</schema></schemalist>

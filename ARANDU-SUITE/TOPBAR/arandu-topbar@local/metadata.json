@@ -1,0 +1,10 @@
+{
+  "uuid": "arandu-topbar@local",
+  "name": "ARANDU TOPBAR v6.6.1.2 — Identidade Unificada",
+  "description": "Grafismo persistente após login/reboot com stylesheet por classes e reaplicação controlada.",
+  "shell-version": [
+    "46"
+  ],
+  "version": 6612,
+  "settings-schema": "org.gnome.shell.extensions.arandu-topbar"
+}

@@ -1,0 +1,49 @@
+.arandu-tag {
+  color: #3c352b; background-color: rgba(250,244,229,0.96);
+  border: 1px solid #bda87a; border-radius: 10px; padding: 5px 11px; font-weight: 600;
+}
+.arandu-tag:hover, .arandu-tag:focus {background-color: #ead9b4;}
+
+.arandu-seed-controls { background-color: rgba(24,22,20,0.96); border:1px solid #b58d4b; border-radius:13px; padding:8px; spacing:5px; }
+.arandu-seed-control { color:#e9d3a9; font-size:12px; padding:9px 11px; border-radius:7px; }
+.arandu-seed-control:hover { background-color:#5d4830; }
+
+/* ARANDU 2.5 — medalhão de orientação, painel leve, não altera TOPBAR */
+.arandu-help-medallion {
+  color:#dfc88b; font-size:19px; font-weight:bold;
+  background-color:rgba(24,27,24,0.90); border:1px solid #bd9b57;
+  border-radius:99px; padding:5px; min-width:21px; min-height:21px;
+}
+.arandu-help-medallion:hover, .arandu-help-medallion:focus {
+  background-color:#4a3c27; border-color:#f0d69a;
+}
+.arandu-help-hint {
+  color:#ead5a4; font-size:11px; padding:5px 8px;
+  background-color:rgba(25,26,24,0.93); border-radius:7px;
+}
+.arandu-help-panel {
+  background-color:rgba(248,240,218,0.98); color:#332b20;
+  border:1px solid #a9884c; border-radius:13px;
+  padding:14px; spacing:5px;
+}
+.arandu-help-title { color:#5d4624; font-weight:bold; font-size:15px; padding-bottom:9px; }
+.arandu-help-row { padding:4px 1px; spacing:9px; }
+.arandu-help-name { color:#43341f; font-weight:bold; font-size:10px; }
+.arandu-help-description { color:#6b604e; font-size:10px; }
+.arandu-help-shortcut {
+  color:#443722; background-color:#e9ddbf; border-radius:6px;
+  border:1px solid #cfbc91; padding:5px 6px; font-size:10px;
+}
+.arandu-help-close { color:#644a27; padding:7px; font-size:11px; }
+.arandu-help-close:hover { background-color:#dfcda7; border-radius:6px; }
+
+/* Navegação assistiva: foco visível também sem mouse. */
+.arandu-node-selected {border: 3px solid #e1b85c; border-radius: 40px; background-color: rgba(46,36,18,0.30); box-shadow: 0 0 13px 4px rgba(225,184,92,0.45);}
+.arandu-river-selected {border: 2px solid #e1b85c; border-radius: 10px; background-color: rgba(230,197,113,0.25);}
+
+/* v2.7.1: conteúdo de ajuda rolável, sempre delimitado ao monitor. */
+.arandu-help-scroll {padding:2px 3px;}
+.arandu-help-rows {spacing:3px;}
+
+/* 2.7.2 — seleção intensa dos medalhões e leitura visual */
+.arandu-node-selected { border: 4px solid #ffe1a0; border-radius: 40px; background-color: rgba(62,42,12,0.45); box-shadow: 0 0 18px 7px rgba(225,184,92,0.60); }

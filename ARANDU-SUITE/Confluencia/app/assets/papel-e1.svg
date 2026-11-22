@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#f5f1e8"/>
+    <stop offset=".48" stop-color="#e9e4d9"/>
+    <stop offset="1" stop-color="#dcd8cf"/>
+  </linearGradient>
+  <radialGradient id="warm" cx="50%" cy="44%" r="65%">
+    <stop offset="0" stop-color="#fffaf0" stop-opacity=".82"/>
+    <stop offset=".52" stop-color="#eee6d7" stop-opacity=".28"/>
+    <stop offset="1" stop-color="#cfc8ba" stop-opacity="0"/>
+  </radialGradient>
+  <pattern id="weave" width="180" height="180" patternUnits="userSpaceOnUse">
+    <path d="M90 10 170 90 90 170 10 90Z" fill="none" stroke="#b18b4d" stroke-width="2" opacity=".09"/>
+    <path d="M90 42 138 90 90 138 42 90Z" fill="none" stroke="#65756e" stroke-width="2" opacity=".07"/>
+    <path d="M10 90H170M90 10V170" stroke="#8e7652" stroke-width="1" opacity=".04"/>
+  </pattern>
+  <pattern id="border" width="120" height="120" patternUnits="userSpaceOnUse">
+    <path d="M0 60 30 30 60 60 90 30 120 60 90 90 60 60 30 90Z"
+          fill="none" stroke="#9a7640" stroke-width="2" opacity=".12"/>
+  </pattern>
+  <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
+</defs>
+<rect width="3840" height="2160" fill="url(#bg)"/>
+<rect width="3840" height="2160" fill="url(#warm)"/>
+<rect x="0" y="0" width="900" height="2160" fill="url(#weave)" opacity=".55"/>
+<rect x="2940" y="0" width="900" height="2160" fill="url(#weave)" opacity=".42"/>
+<rect x="95" y="0" width="92" height="2160" fill="url(#border)" opacity=".62"/>
+<rect x="3653" y="0" width="92" height="2160" fill="url(#border)" opacity=".52"/>
+<ellipse cx="1920" cy="1120" rx="1220" ry="820" fill="#fffdf7" opacity=".26" filter="url(#soft)"/>
+<g fill="none" stroke-linecap="round">
+  <path d="M0 1740 C700 1600 1150 1810 1920 1640 S3140 1400 3840 1510"
+        stroke="#b78d49" stroke-width="5" opacity=".08"/>
+  <path d="M0 1760 C720 1620 1160 1830 1930 1660 S3150 1420 3840 1530"
+        stroke="#657b72" stroke-width="3" opacity=".07"/>
+  <path d="M2920 0 C2790 560 3050 830 2860 1260 S2490 1800 2600 2160"
+        stroke="#7d8b83" stroke-width="4" opacity=".07"/>
+</g>
+<g fill="none" stroke="#a17b41" stroke-width="5" opacity=".17">
+  <path d="M330 280 420 190 510 280 420 370Z"/>
+  <path d="M420 230 470 280 420 330 370 280Z"/>
+  <path d="M3330 1780 3420 1690 3510 1780 3420 1870Z"/>
+  <path d="M3420 1730 3470 1780 3420 1830 3370 1780Z"/>
+</g>
+<g transform="translate(1920 1990)" fill="none" stroke="#9c7b45" opacity=".20">
+  <path d="M0 -48 48 0 0 48 -48 0Z" stroke-width="4"/>
+  <path d="M0 -24 24 0 0 24 -24 0Z" stroke-width="3"/>
+</g>
+</svg>

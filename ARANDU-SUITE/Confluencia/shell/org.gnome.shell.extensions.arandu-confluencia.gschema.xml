@@ -1,0 +1,20 @@
+<schemalist>
+  <schema id="org.gnome.shell.extensions.arandu-confluencia" path="/org/gnome/shell/extensions/arandu-confluencia/">
+    <key name="arandu-tape-mapa" type="as"><default>['&lt;Super&gt;&lt;Shift&gt;t']</default><summary>Abrir o mapa do Arandu</summary></key>
+    <key name="arandu-restaurar-barra" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;b']</default><summary>Recuperar o painel GNOME</summary></key>
+    <key name="show-help-button" type="b"><default>true</default><summary>Exibir medalhão discreto de atalhos junto à Semente</summary></key>
+    <key name="panel-mode" type="s"><default>'visible'</default><summary>Visibilidade do painel GNOME: visible, hidden ou auto</summary></key>
+    <key name="recent" type="s"><default>'[]'</default><summary>Janelas recentes</summary></key>
+    <key name="frequency" type="s"><default>'{}'</default><summary>Contagem local de usos</summary></key>
+    <key name="floating" type="b"><default>false</default><summary>Mostrar Semente sobre as janelas</summary></key>
+    <key name="anchor-x" type="d"><default>0</default><summary>Posição horizontal relativa da Semente</summary></key>
+    <key name="anchor-y" type="d"><default>0</default><summary>Posição vertical relativa da Semente</summary></key>
+    <key name="arandu-rio-memoria" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;1']</default><summary>Selecionar rio Memória</summary></key>
+    <key name="arandu-rio-abertos" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;2']</default><summary>Selecionar rio Abertos</summary></key>
+    <key name="arandu-rio-frequentes" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;3']</default><summary>Selecionar rio Frequentes</summary></key>
+    <key name="arandu-no-anterior" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;Left']</default><summary>Medalhão anterior</summary></key>
+    <key name="arandu-no-proximo" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;Right']</default><summary>Próximo medalhão</summary></key>
+    <key name="arandu-no-ativar" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;Return']</default><summary>Ativar medalhão</summary></key>
+    <key name="arandu-no-cancelar" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;0']</default><summary>Limpar seleção</summary></key>
+  </schema>
+</schemalist>

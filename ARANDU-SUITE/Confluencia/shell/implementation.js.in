@@ -1,0 +1,797 @@
+// Shared by the legacy and ES-module GNOME Shell entry points.
+const DESKTOP = 'org.arandulab.Tape.desktop';
+const BUS_PATH = '/org/arandulab/Tape/Windows';
+const XML = '<node><interface name="org.arandulab.Tape.Windows1">' +
+    '<method name="Snapshot"><arg direction="out" type="s"/></method>' +
+    '<method name="Activate"><arg direction="in" type="s"/><arg direction="out" type="b"/></method>' +
+    '<method name="Clear"/><method name="Center"/><method name="AssistiveCommand"><arg direction="in" type="s"/><arg direction="out" type="b"/></method></interface></node>';
+const RIVERS = ['memory', 'open', 'frequent'];
+const RIVER_NAMES = {memory:'Memória', open:'Abertos', frequent:'Frequentes'};
+const ACTIONS = {memory:'Memory', open:'Open', frequent:'Frequent'};
+const TITLES = {memory:[218,277], open:[909,60], frequent:[977,177]};
+const LAYOUT = __LAYOUT__;
+const DYNAMIC_RIVERS = __DYNAMIC_RIVERS__;
+const SLOTS = [[2],[2],[1,3],[0,2,4],[0,1,3,4],[0,1,2,3,4]];
+const stopSource = id => { if (id) GLib.Source.remove(id); };
+const limit = (value,lo,hi) => Math.max(lo,Math.min(hi,value));
+function parseSetting(value, fallback) {
+    try {return JSON.parse(value);} catch (_) {return fallback;}
+}
+
+class TapeSession {
+    constructor(path, settings) {
+        this.path=path; this.settings=settings; this.links=[]; this.buttons={};
+        this.riverLabels={}; this.items={}; this.later=0; this.writeId=0; this.hoverId=0;
+        this.trackId=0; this.drag=null; this.layer=null; this.tracked=[]; this.dragged=false; this.expanded=false;
+        // Semente adaptativa: nenhum recolhimento automático dos rios.
+        this.seedSleepId=0; this.seedAwake=true;
+        this.helpSleepId=0; this.helpAwake=true;
+        this.medallionSleepId=0; this.medallionsAwake=false;
+        this.navRiver=null;this.navIndex=-1;this.navBindings=[];
+        this.tracker=Shell.WindowTracker.get_default();
+        this.apps=Shell.AppSystem.get_default();
+        this.privacy=new Gio.Settings({schema_id:'org.gnome.desktop.privacy'});
+        const recent=parseSetting(settings.get_string('recent'),'');
+        const freq=parseSetting(settings.get_string('frequency'),{});
+        this.recent=Array.isArray(recent)?recent:[];
+        this.frequency=freq && typeof freq==='object' && !Array.isArray(freq)?freq:{};
+        this.lastFocus='';
+    }
+    signal(obj,name,fun) {this.links.push([obj,obj.connect(name,fun)]);}
+    start() {
+        this.service=Gio.DBusExportedObject.wrapJSObject(XML,this);
+        this.service.export(Gio.DBus.session,BUS_PATH);
+        this.panel=new PanelMenu.Button(0,'Arandu Tape',false);
+        this.panel.add_child(this.icon('semente',22));
+        this.panel.menu.addAction('Abrir Arandu Tape',()=>this.launch());
+        this.panel.menu.addAction('Expandir/recolher os três rios',()=>this.setExpanded(!this.expanded));
+        for (const r of RIVERS) this.panel.menu.addAction(RIVER_NAMES[r],()=>this.launch(r));
+        this.layerItem=this.panel.menu.addAction('Mostrar Semente sobre as janelas',()=>{
+            this.settings.set_boolean('floating',this.layer!=='floating');
+            this.applyLayer();
+        });
+        this.panel.menu.addAction('Centralizar a Semente',()=>this.Center());
+        this.panel.menu.addAction('Guia dos Rios · atalhos',()=>this.toggleHelp());
+        this.panel.menu.addAction('Mostrar/ocultar botão de ajuda',()=>this.toggleHelpButton());
+        this.panel.menu.addAction('Barra: sempre visível',()=>this.setBarMode('visible'));
+        this.panel.menu.addAction('Barra: sempre oculta',()=>this.setBarMode('hidden'));
+        this.panel.menu.addAction('Barra: automática',()=>this.setBarMode('auto'));
+        this.panel.menu.addAction('Recuperar barra superior',()=>this.setBarMode('visible'));
+        Main.panel.addToStatusArea('arandu-tape-confluencia',this.panel);
+        Main.wm.addKeybinding('arandu-tape-mapa',this.settings,Meta.KeyBindingFlags.NONE,
+            Shell.ActionMode.NORMAL|Shell.ActionMode.OVERVIEW,()=>this.launch());
+        this.keyBound=true;
+        Main.wm.addKeybinding('arandu-restaurar-barra',this.settings,Meta.KeyBindingFlags.NONE,
+            Shell.ActionMode.NORMAL|Shell.ActionMode.OVERVIEW,()=>this.setBarMode('visible'));
+        this.rescueKeyBound=true;
+        // Atalhos globais assistivos: ação sobre os medalhões na área de trabalho.
+        // O roteador de intenções usado aqui poderá receber comandos de câmera/voz.
+        const actions={
+            'arandu-rio-memoria':()=>this.selectRiver('memory'),
+            'arandu-rio-abertos':()=>this.selectRiver('open'),
+            'arandu-rio-frequentes':()=>this.selectRiver('frequent'),
+            'arandu-no-anterior':()=>this.moveSelection(-1),
+            'arandu-no-proximo':()=>this.moveSelection(1),
+            'arandu-no-ativar':()=>this.activateSelection(),
+            'arandu-no-cancelar':()=>this.cancelSelection(),
+        };
+        for(const [name,callback] of Object.entries(actions)){
+            Main.wm.addKeybinding(name,this.settings,Meta.KeyBindingFlags.NONE,
+                Shell.ActionMode.NORMAL|Shell.ActionMode.OVERVIEW,callback);
+            this.navBindings.push(name);
+        }
+        // Não toma posse do painel em uma sessão com Hide Top Bar ativa.
+        this.barTimer=GLib.timeout_add(GLib.PRIORITY_DEFAULT,300,()=>{
+            this.updateBar();return GLib.SOURCE_CONTINUE;
+        });
+        this.buildDesktop();
+        this.signal(global.stage,'captured-event',(_stage,event)=>this.helpGlobalEvent(event));
+        this.signal(global.stage,'captured-event',(_stage,event)=>this.navigationKeyEvent(event));
+        this.signal(global.display,'notify::focus-window',()=>{this.record();this.schedule();});
+        this.signal(global.display,'window-created',()=>this.schedule());
+        this.signal(global.window_manager,'destroy',()=>this.schedule());
+        this.signal(Main.layoutManager,'monitors-changed',()=>this.position());
+        this.signal(Main.overview,'showing',()=>{if(this.layer==='floating')this.root.hide();});
+        this.signal(Main.overview,'hidden',()=>this.schedule());
+        this.signal(this.privacy,'changed::remember-recent-files',()=>{this.lastFocus='';this.schedule();});
+        this.record(); this.refresh();
+    }
+    // Interface de acessibilidade única, independente do dispositivo de entrada.
+    // Apenas comandos de uma lista fechada. Não executa shell nem recebe nomes arbitrários.
+    AssistiveCommand(command) {
+        if(!this.allowed() || typeof command!=='string')return false;
+        const cmd=command.trim().toLowerCase();
+        switch(cmd){
+            case 'river:memory':this.selectRiver('memory');return true;
+            case 'river:open':this.selectRiver('open');return true;
+            case 'river:frequent':this.selectRiver('frequent');return true;
+            case 'node:next':this.moveSelection(1);return true;
+            case 'node:previous':this.moveSelection(-1);return true;
+            case 'node:activate':
+                if(!this.navRiver || this.navIndex<0)return false;
+                this.activateSelection();return true;
+            case 'node:cancel':this.cancelSelection();return true;
+            case 'seed:expand':this.setExpanded(true);return true;
+            case 'seed:collapse':this.setExpanded(false);return true;
+            case 'seed:toggle':this.setExpanded(!this.expanded);return true;
+            default:return false;
+        }
+    }
+    // Intent Router: os dispositivos de entrada chamam estas ações sem tocar no layout.
+    selectRiver(river) {
+        if(!RIVERS.includes(river) || !this.allowed())return;
+        if(!this.expanded)this.setExpanded(true);
+        this.refresh();
+        this.wakeMedallions();
+        this.wakeSeed();
+        this.navRiver=river;
+        this.navIndex=this.firstSelectable(river);
+        this.highlightSelection();
+        this.focusSelectedNode();
+    }
+    firstSelectable(river) {
+        return this.buttons[river].findIndex(n=>n.entry!==null && n.entry!==undefined);
+    }
+    selectableIndices(river) {
+        return this.buttons[river].map((n,i)=>n.entry?i:-1).filter(i=>i>=0);
+    }
+    moveSelection(delta) {
+        if(!this.allowed())return;
+        if(!this.navRiver){this.selectRiver('open');return;}
+        this.refresh();
+        this.wakeMedallions();
+        this.wakeSeed();
+        const ids=this.selectableIndices(this.navRiver);
+        if(!ids.length){this.navIndex=-1;this.highlightSelection();return;}
+        const ix=ids.indexOf(this.navIndex);
+        this.navIndex=ids[(ix+delta+ids.length)%ids.length];
+        this.highlightSelection();
+        this.focusSelectedNode();
+    }
+    activateSelection() {
+        if(!this.allowed() || !this.navRiver || this.navIndex<0)return;
+        const node=this.buttons[this.navRiver][this.navIndex];
+        if(!node || !node.entry)return;
+        this.wakeMedallions();
+        this.wakeSeed();
+        this.openNode(this.navRiver,this.navIndex);
+        // Deliberadamente não recolher os rios após a ativação.
+        this.highlightSelection();
+    }
+    cancelSelection() {
+        this.navRiver=null;this.navIndex=-1;this.highlightSelection();
+        if(this.expanded)this.wakeMedallions();
+    }
+    // Enter simples e setas atuam SOMENTE quando o teclado está focado
+    // num medalhão do ARANDU. Nunca interceptar digitação em outros aplicativos.
+    focusSelectedNode() {
+        if(!this.navRiver || this.navIndex<0)return;
+        const node=this.buttons[this.navRiver]?.[this.navIndex];
+        if(node?.entry && node.button?.visible && global.stage?.set_key_focus)
+            global.stage.set_key_focus(node.button);
+    }
+    navigationKeyEvent(event) {
+        if(!this.expanded || !this.navRiver || this.navIndex<0 ||
+           event.type()!==Clutter.EventType.KEY_PRESS)return Clutter.EVENT_PROPAGATE;
+        const node=this.buttons[this.navRiver]?.[this.navIndex];
+        if(!node?.entry || global.stage.get_key_focus?.()!==node.button)
+            return Clutter.EVENT_PROPAGATE;
+        const symbol=event.get_key_symbol();
+        if(symbol===Clutter.KEY_Return || symbol===Clutter.KEY_KP_Enter || symbol===Clutter.KEY_space){
+            this.activateSelection();return Clutter.EVENT_STOP;
+        }
+        if(symbol===Clutter.KEY_Right){this.moveSelection(1);return Clutter.EVENT_STOP;}
+        if(symbol===Clutter.KEY_Left){this.moveSelection(-1);return Clutter.EVENT_STOP;}
+        if(symbol===Clutter.KEY_Escape){this.cancelSelection();return Clutter.EVENT_STOP;}
+        return Clutter.EVENT_PROPAGATE;
+    }
+    highlightSelection() {
+        if(!this.buttons)return;
+        for(const river of RIVERS){
+            const active=river===this.navRiver;
+            const label=this.riverLabels[river];
+            if(label){
+                if(active)label.add_style_class_name('arandu-river-selected');
+                else label.remove_style_class_name('arandu-river-selected');
+            }
+            for(const [index,node] of this.buttons[river].entries()){
+                const chosen=active && index===this.navIndex && !!node.entry && this.expanded;
+                if(chosen)node.button.add_style_class_name('arandu-node-selected');
+                else node.button.remove_style_class_name('arandu-node-selected');
+            }
+        }
+        if(this.area && this.transforms)
+            this.repaintRivers(this.area.width,this.area.height);
+    }
+    toggleHelpButton() {
+        const next=!this.settings.get_boolean('show-help-button');
+        this.settings.set_boolean('show-help-button',next);
+        this.applyMedallionVisibility();
+        if(next && this.expanded)this.wakeMedallions();
+        if(this.helpHint)this.helpHint.hide();
+        if(!next && this.helpBox)this.helpBox.hide();
+        Main.notify('ARANDU TAPE',next?'Guia dos Rios visível junto à Semente.':'Botão Guia dos Rios oculto; a ajuda continua no menu ARANDU.');
+    }
+    toggleHelp() {
+        if(!this.helpBox)return;
+        this.helpBox.visible=!this.helpBox.visible;
+        if(this.helpBox.visible){this.wakeSeed();this.wakeMedallions();this.positionHelp();}
+        else this.scheduleHelpSleep();
+    }
+    helpGlobalEvent(event) {
+        if(!this.helpBox || !this.helpBox.visible)return Clutter.EVENT_PROPAGATE;
+        if(event.type()===Clutter.EventType.KEY_PRESS && event.get_key_symbol()===Clutter.KEY_Escape) {
+            this.helpBox.hide();this.scheduleHelpSleep();return Clutter.EVENT_STOP;
+        }
+        if(event.type()===Clutter.EventType.BUTTON_PRESS) {
+            const actor=event.get_source();
+            const inside=box=>box && (actor===box || box.contains(actor));
+            if(!inside(this.helpBox) && !inside(this.helpButton)){this.helpBox.hide();this.scheduleHelpSleep();}
+        }
+        return Clutter.EVENT_PROPAGATE;
+    }
+    positionHelp() {
+        if(!this.seedPoint || !this.area || !this.helpBox)return;
+        const [sx,sy]=this.seedPoint,w=this.area.width,h=this.area.height;
+        // Todos os elementos permanecem dentro da área útil, inclusive em telas pequenas.
+        const margin=8;
+        const buttonX=limit(sx+72,margin,Math.max(margin,w-44));
+        const buttonY=limit(sy+54,margin,Math.max(margin,h-44));
+        this.helpButton.set_position(Math.round(buttonX),Math.round(buttonY));
+        this.helpHint.set_position(Math.round(limit(buttonX+38,margin,Math.max(margin,w-160))),
+                                   Math.round(limit(buttonY+4,margin,Math.max(margin,h-27))));
+        const panelW=Math.max(140,Math.min(365,w-2*margin));
+        const panelH=Math.max(115,Math.min(535,h-2*margin));
+        // O painel abre preferencialmente à esquerda ou acima da Semente quando necessário.
+        const preferredX=buttonX+48+panelW<=w-margin ? buttonX+48 : buttonX-panelW-12;
+        const panelX=limit(preferredX,margin,Math.max(margin,w-panelW-margin));
+        const preferredY=buttonY-panelH+38;
+        const panelY=limit(preferredY,margin,Math.max(margin,h-panelH-margin));
+        this.helpBox.set_width(panelW);
+        this.helpBox.set_height(panelH);
+        // O conteúdo rola dentro de uma área com limites; título e fechamento ficam visíveis.
+        if(this.helpScroll)this.helpScroll.set_height(Math.max(35,panelH-106));
+        this.helpBox.set_position(Math.round(panelX),Math.round(panelY));
+    }
+    makeHelpPanel() {
+        this.helpButton=new St.Button({label:'?',style_class:'arandu-help-medallion',can_focus:true,
+            reactive:true,track_hover:true,accessible_name:'Guia dos Rios · consultar atalhos'});
+        this.helpButton.connect('clicked',()=>this.toggleHelp());
+        this.helpButton.connect('notify::hover',()=>{if(this.helpButton.hover){this.wakeSeed();this.wakeMedallions();}else this.scheduleHelpSleep();});
+        this.root.add_child(this.helpButton);
+        this.helpHint=new St.Label({text:'Atalhos dos Rios',style_class:'arandu-help-hint',visible:false});
+        this.root.add_child(this.helpHint);
+        this.helpButton.connect('notify::hover',()=>{this.helpHint.visible=this.helpButton.hover && !this.helpBox.visible && this.helpAwake && this.medallionsAwake;});
+        this.helpBox=new St.BoxLayout({vertical:true,style_class:'arandu-help-panel',visible:false});
+        const title=new St.Label({text:'◇ GUIA DOS RIOS',style_class:'arandu-help-title'});
+        this.helpBox.add_child(title);
+        const rows=[
+            ['MAPA','Super + Shift + T','Abrir o ARANDU TAPE'],
+            ['MEMÓRIA','Super + Alt + 1','Selecionar rio e primeiro medalhão'],
+            ['ABERTOS','Super + Alt + 2','Selecionar rio e primeiro medalhão'],
+            ['FREQUENTES','Super + Alt + 3','Selecionar rio e primeiro medalhão'],
+            ['BUSCA','Ctrl + K','Pesquisar no mapa'],
+            ['ANTERIOR','← / Super + Alt + ←','Medalhão anterior'] ,
+            ['PRÓXIMO','→ / Super + Alt + →','Próximo medalhão'],
+            ['ABRIR','Enter no foco / Super + Alt + Enter','Abrir ou focar o aplicativo escolhido'],
+            ['SAIR','Super + Alt + 0','Limpar seleção'],
+            ['AJUDA','F1','Ajuda no mapa aberto'],
+            ['VOLTAR','Esc','Fechar ou voltar'],
+            ['TOPBAR','Super + Alt + B','Recuperar barra superior'],
+        ];
+        this.helpScroll=new St.ScrollView({style_class:'arandu-help-scroll',overlay_scrollbars:true,
+            hscrollbar_policy:St.PolicyType.NEVER,vscrollbar_policy:St.PolicyType.AUTOMATIC});
+        const helpRows=new St.BoxLayout({vertical:true,style_class:'arandu-help-rows'});
+        this.helpScroll.set_child(helpRows);
+        this.helpBox.add_child(this.helpScroll);
+        for(const [name,key,description] of rows){
+            const line=new St.BoxLayout({vertical:false,style_class:'arandu-help-row'});
+            const left=new St.BoxLayout({vertical:true,x_expand:true});
+            left.add_child(new St.Label({text:name,style_class:'arandu-help-name'}));
+            left.add_child(new St.Label({text:description,style_class:'arandu-help-description'}));
+            line.add_child(left);
+            line.add_child(new St.Label({text:key,style_class:'arandu-help-shortcut'}));
+            helpRows.add_child(line);
+        }
+        const foot=new St.Button({label:'Fechar  ×',style_class:'arandu-help-close',can_focus:true});
+        foot.connect('clicked',()=>{this.helpBox.hide();this.scheduleHelpSleep();});this.helpBox.add_child(foot);
+        this.root.add_child(this.helpBox);
+        this.helpButton.visible=this.settings.get_boolean('show-help-button');
+    }
+    hideTopBarConflict() {
+        try {
+            const ext=Main.extensionManager.lookup('hidetopbar@mathieu.bidon.ca');
+            return !!ext && ext.state===1; // GNOME ExtensionState.ENABLED
+        } catch (_) {return false;}
+    }
+    setBarMode(mode) {
+        if(!['visible','hidden','auto'].includes(mode))return;
+        if(mode!=='visible' && this.hideTopBarConflict()) {
+            Main.notify('ARANDU TAPE','Desativa primeiro a extensão Hide Top Bar para evitar conflito de controle.');
+            return;
+        }
+        this.settings.set_string('panel-mode',mode);
+        this.barLastNear=Date.now();
+        this.updateBar();
+        Main.notify('ARANDU TAPE',`Barra superior: ${mode==='visible'?'visível':mode==='hidden'?'oculta':'automática'}. Recuperar: Super + Alt + B`);
+    }
+    restorePanel() {
+        // Nunca altera nem desativa arandu-topbar@local: só a visibilidade do painel GNOME.
+        if(Main.panel && Main.panel.show)Main.panel.show();
+    }
+    updateBar() {
+        if(!Main.panel || !Main.panel.hide || !Main.panel.show)return;
+        const mode=this.settings.get_string('panel-mode');
+        if(this.hideTopBarConflict() || !this.allowed() || Main.overview.visible) {
+            this.restorePanel();return;
+        }
+        if(mode==='hidden'){Main.panel.hide();return;}
+        if(mode!=='auto'){this.restorePanel();return;}
+        const [,y]=global.get_pointer();
+        const mon=Main.layoutManager.primaryMonitor;
+        if(!mon){this.restorePanel();return;}
+        if(y>=mon.y && y<=mon.y+14)this.barLastNear=Date.now();
+        const nearby=Date.now()-(this.barLastNear||0)<1800;
+        if(nearby)this.restorePanel();else Main.panel.hide();
+    }
+    allowed() {return !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;}
+    remembers() {return this.allowed() && this.privacy.get_boolean('remember-recent-files');}
+    windows() {
+        if (!this.allowed()) return [];
+        return global.display.get_tab_list(Meta.TabList.NORMAL_ALL,null).filter(w=>{
+            if (w.skip_taskbar || ![Meta.WindowType.NORMAL,Meta.WindowType.DIALOG,Meta.WindowType.MODAL_DIALOG].includes(w.get_window_type())) return false;
+            const app=this.tracker.get_window_app(w);
+            return app && app.get_id()!==DESKTOP && w.get_wm_class()!=='org.arandulab.Tape';
+        });
+    }
+    describe(w) {
+        const app=this.tracker.get_window_app(w);
+        const ws=w.get_workspace();
+        return {id:String(w.get_stable_sequence()),app:app.get_id(),
+            title:w.get_title()||app.get_name(),where:ws?'Área de trabalho '+(ws.index()+1):'Todas as áreas'};
+    }
+    record() {
+        const w=global.display.focus_window;
+        if (!w || !this.remembers() || !this.windows().includes(w)) {this.lastFocus='';return;}
+        const it=this.describe(w);
+        if (it.id===this.lastFocus) return;
+        this.lastFocus=it.id;
+        const ts=Date.now()/1000;
+        this.recent=[{app:it.app,title:it.title,ts},...this.recent.filter(r=>
+            r.app!==it.app || r.title!==it.title)].slice(0,80);
+        const prev=this.frequency[it.app];
+        this.frequency[it.app]=[prev?prev[0]+1:1,ts];
+        this.frequency=Object.fromEntries(Object.entries(this.frequency).sort((a,b)=>
+            b[1][0]-a[1][0]||b[1][1]-a[1][1]).slice(0,180));
+        if (!this.writeId) this.writeId=GLib.timeout_add(GLib.PRIORITY_DEFAULT,600,()=>{
+            this.writeId=0;this.save();return GLib.SOURCE_REMOVE;
+        });
+    }
+    save() {
+        this.settings.set_string('recent',JSON.stringify(this.recent));
+        this.settings.set_string('frequency',JSON.stringify(this.frequency));
+    }
+    Snapshot() {
+        const keep=this.remembers();
+        return JSON.stringify({windows:this.windows().map(w=>this.describe(w)),recent:keep?this.recent:[],
+            frequency:keep?Object.entries(this.frequency).map(([id,[n,t]])=>[id,n,t]):[]});
+    }
+    Activate(id) {
+        const w=this.windows().find(x=>String(x.get_stable_sequence())===id);
+        if (!w) return false;
+        Main.activateWindow(w,global.get_current_time());return true;
+    }
+    Clear() {
+        if (!this.allowed()) return;
+        this.recent=[];this.frequency={};this.save();this.schedule();
+    }
+    Center() {
+        this.settings.set_double('anchor-x',0);this.settings.set_double('anchor-y',0);
+        this.position();
+    }
+    launch(river) {
+        if (!this.allowed()) return;
+        const app=Gio.DesktopAppInfo.new(DESKTOP);
+        if (!app) {Main.notify('Arandu Tape','Instala o aplicativo para abrir o mapa.');return;}
+        const ctx=global.create_app_launch_context(0,-1);
+        if (ACTIONS[river]) app.launch_action(ACTIONS[river],ctx);
+        else app.launch([],ctx);
+    }
+    icon(file,size) {
+        const path=GLib.build_filenamev([this.path,'assets',file+'.svg']);
+        return new St.Icon({gicon:new Gio.FileIcon({file:Gio.File.new_for_path(path)}),icon_size:size});
+    }
+    buildDesktop() {
+        this.root=new St.Widget({reactive:false,layout_manager:new Clutter.FixedLayout()});
+        this.root.set_size(1200,500);this.root.set_pivot_point(0,0);
+        this.fabric=new St.Widget({reactive:false});
+        this.fabric.set_size(1200,500);this.root.add_child(this.fabric);
+        for (const r of RIVERS) {
+            this.buttons[r]=[];
+            const title=new St.Button({label:RIVER_NAMES[r],style_class:'arandu-tag',can_focus:true});
+            title.connect('clicked',()=>this.launch(r));this.watchHover(title);
+            this.root.add_child(title);title.set_position(TITLES[r][0]-52,TITLES[r][1]-14);
+            this.riverLabels[r]=title;
+            for (let i=0;i<5;i++) {
+                const b=new St.Button({can_focus:true,reactive:true});
+                const stack=new St.Widget({layout_manager:new Clutter.FixedLayout()});stack.set_size(65,65);
+                const med=this.icon(r,60);stack.add_child(med);
+                b.set_child(stack);b.connect('clicked',()=>{this.wakeMedallions();this.openNode(r,i);});
+                b.connect('notify::hover',()=>{if(b.hover)this.wakeMedallions();});
+                this.watchHover(b);this.root.add_child(b);
+                this.buttons[r].push({button:b,stack,badge:null,key:null,entry:null});
+            }
+        }
+        this.seed=new St.Button({can_focus:true,reactive:true,accessible_name:'Semente · Arandu Tape'});
+        this.seed.set_child(this.icon('semente',149));this.seed.set_position(642-75,355-75);
+        this.seed.connect('button-press-event',(_s,e)=>{
+            if (e.get_button()===3) {
+                this.controlBox.visible=!this.controlBox.visible;
+                return Clutter.EVENT_STOP;
+            }
+            if (e.get_button()!==1) return Clutter.EVENT_PROPAGATE;
+            this.dragged=false;this.beginDrag(e);return Clutter.EVENT_PROPAGATE;
+        });
+        this.seed.connect('clicked',()=>{
+            if(!this.dragged)this.setExpanded(!this.expanded);
+        });
+        this.seed.track_hover=true;
+        this.seed.connect('notify::hover',()=>{
+            if(this.stopping)return;
+            if(this.seed.hover){this.wakeSeed();if(this.expanded)this.wakeMedallions();}
+            else this.scheduleSeedSleep();
+        });
+        this.root.add_child(this.seed);
+        this.controlBox=new St.BoxLayout({vertical:true,style_class:'arandu-seed-controls',visible:false});
+        for(const [mode,label] of [['visible','◉ Barra visível'],['hidden','◌ Ocultar barra'],['auto','◐ Barra automática']]) {
+            const b=new St.Button({label,style_class:'arandu-seed-control',can_focus:true,reactive:true});
+            b.connect('clicked',()=>{this.setBarMode(mode);this.controlBox.hide();});
+            this.controlBox.add_child(b);
+        }
+        this.root.add_child(this.controlBox);
+        this.makeHelpPanel();
+        this.applyLayer();this.setExpanded(false);this.position();
+    }
+    detachLayer() {
+        const layout=Main.layoutManager;
+        for (const actor of this.tracked) layout.untrackChrome(actor);
+        this.tracked=[];
+        if (this.layer==='floating')layout.removeChrome(this.root);
+        else if(this.root && this.root.get_parent())this.root.get_parent().remove_child(this.root);
+        this.layer=null;
+    }
+    applyLayer() {
+        if (!this.root) return;
+        const layout=Main.layoutManager;
+        const floating=this.settings.get_boolean('floating') || !layout._backgroundGroup;
+        const desired=floating?'floating':'desktop';
+        if (this.layer!==desired) {
+            this.detachLayer();
+            if (floating) {
+                layout.addChrome(this.root,{affectsStruts:false,affectsInputRegion:false,trackFullscreen:true});
+                this.layer=desired;
+                if(typeof layout.trackChrome==='function' && typeof layout.untrackChrome==='function') {
+                    const controls=[this.seed,this.controlBox,this.helpButton,this.helpBox,...Object.values(this.riverLabels)];
+                    for(const r of RIVERS)for(const n of this.buttons[r])controls.push(n.button);
+                    for(const actor of controls) {
+                        layout.trackChrome(actor,{affectsStruts:false,affectsInputRegion:true,trackFullscreen:true});
+                        this.tracked.push(actor);
+                    }
+                }
+            } else {
+                layout._backgroundGroup.add_child(this.root);
+                this.layer=desired;
+            }
+        }
+        this.layerItem.label.set_text(floating?'Mostrar Semente na área de trabalho':'Mostrar Semente sobre as janelas');
+        this.position();this.refresh();
+    }
+    beginDrag(event) {
+        this.endDrag();
+        const [x,y]=event.get_coords();
+        this.drag={x,y,ax:this.settings.get_double('anchor-x'),ay:this.settings.get_double('anchor-y')};
+        this.trackId=global.stage.connect('captured-event',(_s,e)=>{
+            if(e.type()===Clutter.EventType.MOTION && this.drag) {
+                const [px,py]=e.get_coords();const dx=px-this.drag.x,dy=py-this.drag.y;
+                if(Math.hypot(dx,dy)>6)this.dragged=true;
+                if(this.dragged && this.area) {
+                    this.drag.newX=limit(this.drag.ax+dx/this.area.width,-1,1);
+                    this.drag.newY=limit(this.drag.ay+dy/this.area.height,-1,1);
+                    this.position(this.drag.newX,this.drag.newY);
+                }
+            } else if(e.type()===Clutter.EventType.BUTTON_RELEASE && this.drag) {
+                if(this.dragged && this.drag.newX!==undefined) {
+                    this.settings.set_double('anchor-x',this.drag.newX);
+                    this.settings.set_double('anchor-y',this.drag.newY);
+                }
+                this.endDrag();
+            }
+            return Clutter.EVENT_PROPAGATE;
+        });
+    }
+    endDrag() {
+        if(this.trackId)global.stage.disconnect(this.trackId);
+        this.trackId=0;this.drag=null;
+    }
+    // Geometria única: SVG, medalhões e rótulos compartilham a mesma matriz.
+    // Cada rio parte exatamente da Semente e alcança uma borda da área útil.
+    makeTransform(r, endX, endY) {
+        const index=RIVERS.indexOf(r), points=DYNAMIC_RIVERS.paths[index];
+        const start=points[0], end=points[points.length-1];
+        const dx=end[0]-start[0],dy=end[1]-start[1];
+        const vx=endX-this.seedPoint[0],vy=endY-this.seedPoint[1];
+        const denom=dx*dx+dy*dy;
+        const a=(vx*dx+vy*dy)/denom;
+        const b=(vy*dx-vx*dy)/denom;
+        return [a,b,-b,a,this.seedPoint[0]-a*start[0]+b*start[1],
+            this.seedPoint[1]-b*start[0]-a*start[1]];
+    }
+    transformPoint(m,p) {
+        return [m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];
+    }
+    // Retorna um ponto da linha central do próprio SVG (sem interpolação divergente).
+    riverPoint(r, t) {
+        const points=DYNAMIC_RIVERS.paths[RIVERS.indexOf(r)];
+        const u=limit(t,0,1)*(points.length-1);
+        const i=Math.min(Math.floor(u),points.length-2),f=u-i;
+        const p=[points[i][0]*(1-f)+points[i+1][0]*f,
+            points[i][1]*(1-f)+points[i+1][1]*f];
+        return this.transformPoint(this.transforms[r],p);
+    }
+    repaintRivers(w,h) {
+        const cache=GLib.build_filenamev([GLib.get_user_cache_dir(),'arandu-tape-confluencia','rios']);
+        GLib.mkdir_with_parents(cache,0o700);
+        const filename=`rios-272-${w}-${h}-${Math.round(this.seedPoint[0])}-${Math.round(this.seedPoint[1])}-${this.expanded?this.navRiver||'none':'closed'}.svg`;
+        const path=GLib.build_filenamev([cache,filename]);
+        if(!GLib.file_test(path,GLib.FileTest.EXISTS)) {
+            let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`;
+            for(let i=0;i<RIVERS.length;i++) {
+                const m=this.transforms[RIVERS[i]];
+                svg+=`<g transform="matrix(${m.map(v=>v.toFixed(7)).join(' ')})">${DYNAMIC_RIVERS.groups[i]}</g>`;
+            }
+            // Destaque físico do rio ativo: linha central espessa e halo dourado.
+            // Usa a MESMA geometria transformada dos nós e dos caminhos.
+            if(this.expanded && this.navRiver && RIVERS.includes(this.navRiver)){
+                const pathPoints=DYNAMIC_RIVERS.paths[RIVERS.indexOf(this.navRiver)];
+                const points=pathPoints.map(p=>this.transformPoint(this.transforms[this.navRiver],p)
+                    .map(v=>v.toFixed(2)).join(',')).join(' ');
+                svg+=`<polyline points="${points}" fill="none" stroke="#e5be65" stroke-opacity="0.28" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/>`;
+                svg+=`<polyline points="${points}" fill="none" stroke="#ffe2a0" stroke-opacity="0.82" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>`;
+            }
+            svg+='</svg>';
+            GLib.file_set_contents(path,svg);
+        }
+        this.fabric.set_style(`background-image:url("${Gio.File.new_for_path(path).get_uri()}");background-size:100% 100%;`);
+    }
+    position(ax,ay) {
+        if(!this.root || !Main.layoutManager.primaryMonitor)return;
+        const mon=Main.layoutManager.primaryMonitor;
+        const rect=Main.layoutManager.getWorkAreaForMonitor(mon.index);
+        this.area=rect;
+        const w=Math.max(1,rect.width),h=Math.max(1,rect.height);
+        const px=ax===undefined?this.settings.get_double('anchor-x'):ax;
+        const py=ay===undefined?this.settings.get_double('anchor-y'):ay;
+        this.root.set_scale(1,1);
+        this.root.set_size(w,h);
+        this.root.set_position(rect.x,rect.y);
+        this.fabric.set_size(w,h);
+        const seedX=limit(w*.52+px*w*.20,95,w-95);
+        const seedY=limit(h*.72+py*h*.18,100,h-100);
+        this.seedPoint=[seedX,seedY];
+        this.seed.set_position(Math.round(seedX-75),Math.round(seedY-75));
+        if(this.helpButton)this.positionHelp();
+        if(this.controlBox)this.controlBox.set_position(
+            Math.round(limit(seedX+75,4,Math.max(4,w-180))),
+            Math.round(limit(seedY-100,4,Math.max(4,h-140))));
+        this.transforms={
+            memory:this.makeTransform('memory',-34,seedY),
+            open:this.makeTransform('open',limit(seedX+w*.09,60,w-60),-34),
+            frequent:this.makeTransform('frequent',w+34,limit(h*.34,60,h-60))
+        };
+        this.repaintRivers(w,h);
+        this.layoutRivers();
+    }
+    layoutRivers() {
+        if(!this.seedPoint || !this.area || !this.transforms)return;
+        const w=this.area.width,h=this.area.height;
+        const labelT={memory:.73,open:.76,frequent:.70};
+        for(const r of RIVERS) {
+            const actor=this.riverLabels[r],p=this.riverPoint(r,labelT[r]);
+            const offset=r==='memory'?[0,-54]:r==='open'?[43,0]:[5,-60];
+            actor.set_position(Math.round(limit(p[0]+offset[0]-52,3,w-110)),
+                               Math.round(limit(p[1]+offset[1]-14,3,h-36)));
+            for(const node of this.buttons[r]) {
+                if(node.slot===undefined)continue;
+                const [x,y]=this.riverPoint(r,(node.slot+1)/6);
+                node.button.set_position(Math.round(limit(x-30,2,w-62)),
+                                         Math.round(limit(y-30,2,h-62)));
+            }
+        }
+    }
+    // Os medalhões não fecham os rios ao perder o foco; a Semente é o único alternador.
+    watchHover(actor) {
+        actor.track_hover=true;
+    }
+    setSeedOpacity(alpha) {
+        if(!this.seed)return;
+        // Opacidade altera apenas a aparência; a área clicável permanece intacta.
+        if(typeof this.seed.ease==='function')
+            this.seed.ease({opacity:alpha,duration:450,mode:Clutter.AnimationMode.EASE_OUT_QUAD});
+        else this.seed.opacity=alpha;
+    }
+    cancelHelpSleep() {stopSource(this.helpSleepId);this.helpSleepId=0;}
+    scheduleHelpSleep() {
+        this.cancelHelpSleep();
+        if(!this.helpButton || !this.expanded || this.helpButton.hover || this.helpBox?.visible)return;
+        // O ? repousa aos 6 segundos, um segundo antes da Semente central (7 s).
+        this.helpSleepId=GLib.timeout_add(GLib.PRIORITY_DEFAULT,6000,()=>{
+            this.helpSleepId=0;
+            if(!this.helpButton.hover && !this.helpBox?.visible){
+                this.helpAwake=false;
+                this.applyMedallionVisibility();
+            }
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+    cancelSeedSleep() {
+        stopSource(this.seedSleepId);this.seedSleepId=0;
+    }
+    wakeSeed() {
+        this.cancelSeedSleep();
+        this.seedAwake=true;
+        this.helpAwake=true;
+        if(this.expanded && this.buttons)this.applyMedallionVisibility();
+        this.setSeedOpacity(255);
+        this.scheduleSeedSleep();
+    }
+    scheduleSeedSleep() {
+        this.cancelSeedSleep();
+        this.scheduleHelpSleep();
+        if(!this.seed || this.seed.hover)return;
+        // Apenas a Semente central repousa após 7 s, com os rios abertos ou fechados.
+        this.seedSleepId=GLib.timeout_add(GLib.PRIORITY_DEFAULT,7000,()=>{
+            this.seedSleepId=0;
+            if(!this.seed.hover && !this.drag) {
+                this.seedAwake=false;
+                this.setSeedOpacity(31); // 12%: quase invisível, ainda clicável
+            }
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+    // Os medalhões dos aplicativos permanecem visíveis enquanto os rios estão abertos.
+    // Nada de temporizador para apagá-los; a Semente repousa independentemente.
+    cancelMedallionSleep(){stopSource(this.medallionSleepId);this.medallionSleepId=0;}
+    applyMedallionVisibility(){
+        if(!this.buttons)return;
+        const awake=this.expanded && this.medallionsAwake;
+        for(const river of RIVERS)for(const node of this.buttons[river]){
+            const b=node.button;
+            if(!b)continue;
+            const show=awake && !!node.entry;
+            b.reactive=show;
+            if(show){
+                b.show();
+                b.ease?.({opacity:255,duration:250,mode:Clutter.AnimationMode.EASE_OUT_QUAD});
+                if(!b.ease)b.opacity=255;
+            }else{
+                if(b.ease)b.ease({opacity:0,duration:450,mode:Clutter.AnimationMode.EASE_OUT_QUAD});
+                else b.opacity=0;
+                // Não destruir o ator, seu foco nem sua seleção.
+            }
+        }
+        if(this.helpButton){
+            const helpVisible=awake && (this.helpAwake || !!this.helpBox?.visible) &&
+                this.settings.get_boolean('show-help-button');
+            this.helpButton.visible=awake && this.settings.get_boolean('show-help-button');
+            this.helpButton.reactive=helpVisible;
+            if(typeof this.helpButton.ease==='function')
+                this.helpButton.ease({opacity:helpVisible?255:0,duration:350,mode:Clutter.AnimationMode.EASE_OUT_QUAD});
+            else this.helpButton.opacity=helpVisible?255:0;
+        }
+        if(!awake && this.helpHint)this.helpHint.hide();
+    }
+    wakeMedallions(){
+        // Mantém a interface navegável, inclusive por voz ou câmera.
+        this.cancelMedallionSleep();
+        this.medallionsAwake=true;
+        this.applyMedallionVisibility();
+    }
+    setExpanded(on) {
+        this.expanded=Boolean(on);
+        if(!this.root)return;
+        this.wakeSeed();
+        this.fabric.visible=this.expanded;
+        for(const r of RIVERS)this.riverLabels[r].visible=this.expanded;
+        if(this.expanded)this.wakeMedallions();
+        else{this.cancelMedallionSleep();this.cancelHelpSleep();this.medallionsAwake=false;}
+        this.applyMedallionVisibility();
+        if(!this.expanded){
+            if(this.helpBox)this.helpBox.hide();
+            if(this.helpHint)this.helpHint.hide();
+            if(this.controlBox)this.controlBox.hide();
+        }
+        this.scheduleSeedSleep();
+        this.refresh();this.highlightSelection();
+        this.applyMedallionVisibility();
+    }
+    schedule() {
+        if(this.later)return;
+        this.later=GLib.timeout_add(GLib.PRIORITY_DEFAULT,150,()=>{
+            this.later=0;this.refresh();return GLib.SOURCE_REMOVE;
+        });
+    }
+    refresh() {
+        if(!this.root)return;
+        const focused=global.display.focus_window;
+        const ownApp=focused && this.tracker.get_window_app(focused);
+        this.root.visible=this.layer!=='floating' ||
+            (this.allowed() && !Main.overview.visible && (!ownApp || ownApp.get_id()!==DESKTOP));
+        if(!this.expanded){
+            for(const r of RIVERS)for(const node of this.buttons[r])node.button.hide();
+            return;
+        }
+        const live=this.windows().map(w=>this.describe(w));
+        const keep=this.remembers();
+        const data={open:live,memory:keep?this.recent.slice(0,5):[],
+            frequent:keep?Object.entries(this.frequency).sort((a,b)=>b[1][0]-a[1][0]||b[1][1]-a[1][1])
+                .filter(([id])=>this.apps.lookup_app(id)).slice(0,5).map(([app])=>({app})):[]};
+        for(const r of RIVERS) {
+            const entries=data[r].slice(0,5),slots=SLOTS[entries.length];
+            this.buttons[r].forEach((node,i)=>{
+                if(i>=slots.length){node.button.hide();node.entry=null;node.slot=undefined;return;}
+                const entry=entries[i]||null;node.entry=entry;
+                node.slot=slots[i];
+                const [x,y]=this.riverPoint(r,(node.slot+1)/6);
+                const w=this.area?this.area.width:1200,h=this.area?this.area.height:500;
+                node.button.set_position(Math.round(limit(x-30,2,w-62)),Math.round(limit(y-30,2,h-62)));
+                const app=entry?this.apps.lookup_app(entry.app):null;
+                if(node.key!==(entry?entry.app:'')){
+                    if(node.badge){node.badge.destroy();node.badge=null;}
+                    if(app){
+                        node.badge=app.create_icon_texture(20);node.stack.add_child(node.badge);
+                        node.badge.set_position(43,43);
+                    }
+                    node.key=entry?entry.app:'';
+                }
+                node.button.accessible_name=entry?(entry.title||(app?app.get_name():entry.app)):RIVER_NAMES[r];
+                node.button.show();
+            });
+        }
+        if(this.navRiver){
+            const ids=this.selectableIndices(this.navRiver);
+            if(!ids.includes(this.navIndex))this.navIndex=ids.length?ids[0]:-1;
+        }
+        this.highlightSelection();
+        this.applyMedallionVisibility();
+    }
+    openNode(r,index) {
+        const e=this.buttons[r][index].entry;
+        if(!e){this.launch(r);return;}
+        if(e.id && this.Activate(e.id))return;
+        const w=this.windows().find(x=>{
+            const d=this.describe(x);return d.app===e.app && (!e.title||d.title===e.title);
+        });
+        if(w){Main.activateWindow(w,global.get_current_time());return;}
+        const app=this.apps.lookup_app(e.app);
+        if(app)app.activate();else this.launch(r);
+    }
+    stop() {
+        this.stopping=true;
+        this.endDrag();
+        for(const [obj,id] of this.links)obj.disconnect(id);
+        this.links=[];
+        stopSource(this.later);stopSource(this.hoverId);stopSource(this.writeId);this.cancelSeedSleep();this.cancelHelpSleep();this.cancelMedallionSleep();
+        if(this.writeId)this.save();
+        this.restorePanel();
+        stopSource(this.barTimer);this.barTimer=0;
+        for(const name of this.navBindings)Main.wm.removeKeybinding(name);
+        this.navBindings=[];
+        if(this.rescueKeyBound)Main.wm.removeKeybinding('arandu-restaurar-barra');
+        if(this.keyBound)Main.wm.removeKeybinding('arandu-tape-mapa');
+        if(this.service)this.service.unexport();
+        this.detachLayer();
+        if(this.root)this.root.destroy();
+        if(this.panel)this.panel.destroy();
+        this.root=null;this.panel=null;this.service=null;
+    }
+}

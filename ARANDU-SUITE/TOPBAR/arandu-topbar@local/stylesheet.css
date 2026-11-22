@@ -1,0 +1,106 @@
+#panel.arandu-topbar {
+  border-bottom: 2px solid rgba(205, 161, 88, 0.96);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+}
+
+#panel.arandu-band-arandu { background-image: url("assets/band-arandu.svg"); }
+#panel.arandu-band-yvy { background-image: url("assets/band-yvy.svg"); }
+#panel.arandu-band-kaaguy { background-image: url("assets/band-kaaguy.svg"); }
+#panel.arandu-band-tape { background-image: url("assets/band-tape.svg"); }
+#panel.arandu-band-trama { background-image: url("assets/band-trama.svg"); }
+
+#panel.arandu-topbar--compact { height: 46px; }
+#panel.arandu-topbar--medium  { height: 50px; }
+#panel.arandu-topbar--tall    { height: 54px; }
+
+.arandu-clock-capsule {
+  border-radius: 18px;
+  padding: 0 20px;
+  margin: 4px 0;
+}
+.arandu-clock-capsule--terra {
+  background-color: rgba(29, 23, 18, 0.96);
+  border: 1px solid rgba(214, 170, 94, 0.95);
+}
+.arandu-clock-capsule--mate {
+  background-color: rgba(19, 27, 20, 0.96);
+  border: 1px solid rgba(139, 162, 93, 0.94);
+}
+.arandu-clock-capsule--cinza {
+  background-color: rgba(27, 27, 28, 0.96);
+  border: 1px solid rgba(191, 189, 181, 0.80);
+}
+
+.arandu-portal-button {
+  border-radius: 15px;
+  margin: 5px 8px;
+  padding: 0 11px;
+  background-color: rgba(33, 27, 20, 0.90);
+  border: 1px solid rgba(207, 164, 91, 0.74);
+}
+.arandu-portal-content { spacing: 7px; }
+.arandu-portal-label {
+  font-weight: 700;
+  color: #f5ead6;
+}
+
+/* ARANDU v5.8 — botão funcional dos RIOS */
+.arandu-rivers-button {
+  border-radius: 15px;
+  margin: 5px 4px;
+  padding: 0 10px;
+  background-color: rgba(18, 31, 27, 0.90);
+  border: 1px solid rgba(124, 158, 122, 0.78);
+}
+.arandu-rivers-label {
+  font-weight: 700;
+  color: #dfe9d8;
+}
+
+/* ARANDU-v6.6.1-BEGIN */
+/*
+ * Família visual da topbar.
+ * Os ícones geométricos são próprios do ARANDU e não são apresentados
+ * como símbolos tradicionais Guarani.
+ */
+.arandu-topbar-button,
+.arandu-rivers-button,
+.arandu-apps-button {
+  border-radius: 999px;
+  padding: 0 10px;
+  margin: 4px 3px;
+  transition-duration: 150ms;
+}
+
+.arandu-topbar-button:hover,
+.arandu-rivers-button:hover,
+.arandu-apps-button:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.arandu-topbar-button:focus,
+.arandu-rivers-button:focus,
+.arandu-apps-button:focus {
+  box-shadow: inset 0 0 0 1px rgba(205, 166, 94, 0.72);
+}
+/* ARANDU-v6.6.1-END */
+/* ARANDU-v6.6.1.2-BEGIN */
+.arandu-apps-button {
+  border-radius: 999px;
+  padding: 0 10px;
+  margin: 4px 3px;
+  transition-duration: 150ms;
+}
+
+.arandu-apps-button:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.arandu-apps-button:focus,
+.arandu-apps-button:checked {
+  background-color: rgba(92, 109, 78, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(205, 166, 94, 0.72);
+}
+/* ARANDU-v6.6.1.2-END */
