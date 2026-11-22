@@ -1,6 +1,7 @@
 <schemalist>
   <schema id="org.gnome.shell.extensions.arandu-confluencia" path="/org/gnome/shell/extensions/arandu-confluencia/">
     <key name="arandu-tape-mapa" type="as"><default>['&lt;Super&gt;&lt;Shift&gt;t']</default><summary>Abrir o mapa do Arandu</summary></key>
+    <key name="arandu-alternar-barra" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;h']</default><summary>Alternar visibilidade do painel sem mouse</summary></key>
     <key name="arandu-restaurar-barra" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;b']</default><summary>Recuperar o painel GNOME</summary></key>
     <key name="show-help-button" type="b"><default>true</default><summary>Exibir medalhão discreto de atalhos junto à Semente</summary></key>
     <key name="panel-mode" type="s"><default>'visible'</default><summary>Visibilidade do painel GNOME: visible, hidden ou auto</summary></key>
