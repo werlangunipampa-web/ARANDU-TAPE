@@ -200,11 +200,11 @@ class TapeSession {
         const interval=this.settings.get_int('scan-interval-ms');
         const shortcuts=this.settings.get_strv('arandu-varredura-acionar');
         const switchName=shortcuts.includes('<Super><Alt>s')?'Super+Alt+S':'Super+Alt+Espaço';
-        this.accessibilityLabels.speed.set_text('Varredura: '+(interval/1000).toLocaleString('pt-BR')+' s');
-        this.accessibilityLabels.size.set_text('Medalhões: '+Math.round(scale*100)+'%');
-        this.accessibilityLabels.contrast.set_text('Alto contraste: '+(contrast?'ligado':'desligado'));
-        this.accessibilityLabels.switch.set_text('Acionador: '+switchName);
-        this.accessibilityLabels.bar.set_text('Barra: '+this.settings.get_string('panel-mode'));
+        this.accessibilityLabels.speed.set_label('Varredura: '+(interval/1000).toLocaleString('pt-BR')+' s');
+        this.accessibilityLabels.size.set_label('Medalhões: '+Math.round(scale*100)+'%');
+        this.accessibilityLabels.contrast.set_label('Alto contraste: '+(contrast?'ligado':'desligado'));
+        this.accessibilityLabels.switch.set_label('Acionador: '+switchName);
+        this.accessibilityLabels.bar.set_label('Barra: '+this.settings.get_string('panel-mode'));
     }
     // Varredura opcional: nunca abre um programa automaticamente.
     // Uma tecla ou acionador inicia a varredura e confirma o item destacado.
