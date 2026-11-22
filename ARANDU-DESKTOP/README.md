@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.5 — janelas reais do Sway, sessão experimental
+# ARANDU Desktop 0.5.1 — teste direto de duas janelas no Sway
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -87,3 +87,9 @@ O aplicativo GTK4 ainda é uma janela dentro do Sway; **não existe camada layer
 Em `sway.config.in`, **Super+Enter** executa o Foot (terminal) dentro do Sway para teste. `Super+Tab` alterna janelas; `Ctrl+Alt+Shift+Q` sai do compositor aninhado. O Rio da Memória, Frequentes e a ECA permanecem isolados.
 
 **Ainda falta validar graficamente** no VAIO a seleção, confirmação e retorno ao Foot. A operação IPC é síncrona com timeout de 3 segundos e pode causar pausa breve em erro de comunicação; não monitorar continuamente. A versão anterior permanece no histórico Git.
+
+## Revisão 0.5.1 — observação do VAIO
+
+No VAIO em 22/11/2026, 25 testes Python e 2 Rust passaram e a janela ARANDU abriu no Sway aninhado, **mas a captura ainda não confirmou foco entre duas janelas**. Apareceram avisos transitórios do wlroots (`xdg_surface`) e GDK sobre reposicionamento de pop-ups. Não há evidência de travamento fatal; evitar mascarar avisos. `Ctrl+C` gerou `Pipe quebrado` porque terminou abruptamente o compositor.
+
+A interface 0.5.1 oferece o botão **Abrir Foot no Sway** somente dentro do laboratório, por clique explícito; não usa `shell=True`, nem executa comandos como root. Depois de abrir o Foot, volte ao ARANDU com **Super+Tab** dentro do Sway, clique **Janelas da sessão Sway**, observe os nomes reais e selecione/confirme o medalhão Foot. A tecla Super pode ser interceptada pelo GNOME hospedeiro: o botão de abertura evita depender desse atalho para criar a segunda janela. Saia pelo atalho de encerramento do Sway, não por `Ctrl+C`.
