@@ -2,11 +2,17 @@
 # Sway gerencia janelas, ARANDU GTK4 é o painel; não é compositor ARANDU próprio.
 set $mod Mod4
 font pango:Sans 10
-default_border pixel 2
-default_floating_border pixel 2
+# Bordas e barras de título do Sway ocultas por padrão (visual ARANDU).
+# Menus próprios dos aplicativos ainda podem ter cabeçalhos internos.
+default_border none
+default_floating_border none
 gaps inner 7
 gaps outer 5
-workspace_layout tabbed
+# Layout sem barra de abas. Opy (Alt+Tab) faz a navegação entre janelas.
+# Super+T restaura temporariamente o layout com abas, se necessário.
+workspace_layout default
+bindsym $mod+t layout tabbed
+bindsym $mod+e layout toggle split
 output * bg #14221d solid_color
 client.focused #bba66e #20372f #f4f0df #91b59f #bba66e
 client.unfocused #263e34 #192620 #b8c6b7 #263e34 #263e34
@@ -29,5 +35,11 @@ bindsym Shift+Print exec __ARANDU_CAPTURE_SAVE__
 bindsym $mod+Return exec foot
 bindsym $mod+f fullscreen toggle
 bindsym $mod+Shift+space floating toggle
+# Ações explícitas para trabalhar sem botão X nem barra de título.
+# 'kill' solicita fechamento da janela focada; saída de sessão tem outro atalho.
+bindsym $mod+q kill
+# Recolher janela ao scratchpad; Super+Shift+H a recupera.
+bindsym $mod+h move scratchpad
+bindsym $mod+Shift+h scratchpad show
 # Não instalar swaylock/swayidle automaticamente: integração futura.
 exec __ARANDU_LAUNCHER__
