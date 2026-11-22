@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 
 from core import Session, NAMES, RIVERS
+from performance import collect
 
 try:
     import gi
@@ -27,7 +28,7 @@ except (ImportError, ValueError) as error:
 from visual import RiversCanvas
 from session.windows import list_windows, focus_window, list_outputs, move_arandu_to_output
 
-VERSION = "0.6.2"
+VERSION = "0.6.3"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
@@ -83,7 +84,7 @@ class Desktop(Gtk.Application):
             self.window.present()
             return
         self.window = Gtk.ApplicationWindow(application=self)
-        self.window.set_title("ARANDU Desktop · Laboratório 0.6.2")
+        self.window.set_title("ARANDU Desktop · Laboratório 0.6.3")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
         provider = Gtk.CssProvider()
@@ -94,9 +95,12 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.6.2 · INICIAR E TRABALHAR", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.6.3 · OBSERVATÓRIO", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
+        performance = Gtk.Button(label="Desempenho")
+        performance.connect("clicked", lambda *_: self.show_performance())
+        bar.append(performance)
         roadmap = Gtk.Button(label="Evolução")
         roadmap.connect("clicked", lambda *_: self.show_development())
         bar.append(roadmap)
@@ -164,6 +168,37 @@ class Desktop(Gtk.Application):
         self.window.add_controller(controller)
         self.show_intro()
         self.window.present()
+
+    def show_performance(self):
+        """Fotografia local sob clique; nenhuma amostragem contínua."""
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        self.content.append(self.text("OBSERVATÓRIO · USO ATUAL", "arandu-title"))
+        try:
+            report = collect(limit=8)
+            mem = report["memory"]
+            self.content.append(self.text(
+                f'RAM disponível: {mem["available_mib"]:.1f} MiB / '
+                f'{mem["total_mib"]:.1f} MiB'))
+            self.content.append(self.text(
+                f'RAM em uso (estimada, sem cache recuperável): '
+                f'{mem["used_excluding_reclaimable_mib"]:.1f} MiB'))
+            self.content.append(self.text(
+                f'Swap em uso: {mem["swap_used_mib"]:.1f} MiB'))
+            self.content.append(self.text(
+                "Maiores processos por RSS (páginas compartilhadas podem duplicar):"))
+            for item in report["top_processes"]:
+                self.content.append(self.text(
+                    f'{item["name"]} · PID {item["pid"]} · '
+                    f'{item["rss_mib"]:.1f} MiB RSS'))
+            self.content.append(self.text(
+                "Comparação GNOME × ARANDU: usar a mesma máquina, aplicativos "
+                "e condições. Esta leitura não mede o consumo isolado da interface."))
+        except (OSError, KeyError, ValueError) as error:
+            self.content.append(self.text("Leitura indisponível: " + str(error)))
+        refresh = Gtk.Button(label="Medir novamente")
+        refresh.connect("clicked", lambda *_: self.show_performance())
+        self.content.append(refresh)
 
     def show_development(self):
         """Painel local de estado; nenhuma atualização automática de código."""
