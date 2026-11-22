@@ -122,3 +122,32 @@ Na própria janela ARANDU há atalhos explícitos **Arquivos (Nemo)** e **Termin
 **Nota de integração:** aplicativos de instância única, como gerenciadores de arquivos, podem ser redirecionados à sessão GNOME hospedeira; precisamos observar no VAIO se o Nemo aparece dentro do Sway antes de alegar integração completa. O Foot é o primeiro teste controlado. Testar uma saída virtual; tela cheia e saídas múltiplas permanecem opções experimentais.
 
 **Status:** correção publicada, testes unitários ainda não executados no VAIO após o update. Não temos sessão de login ARANDU nem motor Rust ligado à interface GTK.
+
+## ARANDU no seletor de login — ensaio independente (a validar no VAIO)
+
+A sessão opcional **ARANDU Desktop (Experimental)** usa o compositor Sway Wayland REAL e a GUI GTK4 atual. **Não é um compositor próprio, não é GNOME e ainda não tem integração completa com áudio, redes, portais, notificações, travamento de tela nem todos os serviços do Mint.** O laboratório aninhado continua disponível.
+
+**Primeiro**, no GNOME, sem privilégios:
+```bash
+cd "$HOME/Downloads/ARANDU-TAPE-COMPLETO"
+git pull --ff-only
+python3 -m unittest discover -s ARANDU-DESKTOP/tests -v
+bash -n ARANDU-DESKTOP/session/login/{start-login.sh,manage-login.sh}
+bash ARANDU-DESKTOP/session/login/manage-login.sh --check
+```
+**Opcional, somente se os testes passarem e o usuário quiser ver a opção no login**:
+```bash
+sudo bash ARANDU-DESKTOP/session/login/manage-login.sh --install
+```
+O instalador cria somente `/usr/local/bin/arandu-login-session` e `/usr/share/wayland-sessions/arandu-desktop-lab.desktop` com marcador de propriedade, não altera sessão padrão, configuração do LightDM ou GNOME, nem reinicia o sistema. Na tela de login, selecionar **ARANDU Desktop (Experimental)** manualmente; selecionar o GNOME como antes é sempre possível.
+
+Na sessão ARANDU, `Ctrl+Alt+A` volta à janela dos Rios, `Super+Enter` abre Foot e `Ctrl+Alt+Shift+Q` encerra Sway e retorna ao login (atalho disponível mesmo que a GUI não abra, desde que o compositor esteja operacional). Em caso de compositor bloqueado, tentar alternar para um TTY com Ctrl+Alt+F3 e voltar ao login de forma manual, sem comandos de recuperação arriscados; manter acesso a outro ambiente antes de mudar o login.
+
+Para **remover somente a opção ARANDU**, ainda no GNOME:
+```bash
+cd "$HOME/Downloads/ARANDU-TAPE-COMPLETO"
+sudo bash ARANDU-DESKTOP/session/login/manage-login.sh --remove
+```
+A opção de login aponta para o caminho absoluto **deste clone**: não apagar/mover a pasta até remover ou reinstalar a entrada. Não habilitar login automático para o ARANDU enquanto experimental. O instalador recusa sobrescrever sessão/launcher que não tenham marcador ARANDU.
+
+**Estado:** scripts e testes publicados no GitHub, sem teste físico da sessão nativa no VAIO. Os 34 testes relatados foram da versão 0.6.1 **aninhada**, não validam LightDM, seat, DRM, entrada ou a inicialização nativa.
