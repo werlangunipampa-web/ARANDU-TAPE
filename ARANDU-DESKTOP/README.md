@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.5.2 — Rio dos Abertos conectado às janelas Sway
+# ARANDU Desktop 0.6.1 — Semente retrátil e saídas Sway experimentais
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -104,3 +104,11 @@ Após a abertura comprovada de ARANDU e Foot lado a lado, melhoramos o caminho p
 5. Volte com **Ctrl+Alt+A** e valide o retorno, sem abrir outro Foot.
 
 São mantidos os testes de segurança (sem janelas do GNOME, sem ECA e sem execução de comandos recebidos de títulos). O Sway ainda é compositor de terceiros dentro de janela GNOME. **Código publicado, teste físico 0.5.2 pendente.**
+
+## Laboratório 0.6.1 — tela cheia e múltiplas saídas
+
+`bash ARANDU-DESKTOP/session/start-nested.sh` executa **uma saída virtual** aninhada. Opcionalmente, `bash ARANDU-DESKTOP/session/start-nested.sh --outputs=2` ou `--outputs=3` solicita até 3 saídas **virtuais** do backend X11. Não são equivalentes a detectar ou configurar fisicamente 2-3 monitores do VAIO.
+
+No laboratório, `Ctrl+Alt+A` alterna exibir/ocultar a janela ARANDU flutuante por scratchpad do Sway; não é uma superfície layer-shell transparente. O botão `Tela cheia` expande/recolhe a própria janela ARANDU, enquanto `Telas do ARANDU` lista as saídas informadas via IPC e permite mover a janela por nome enumerado.
+
+A leitura de saídas é sob demanda. Sway permanece o compositor efetivo; ARANDU ainda é cliente GTK4. O GNOME hospedeiro, TOPBAR e ECA não são alterados. **Código e testes publicados; comportamento de 0.6.1 ainda depende de teste real no VAIO.** As opções de monitor preferido/foco/janela ativa da Confluência GNOME ainda não foram integralmente portadas.
