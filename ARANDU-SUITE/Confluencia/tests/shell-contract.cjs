@@ -42,7 +42,8 @@ class Panel extends Actor {
 const prefs=new Map([['recent','[]'],['frequency','{}']]);
 const settings={get_string:k=>prefs.get(k),set_string:(k,v)=>prefs.set(k,v),
     get_double:k=>prefs.get(k)||0,set_double:(k,v)=>prefs.set(k,v),
-    get_boolean:k=>!!prefs.get(k),set_boolean:(k,v)=>prefs.set(k,v)};
+    get_boolean:k=>!!prefs.get(k),set_boolean:(k,v)=>prefs.set(k,v),
+    get_int:k=>prefs.get(k)??3500,set_int:(k,v)=>prefs.set(k,v)};
 let privacy=true;
 class Privacy extends Actor {get_boolean(){return privacy;}}
 let service=false, key=false, actions=[], windowList=[], focused=null;
@@ -167,6 +168,28 @@ assert.equal(s.seed.opacity,255);
 assert.equal(s.buttons[s.navRiver][s.navIndex].button.opacity,255);
 assert.equal(s.buttons[s.navRiver][s.navIndex].button.reactive,true);
 
+// A varredura inicia desligada, avança sem ativar e confirma sob comando explícito.
+assert.equal(s.scanning,false);
+s.selectRiver('open');
+assert.equal(s.AssistiveCommand('scan:start'),true);
+assert.equal(s.scanning,true);
+assert(s.scanTimer && pending.has(s.scanTimer));
+const scanTick=pending.get(s.scanTimer);
+const beforeTick=s.navIndex;
+const focusedBeforeScan=focused;
+assert.equal(scanTick(),true);
+assert.notEqual(s.navIndex,beforeTick);
+assert.equal(focused,focusedBeforeScan); // varredura não abre aplicativos sozinha
+assert.equal(s.AssistiveCommand('scan:switch'),true);
+assert.equal(s.scanning,false);
+assert.equal(s.scanTimer,0);
+assert.equal(s.AssistiveCommand('scan:start'),true);
+s.setExpanded(false);
+assert.equal(s.scanning,false); // recolher cancela a varredura
+assert.equal(s.AssistiveCommand('scan:start'),true);
+assert.equal(s.AssistiveCommand('node:cancel'),true);
+assert.equal(s.scanning,false);
+assert.equal(s.AssistiveCommand('scan:unknown'),false);
 const fixedRoot=s.root;
 for(let i=0;i<60;i++){s.setExpanded(false);s.setExpanded(true);}
 assert.equal(s.root,fixedRoot);assert.equal(fixedRoot.destroyed,undefined);
