@@ -115,6 +115,7 @@ class RiversCanvas(Gtk.ScrolledWindow):
             marker._arandu_app = None
             marker.set_focusable(False)
             marker.set_sensitive(False)
+            marker.set_visible(True)
             marker.set_tooltip_text(NAMES[river] + " · posição visual, sem dados")
             marker.set_child(Gtk.Picture.new_for_filename(str(ASSETS / f"{river}.svg")))
         for label in self.river_buttons.values():
