@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "session"))
-from windows import flatten_windows, list_windows, focus_window, user_windows, hide_arandu
+from windows import flatten_windows, list_windows, focus_window, user_windows, hide_arandu, list_outputs, move_arandu_to_output
 
 
 class WindowAdapterContract(unittest.TestCase):
@@ -88,6 +88,40 @@ class WindowAdapterContract(unittest.TestCase):
                     '[title="^ARANDU Desktop"] move scratchpad'
                 ])
                 self.assertNotIn("shell", run.call_args.kwargs)
+
+    def test_outputs_are_read_only_and_require_nested_session(self):
+        from types import SimpleNamespace
+        import json
+        with patch.dict("os.environ", {}, clear=True):
+            with patch("subprocess.run") as run:
+                self.assertEqual(list_outputs(), ())
+                self.assertFalse(move_arandu_to_output("X11-1"))
+                run.assert_not_called()
+        results = [
+            SimpleNamespace(stdout=json.dumps([
+                {"name": "X11-1", "active": True, "focused": True,
+                 "rect": {"width": 1280, "height": 720}},
+                {"name": "X11-2", "active": False}
+            ])),
+            SimpleNamespace(stdout='[{"success": true}]'),
+        ]
+        with patch.dict("os.environ", {
+                "ARANDU_SESSION_LAB": "1", "SWAYSOCK": "test"}):
+            with patch("subprocess.run", side_effect=results) as run:
+                self.assertTrue(move_arandu_to_output("X11-1"))
+                self.assertEqual(run.call_args.args[0], [
+                    "swaymsg", "-r", "-t", "command",
+                    '[title="^ARANDU Desktop"] move to output X11-1'])
+
+    def test_unlisted_output_is_rejected(self):
+        import json
+        from types import SimpleNamespace
+        with patch.dict("os.environ", {
+                "ARANDU_SESSION_LAB": "1", "SWAYSOCK": "test"}):
+            with patch("subprocess.run", return_value=SimpleNamespace(
+                    stdout=json.dumps([{"name": "X11-1", "active": True}]))) as run:
+                self.assertFalse(move_arandu_to_output("X11-9"))
+                self.assertEqual(run.call_count, 1)
 
     def test_without_nested_session_does_not_run_subprocess(self):
         with patch.dict("os.environ", {}, clear=True):
