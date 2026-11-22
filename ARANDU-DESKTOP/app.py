@@ -174,7 +174,9 @@ class Desktop(Gtk.Application):
             button.connect("clicked", lambda _b, cb=callback: cb())
             self.seed_status.append(button)
         self.tools_box.append(self.seed_status)
-        self.tools_box.append(self.quick_action("Tupã · ChatGPT / modelos", "tupa"))
+        tupa_shortcut = Gtk.Button(label="Tupã · ChatGPT / modelos")
+        tupa_shortcut.connect("clicked", lambda *_: self.show_tupa())
+        self.tools_box.append(tupa_shortcut)
         self.clock_button.set_label(clock_text())
         GLib.timeout_add_seconds(60, self.update_seed_clock)
 
@@ -331,6 +333,86 @@ class Desktop(Gtk.Application):
             )
         except OSError as error:
             self.content.append(self.text("Não foi possível abrir controle: " + str(error)))
+
+    def show_bluetooth(self):
+        """Exibe fones pareados ao solicitar; nenhuma descoberta contínua."""
+        self.clear_content()
+        self.detail_revealer.set_reveal_child(True)
+        self.content.append(self.text("SEMENTE · BLUETOOTH", "arandu-title"))
+        self.content.append(self.text(
+            "Fone Philips: se pareado, aparecerá com seu nome real. "
+            "Não conectamos automaticamente nem rastreamos dispositivos próximos."))
+        manager = Gtk.Button(label="Parear fone / gerenciar Bluetooth")
+        manager.connect("clicked", lambda *_: self.open_bluetooth_manager())
+        self.content.append(manager)
+        message = self.text("Consultando dispositivos pareados...")
+        self.content.append(message)
+        import threading
+        token = object()
+        self._bluetooth_token = token
+
+        def worker():
+            devices = paired_devices()
+            GLib.idle_add(self.render_bluetooth, devices, token, message)
+        threading.Thread(target=worker, daemon=True).start()
+
+    def render_bluetooth(self, devices, token, message):
+        if self._bluetooth_token is not token:
+            return False
+        ordered = sorted(devices, key=lambda d: (
+            "philips" not in d["name"].casefold(), d["name"].casefold()))
+        message.set_label(
+            f"{len(devices)} dispositivo(s) pareado(s)." if devices else
+            "Nenhum pareado encontrado. Ative o modo pareamento no fone Philips.")
+        for device in ordered:
+            line = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=9)
+            status = "conectado" if device["connected"] else "desconectado"
+            line.append(self.text(f"{device['name']} · {status}"))
+            action = "disconnect" if device["connected"] else "connect"
+            button = Gtk.Button(label="Desconectar" if device["connected"] else "Conectar")
+            button.connect("clicked",
+                           lambda _b, mac=device["address"], op=action:
+                           self.bluetooth_action(mac, op))
+            line.append(button)
+            self.content.append(line)
+        audio = Gtk.Button(label="Escolher saída de áudio para o fone")
+        audio.connect("clicked", lambda *_: self.launch_system_tool("pavucontrol"))
+        self.content.append(audio)
+        return False
+
+    def open_bluetooth_manager(self):
+        command = pairing_manager()
+        if command is None:
+            self.content.append(self.text(
+                "Não há gerenciador gráfico reconhecido. "
+                "No GNOME, abra Configurações → Bluetooth."))
+            return
+        try:
+            subprocess.Popen(command, stdin=subprocess.DEVNULL,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                             close_fds=True, start_new_session=True)
+        except OSError as error:
+            self.content.append(self.text("Falha no pareamento: " + str(error)))
+
+    def bluetooth_action(self, address, operation):
+        """Só Connect/Disconnect de endereço pareado validado no adaptador."""
+        self.content.append(self.text("Solicitando operação Bluetooth..."))
+        import threading
+        token = self._bluetooth_token
+
+        def worker():
+            ok, result = device_action(address, operation)
+            GLib.idle_add(self.bluetooth_result, ok, result, token)
+        threading.Thread(target=worker, daemon=True).start()
+
+    def bluetooth_result(self, success, message, token):
+        if self._bluetooth_token is not token:
+            return False
+        self.content.append(self.text(message))
+        refresh = Gtk.Button(label="Atualizar dispositivos")
+        refresh.connect("clicked", lambda *_: self.show_bluetooth())
+        self.content.append(refresh)
+        return False
 
     def show_session_menu(self):
         self.clear_content()
