@@ -959,7 +959,9 @@ class TapeSession {
         this.applyMedallionVisibility();
     }
     setExpanded(on) {
+        const wasExpanded=Boolean(this.expanded);
         this.expanded=Boolean(on);
+        if(this.expanded && !wasExpanded)this.dismissNavigationPanels();
         if(!this.expanded){this.stopScan();this.leaveNavigation();}
         if(!this.root)return;
         this.wakeSeed();
