@@ -136,3 +136,40 @@ def move_arandu_to_output(name):
     answer = json.loads(result.stdout)
     return isinstance(answer, list) and bool(answer) and all(
         isinstance(part, dict) and part.get("success") is True for part in answer)
+
+
+def window_action(identifier, action):
+    """Opera somente sobre janela ainda presente no Sway da sessão ARANDU.
+
+    Ações: recolher (scratchpad) e encerrar (solicitação de fechar janela).
+    A verificação da identidade atual impede comandos arbitrários.
+    """
+    if action not in ("recolher", "encerrar"):
+        return False
+    if not _sway_socket() or type(identifier) is not int or identifier <= 0:
+        return False
+    if identifier not in {w["id"] for w in list_windows()}:
+        return False
+    sway_action = "move scratchpad" if action == "recolher" else "kill"
+    result = subprocess.run(
+        ["swaymsg", "-r", "-t", "command", f"[con_id={identifier}] {sway_action}"],
+        capture_output=True, text=True, timeout=3, check=True,
+    )
+    answer = json.loads(result.stdout)
+    return isinstance(answer, list) and bool(answer) and all(
+        isinstance(part, dict) and part.get("success") is True for part in answer
+    )
+
+
+def show_scratchpad():
+    """Recuperar a última janela recolhida é uma ação explícita do usuário."""
+    if not _sway_socket():
+        return False
+    result = subprocess.run(
+        ["swaymsg", "-r", "-t", "command", "scratchpad show"],
+        capture_output=True, text=True, timeout=3, check=True,
+    )
+    answer = json.loads(result.stdout)
+    return isinstance(answer, list) and bool(answer) and all(
+        isinstance(part, dict) and part.get("success") is True for part in answer
+    )
