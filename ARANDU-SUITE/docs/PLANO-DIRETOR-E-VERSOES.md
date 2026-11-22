@@ -224,3 +224,13 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - Indicadores próximos à Semente nesta etapa; a integração geométrica nos medalhões originais será feita após testes de usabilidade.
 - Nova proposta visual: fundo de paisagem/rio/mata em tons verdes e dourados, com Semente clara em primeiro plano e baixa interferência visual. Arte visual é conceito, não interface executada.
 - Testes de contrato publicados. Pendente validação visual no VAIO e verificação completa antes de entrar novamente na sessão ARANDU.
+
+## Desktop 0.7.5 — retorno seguro, atualização interna e Terminal ARANDU (22/11/2026)
+
+- Semente: lançadores Firefox, Nemo, Opy, Terminal ARANDU, pasta Área de Trabalho, captura para área de transferência, ações de janela, indicadores de status, saída confirmada e Centro de Atualizações de pacotes (somente gerenciador oficial).
+- Terminal ARANDU: Foot real com esquema de cores verde/dourado e atalho Super+Enter; não reimplementa PTY.
+- Centro de Evolução do código: `session/evolve-arandu.sh` valida estado do repositório e exige confirmação literal antes de `git pull --ff-only`; interrompe se houver mudanças locais, não reinicia sessão e testa após atualizar.
+- Comparador de desempenho `session/benchmark-desktop.sh` preservado (RAM/CPU/swap locais); próximos ensaios devem medir PSS, carga, energia e latência de Opy/Firefox/Nemo sob as mesmas condições no VAIO.
+- Testes contratuais Python de segurança e funcionalidade estendidos; CI `.github/workflows/arandu-desktop-tests.yml` executa testes/sintaxe em pushes.
+- **Estado real:** publicação no GitHub confirmada, principais contratos inspecionados; suíte e integração gráfica da versão 0.7.5 **ainda não confirmadas no VAIO**. Preservar GNOME e validar Sway aninhado antes de reentrar na sessão nativa.
+- Pendente para fase seguinte: bloqueio seguro, energia/suspensão, notificações, superfície de desktop com drag-and-drop, impressão/scanner, gestão de monitores e interoperabilidade robusta de clipboard entre aplicativos.
