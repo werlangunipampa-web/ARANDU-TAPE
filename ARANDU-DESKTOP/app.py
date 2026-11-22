@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -225,7 +226,7 @@ class Desktop(Gtk.Application):
             return
         try:
             windows = list_windows()
-        except (OSError, ValueError, RuntimeError) as error:
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
             self.visual.show_rivers()
             self.content.append(self.text("Não foi possível consultar Sway: " + str(error)))
             return
@@ -262,7 +263,7 @@ class Desktop(Gtk.Application):
                     "Janela indisponível ou foco recusado pelo compositor."))
                 return
             self.retract()
-        except (OSError, ValueError, RuntimeError) as error:
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
             self.content.append(self.text("Erro ao focar janela: " + str(error)))
 
     def select_app(self, application):
