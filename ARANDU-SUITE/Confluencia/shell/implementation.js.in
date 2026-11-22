@@ -55,6 +55,9 @@ class TapeSession {
         this.panel.menu.addAction('Centralizar a Semente',()=>this.Center());
         this.panel.menu.addAction('Guia dos Rios · atalhos',()=>this.toggleHelp());
         this.panel.menu.addAction('Varredura assistiva: iniciar/parar',()=>this.scanning?this.stopScan():this.startScan());
+        this.panel.menu.addAction('Varredura: lenta · 5 segundos',()=>this.setScanInterval(5000));
+        this.panel.menu.addAction('Varredura: normal · 3,5 segundos',()=>this.setScanInterval(3500));
+        this.panel.menu.addAction('Varredura: rápida · 2 segundos',()=>this.setScanInterval(2000));
         this.panel.menu.addAction('Mostrar/ocultar botão de ajuda',()=>this.toggleHelpButton());
         this.panel.menu.addAction('Barra: sempre visível',()=>this.setBarMode('visible'));
         this.panel.menu.addAction('Barra: sempre oculta',()=>this.setBarMode('hidden'));
@@ -142,6 +145,16 @@ class TapeSession {
             case 'seed:toggle':this.setExpanded(!this.expanded);return true;
             default:return false;
         }
+    }
+    // Velocidade personalizável sem terminal, persistente por perfil.
+    // Se estiver varrendo, reinicia apenas o relógio mantendo o medalhão selecionado.
+    setScanInterval(ms) {
+        if(!this.allowed() || ![2000,3500,5000].includes(ms))return false;
+        this.settings.set_int('scan-interval-ms',ms);
+        const running=this.scanning;
+        if(running)this.startScan();
+        Main.notify('ARANDU TAPE',`Varredura: ${(ms/1000).toLocaleString('pt-BR')} segundos por medalhão.`);
+        return true;
     }
     // Varredura opcional: nunca abre um programa automaticamente.
     // Uma tecla ou acionador inicia a varredura e confirma o item destacado.
