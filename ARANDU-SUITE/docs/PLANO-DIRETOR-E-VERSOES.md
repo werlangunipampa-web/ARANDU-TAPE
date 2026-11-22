@@ -70,3 +70,15 @@ Uma camada de navegação gráfica própria, acessível e discreta no desktop GN
 ## Regras de aceite
 
 Aceitar como estável somente com testes simulados aprovados, versão GNOME carregada identificada, sessão gráfica real validada, backup verificado e nenhuma regressão em acesso assistivo.
+
+## Trilha independente — ARANDU Desktop 0.1 (2026-11-22)
+
+- Protótipo GTK4 autocontido em `ARANDU-DESKTOP/`. **Não substitui GNOME nem Cinnamon, não instala sessão gráfica**.
+- Semente e três Rios em visual próprio, lançador explícito de aplicativos instalados, seção Sobre com crédito ao desenvolvedor.
+- Rio Abertos sem provedor de janelas nesta fase, para não anunciar dados simulados como observação real.
+- Memória, Frequentes e ECA inativos; nenhuma migração de identidade, coleta automática ou sincronização.
+- Contrato de sessão verificável em Python, núcleo mínimo Rust com testes locais; integração entre eles ainda não implementada.
+- Lançador somente de usuário `bash ARANDU-DESKTOP/rodar-arandu-desktop.sh`.
+- **Status:** arquivos publicados no GitHub. Testes e execução GTK4 no Linux Mint **pendentes de validação pelo usuário**.
+- Avanço posterior somente após avaliação visual, acessibilidade, comportamento ao abrir apps e medição de desempenho, com o TAPE atual intocado.
+
