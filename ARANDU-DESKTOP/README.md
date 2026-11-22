@@ -1,4 +1,4 @@
-# ARANDU Desktop 0.6.3 — observatório de desempenho sob demanda
+# ARANDU Desktop 0.6.4 — medição comparativa de desempenho
 
 **Desenvolvimento:** Rafhael Brum Werlang  
 **Origem:** ARANDU TAPE / Linux Mint / GNOME 46, com preservação da interface existente.
@@ -180,3 +180,23 @@ Em cada sessão (ARANDU, GNOME, Cinnamon etc.), medir no mesmo VAIO, após igual
 Para testar um aplicativo específico já aberto: `ps -C firefox -o pid,rss,%cpu,comm` (RSS em KiB por processo; `%CPU` é média desde início do processo, não taxa instantânea). Alternativamente procurar `firefox`, `nemo` ou `foot` na lista do Observatório, que mostra os 8 maiores processos por RSS. Para experimentos reproduzíveis de tempo de resposta, medir a mesma tarefa em ambas sessões, com cache quente/frio controlado e ao menos 5 repetições; não comparar somente a abertura de uma instância já em execução.
 
 **Métricas futuras:** latência de abertura de aplicativos, FPS/composição, consumo PSS proporcional (smaps_rollup), amostragem temporal de CPU/temperatura, energia e gráficos históricos com consentimento. Nenhum resultado comparativo foi medido ou reivindicado no VAIO ainda.
+
+## 0.6.4 — Ensaio CPU/RAM ARANDU × GNOME (opt-in)
+
+O botão `Desempenho → Ensaio comparativo (5 medições)` abre Foot com uma medição de 5 amostras por 1 segundo. Exibe os dados no terminal; não armazena automaticamente. O módulo `benchmark.py` pode medir uma sessão, salvar um JSON privado apenas por ação explícita e comparar arquivos de sessões diferentes, sem rede nem telemetria.
+
+```bash
+# Na sessão ARANDU, salvar primeira medição (arquivo novo, exclusivo, permissão 600)
+cd "$HOME/Downloads/ARANDU-TAPE-COMPLETO"
+python3 ARANDU-DESKTOP/benchmark.py --measure --count 10 --interval 1 --save "$HOME/arandu-benchmark-arandu.json"
+
+# Mais tarde, na sessão GNOME, nas mesmas condições:
+python3 ARANDU-DESKTOP/benchmark.py --measure --count 10 --interval 1 --save "$HOME/arandu-benchmark-gnome.json"
+
+# Comparar, a partir de qualquer sessão:
+python3 ARANDU-DESKTOP/benchmark.py --compare "$HOME/arandu-benchmark-arandu.json" "$HOME/arandu-benchmark-gnome.json"
+```
+
+O comparador usa medianas de RAM estimada, CPU global e swap e calcula diferenças `GNOME – ARANDU`. **Não conclui automaticamente qual desktop é mais rápido:** RAM/CPU incluem todos os processos, inclusive navegador/serviços, e uma única medição curta é indicativa. Para precisão, repetir ensaios em repouso e com tarefas equivalentes, no mesmo hardware, evitando comparações com programas diferentes. Arquivos contêm métricas locais e etiqueta da sessão, e não devem ser enviados sem revisão. A medição termina sozinha; nenhum daemon foi instalado.
+
+**Pendente:** validação dos novos testes e funcionamento real do botão GTK no VAIO.
