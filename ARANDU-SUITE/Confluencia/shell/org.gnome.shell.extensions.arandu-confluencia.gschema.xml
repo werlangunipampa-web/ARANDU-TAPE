@@ -21,6 +21,7 @@
     <key name="arandu-no-cancelar" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;0']</default><summary>Limpar seleção</summary></key>
     <key name="medallion-scale" type="d"><default>1.0</default><range min="0.85" max="1.2"/><summary>Escala acessível dos medalhões de aplicativos</summary></key>
     <key name="high-contrast" type="b"><default>false</default><summary>Aplicar alto contraste aos medalhões</summary></key>
+    <key name="navigation-idle-ms" type="i"><default>60000</default><range min="0" max="120000"/><summary>Recolher Semente e rios após inatividade fora de varredura; 0 desativa</summary></key>
     <key name="scan-interval-ms" type="i"><default>3500</default><range min="2000" max="5000"/><summary>Intervalo da varredura assistiva em milissegundos</summary></key>
     <key name="arandu-varredura-acionar" type="as"><default>['&lt;Super&gt;&lt;Alt&gt;space']</default><summary>Iniciar varredura ou confirmar o medalhão selecionado</summary></key>
   </schema>
