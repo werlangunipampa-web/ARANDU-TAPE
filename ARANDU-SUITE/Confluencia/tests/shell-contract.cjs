@@ -161,6 +161,16 @@ s.setExpanded(true);assert.equal(s.buttons.open[0].button.visible,true);
 // Assistive global navigation selects real medalhões without opening GTK.
 // 3 monitores: o rio deve surgir na tela da janela ativa.
 focused=b; // janela simulada no monitor 2
+// Pop-ups deixados abertos não devem acompanhar a navegação por atalhos.
+s.toggleHelp();assert.equal(s.helpBox.visible,true);
+s.toggleAccessibility();assert.equal(s.controlScroll.visible,true);
+s.selectRiver('open');
+assert.equal(s.helpBox.visible,false);
+assert.equal(s.controlScroll.visible,false);
+s.toggleHelp();s.toggleAccessibility();
+s.cancelSelection();
+assert.equal(s.helpBox.visible,false);
+assert.equal(s.controlScroll.visible,false);
 s.selectRiver('open');
 assert.equal(s.navRiver,'open');
 assert.equal(s.navigationOverlay,true);
