@@ -6,6 +6,7 @@ ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 CFG="$ROOT/session/sway.config.in"
 LAUNCH="$ROOT/session/launch-arandu.sh"
 CAPTURE="$ROOT/session/capture-screen.sh"
+OPY="$ROOT/opy.py"
 # Em X11, cada saída virtual é uma janela do compositor; NÃO detecta monitores físicos.
 OUTPUTS=1
 case "${1:-}" in
@@ -36,19 +37,21 @@ cleanup(){ rm -rf -- "$TMP"; }
 trap cleanup EXIT
 export ARANDU_SESSION_CONFIG="$TMP/config"
 export ARANDU_SESSION_LAUNCH="$LAUNCH"
-python3 - "$CFG" "$ARANDU_SESSION_CONFIG" "$LAUNCH" "$CAPTURE" <<'PY'
+python3 - "$CFG" "$ARANDU_SESSION_CONFIG" "$LAUNCH" "$CAPTURE" "$OPY" <<'PY'
 import pathlib, shlex, sys
-source, destination, executable, capture = map(pathlib.Path, sys.argv[1:])
+source, destination, executable, capture, opy = map(pathlib.Path, sys.argv[1:])
 template = source.read_text(encoding='utf-8')
 assert template.count('__ARANDU_LAUNCHER__') == 1
 assert template.count('__ARANDU_CAPTURE__') == 1
 assert template.count('__ARANDU_CAPTURE_SAVE__') == 1
+assert template.count('__ARANDU_OPY__') == 1
 # 'exec' de Sway invoca uma linha de comando; protegemos o caminho com shlex.
 command = '/bin/bash ' + shlex.quote(str(executable))
 capture_command = '/bin/bash ' + shlex.quote(str(capture))
 template = template.replace('__ARANDU_LAUNCHER__', command)
 template = template.replace('__ARANDU_CAPTURE_SAVE__', capture_command + ' --save')
 template = template.replace('__ARANDU_CAPTURE__', capture_command + ' --clipboard')
+template = template.replace('__ARANDU_OPY__', '/usr/bin/python3 ' + shlex.quote(str(opy)))
 destination.write_text(template, encoding='utf-8')
 destination.chmod(0o600)
 PY
