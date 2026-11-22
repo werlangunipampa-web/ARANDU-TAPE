@@ -6,19 +6,14 @@ não simulam aplicativos nem registros de memória.
 from __future__ import annotations
 
 from gi.repository import Gtk
-from layout import ASSETS, WIDTH, HEIGHT, SEED, paths
+from layout import ASSETS, SEED, paths
+from visual_contract import SCALE, scaled, compact_geometry
 from core import RIVERS, NAMES
 
 
 # Escala determinística: preserva cada coordenada original no mesmo sistema de referência.
 # 1200x500 -> 900x375, cabendo na sessão de teste do VAIO sem cortar a Semente.
-SCALE = 0.75
-CANVAS_WIDTH = round(WIDTH * SCALE)
-CANVAS_HEIGHT = round(HEIGHT * SCALE)
-
-
-def scaled(value):
-    return round(value * SCALE)
+CANVAS_WIDTH, CANVAS_HEIGHT = compact_geometry()["size"]
 
 
 class RiversCanvas(Gtk.ScrolledWindow):
