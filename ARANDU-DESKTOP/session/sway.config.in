@@ -17,6 +17,9 @@ bindsym $mod+Shift+Escape exit
 # Navegação normal de janelas no compositor experimental.
 bindsym $mod+Tab focus next
 bindsym $mod+Shift+Tab focus prev
+# Retorno explícito à janela ARANDU (Sway aninhado apenas).
+# O seletor é um título regex; não afeta janelas do GNOME hospedeiro.
+bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] focus
 bindsym $mod+f fullscreen toggle
 bindsym $mod+Shift+space floating toggle
 # Terminal apenas nesta sessão aninhada; Foot instalado junto do Sway no Mint.
