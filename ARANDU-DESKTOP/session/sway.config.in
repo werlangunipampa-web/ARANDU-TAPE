@@ -17,9 +17,11 @@ bindsym $mod+Shift+Escape exit
 # Navegação normal de janelas no compositor experimental.
 bindsym $mod+Tab focus next
 bindsym $mod+Shift+Tab focus prev
-# Retorno explícito à janela ARANDU (Sway aninhado apenas).
-# O seletor é um título regex; não afeta janelas do GNOME hospedeiro.
-bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] focus
+# ARANDU experimental em janela flutuante retrátil, não ocupa uma aba.
+# Scratchpad mantém a janela viva; não é layer-shell nem transparência real.
+for_window [title="^ARANDU Desktop"] floating enable, resize set width 780 px height 610 px, move position center, move scratchpad, scratchpad show
+# Atalho alterna exibição/ocultação do ARANDU dentro deste Sway.
+bindsym Ctrl+Alt+a [title="^ARANDU Desktop"] scratchpad show
 bindsym $mod+f fullscreen toggle
 bindsym $mod+Shift+space floating toggle
 # Terminal apenas nesta sessão aninhada; Foot instalado junto do Sway no Mint.
