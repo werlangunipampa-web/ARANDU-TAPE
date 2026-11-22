@@ -33,3 +33,11 @@ Pode encerrar a sessão experimental com **Ctrl+Alt+Shift+Q**, com o foco na jan
 - A leitura das janelas Sway por IPC será tratada em módulo isolado e somente sob pedido.
 - Os comandos não executam `sudo`, `apt`, `pkill`, `systemctl`, nem alteram `~/.config/sway`.
 - A interface e o protocolo de testes serão avaliados no VAIO antes de declarar esse marco validado.
+
+## Validação real no VAIO — 22/11/2026
+
+A captura mostrou o compositor `wlroots - X11-1` aberto **como janela dentro do GNOME**, com o cliente ARANDU GTK4 0.3 executando na tela aninhada. A saída do terminal mostrou **19 testes Python aprovados**. Confirmada a primeira execução gráfica aninhada no VAIO; **não** significa que a sessão ARANDU esteja pronta para login nem que gerencie janelas pela própria interface.
+
+O GTK apresentou aviso `Gtk-CRITICAL: gtk_scrolled_window_set_min_content_height: assertion ... failed`. Corrigido no código do laboratório ao substituir os limites conflitantes por `set_size_request(-1, h)`; o rótulo Frequentes também foi deslocado para permanecer dentro do canvas. Essas correções **ainda precisam ser executadas e confirmadas no VAIO**.
+
+Próximos testes: redimensionar janela Sway; selecionar um programa por medalhão e confirmar a abertura; garantir que nada execute sem confirmação; usar Ctrl+Alt+Shift+Q para voltar ao GNOME. Não instalar sessão ARANDU na tela de login nesta fase.
