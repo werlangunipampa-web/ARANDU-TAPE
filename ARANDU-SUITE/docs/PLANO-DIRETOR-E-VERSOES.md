@@ -196,3 +196,12 @@ Aceitar como estável somente com testes simulados aprovados, versão GNOME carr
 - Persistência apenas mediante `--save`: cria arquivo novo, permissionamento 0600, recusa sobrescrever. Nenhuma telemetria/rede.
 - `tests/test_benchmark.py` testa CPU, medianas, segurança de arquivo, limites de coleta e disparo por GUI.
 - Critério: executar todos os testes Python e coletar baselines reais nas sessões ARANDU e GNOME, sob condições equivalentes. Não declarar desempenho comprovadamente superior sem repetições.
+
+## Desktop 0.7.0 — Opy, encontro das janelas (22/11/2026)
+
+- `Alt+Tab` na sessão ARANDU Sway invoca `opy.py`, interface GTK4 experimental de seleção de janelas existentes: setas, Enter para focar, Esc para cancelar; seleciona apenas janelas verificadas por `swaymsg get_tree` e não encerra aplicações.
+- Opy usa janela flutuante centralizada por regra temporária do Sway, não depende do GNOME Shell nem substitui o Sway; barra tabbed existente permanece até validação.
+- Contratos de compatibilidade: `Ctrl+Alt+A` retorna aos Rios, Print cola captura no clipboard, Shift+Print salva PNG; nenhuma ECA, histórico de uso ou telemetria.
+- **Respeito cultural:** Opy é uma referência metafórica ao encontro e à organização, não representação de cerimônia ou reprodução de práticas religiosas. Recomendada futura escuta de interlocutores Guarani para avaliar terminologia e iconografia.
+- Publicados testes contratuais de teclado, exclusão da própria Opy, segurança e atalhos preservados. **Pendente:** confirmar no VAIO a abertura/centralização e troca entre Firefox, Nemo, Foot. O registro do atalho na sessão atual pode ser feito por `swaymsg`; centralização completa requer carregar nova configuração após relogin.
+- Futuro: reduzir presença da barra convencional de janelas, melhorar agrupamento acessível e navegação por múltiplos monitores, sem bloquear acesso de emergência.
