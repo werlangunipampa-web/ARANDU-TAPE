@@ -95,8 +95,10 @@ class RiversCanvas(Gtk.ScrolledWindow):
         self.canvas.set_size_request(w, h)
         self.background.set_size_request(w, h)
         self.fixed.set_size_request(w, h)
-        self.set_min_content_height(h)
-        self.set_max_content_height(h)
+        # Nunca combine min/max content-height na troca de escala:
+        # o GTK4 pode validar o limite antigo antes do novo (GTK-CRITICAL).
+        # O tamanho solicitado acompanha o canvas e evita esse conflito.
+        self.set_size_request(-1, h)
         size = scaled(148, scale)
         self.seed.set_size_request(size, size)
         self.seed.get_child().set_size_request(size, size)
