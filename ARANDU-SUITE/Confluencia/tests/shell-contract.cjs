@@ -196,6 +196,17 @@ assert.equal(s.navigationOutsideEvent({type:()=>4,get_source:()=>new Actor()}),f
 assert.equal(s.navigationOverlay,false);
 assert.equal(s.expanded,false);
 assert.equal(s.navigationIdleTimer,0);
+// Digitar no aplicativo com a mesma janela focada recolhe imediatamente.
+s.selectRiver('open');
+stage.set_key_focus(new Actor()); // campo de edição do aplicativo
+assert.equal(s.navigationOutsideEvent({type:()=>3,get_source:()=>new Actor()}),false);
+assert.equal(s.navigationOverlay,false);
+assert.equal(s.expanded,false);
+// Um toque na superfície transparente (root) também libera o aplicativo.
+s.selectRiver('open');
+assert.equal(s.navigationOutsideEvent({type:()=>4,get_source:()=>s.root}),false);
+assert.equal(s.navigationOverlay,false);
+assert.equal(s.expanded,false);
 // Foco na janela já em uso não deve encerrar; trocar de janela sim.
 s.selectRiver('open');
 s.onFocusWindowChanged();
