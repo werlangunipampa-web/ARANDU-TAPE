@@ -175,6 +175,12 @@ assert.equal(s.setMonitorTarget('fixed',2),true);
 s.selectRiver('open');
 assert.equal(s.navigationMonitorIndex,2);
 assert.equal(s.root.pos[0],2446);
+// Simular desligamento do terceiro monitor: recuperar no principal.
+const disconnected=layout.monitors.pop();
+s.position();
+assert.equal(s.navigationMonitorIndex,0);
+assert.equal(s.root.pos[0],0);
+layout.monitors.push(disconnected);
 s.cancelSelection();
 assert.equal(s.setMonitorTarget('pointer'),true);
 pointer=[1400,200];
