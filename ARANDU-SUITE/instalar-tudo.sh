@@ -75,7 +75,7 @@ elif [[ "$TOP_SUPPORTED" == "1" && -f "$TOP_SRC/metadata.json" ]]; then
     fi
     command -v glib-compile-schemas >/dev/null || { echo 'ERRO: glib-compile-schemas não encontrado.' >&2; exit 2; }
     glib-compile-schemas "$STAGE/schemas"
-  fi
+  }
   # Instala somente quando não existe TOPBAR no destino.
   if [[ ! -e "$TOP" ]]; then mv -- "$STAGE" "$TOP"; trap - EXIT; fi
   echo 'TOPBAR incorporada instalada. É necessário iniciar nova sessão GNOME.'
