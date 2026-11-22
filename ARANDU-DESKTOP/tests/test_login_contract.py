@@ -47,6 +47,22 @@ class LoginContract(unittest.TestCase):
         self.assertIn('template.replace("__ARANDU_CAPTURE__"', source)
         self.assertIn('template.replace("__ARANDU_CAPTURE_SAVE__"', source)
 
+    def test_every_future_login_preflight_checks_capture_dependencies(self):
+        manager = (LOGIN / "manage-login.sh").read_text()
+        self.assertIn('for exe in grim wl-copy; do', manager)
+        self.assertIn('bindsym Print exec __ARANDU_CAPTURE__', manager)
+        self.assertIn('bindsym Shift+Print exec __ARANDU_CAPTURE_SAVE__', manager)
+        self.assertIn('Atalhos de captura presentes no modelo de login.', manager)
+
+    def test_capture_is_an_explicit_clipboard_action_not_memory_collection(self):
+        script = (ROOT / "session" / "capture-screen.sh").read_text()
+        self.assertIn('MODE="${1:---clipboard}"', script)
+        self.assertIn('grim - | wl-copy --type image/png', script)
+        self.assertIn('--save)', script)
+        self.assertNotIn('ARANDU-ECA', script)
+        self.assertNotIn('curl ', script)
+        self.assertNotIn('git ', script)
+
     def test_no_unrequested_cognitive_connection(self):
         for path in LOGIN.iterdir():
             content = path.read_text()
