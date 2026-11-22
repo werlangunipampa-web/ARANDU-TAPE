@@ -8,7 +8,7 @@ BACK="$HOME/.local/share/arandu-suite/backups"
 case "${1:-}" in
   --preflight)
     command -v gnome-shell >/dev/null || { echo 'GNOME Shell não encontrado.' >&2; exit 2; }
-    echo 'ARANDU SUITE 2.8.3 | Pré-verificação'
+    echo 'ARANDU SUITE 2.9.0 | Pré-verificação'
     gnome-shell --version
     echo "Sessão: ${XDG_SESSION_TYPE:-desconhecida}"
     echo 'Confluência:'; bash "$ROOT/Confluencia/instalar.sh" --preflight
