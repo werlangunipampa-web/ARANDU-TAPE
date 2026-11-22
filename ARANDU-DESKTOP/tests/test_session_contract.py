@@ -35,6 +35,15 @@ class NestedSessionContract(unittest.TestCase):
         self.assertIn("ARANDU_SESSION_LAB", launcher)
         self.assertIn("GDK_BACKEND=wayland", launcher)
 
+    def test_foot_requires_direct_click_and_nested_session(self):
+        source = (ROOT / "app.py").read_text(encoding="utf-8")
+        self.assertIn('terminal_btn.connect("clicked"', source)
+        self.assertIn('def open_test_terminal(self):', source)
+        self.assertIn('os.environ.get("SWAYSOCK")', source)
+        self.assertIn('subprocess.Popen(', source)
+        self.assertIn('["foot"]', source)
+        self.assertNotIn('shell=True', source)
+
     def test_no_automatic_eca_connection(self):
         for name in ("start-nested.sh", "launch-arandu.sh", "sway.config.in"):
             source = (SESSION / name).read_text(encoding="utf-8")
