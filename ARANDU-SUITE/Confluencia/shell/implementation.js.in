@@ -1088,8 +1088,11 @@ class TapeSession {
         if(!this.root)return;
         const focused=global.display.focus_window;
         const ownApp=focused && this.tracker.get_window_app(focused);
-        this.root.visible=this.layer!=='floating' ||
-            (this.allowed() && !Main.overview.visible && (!ownApp || ownApp.get_id()!==DESKTOP));
+        // A8.3: serviço D-Bus ativo, Rios clássicos invisíveis só na sessão ARANDU.
+        // GNOME normal mantém o visual anterior até a migração completa.
+        this.root.visible=(GLib.getenv('ARANDU_SESSION') !== '1') &&
+            (this.layer!=='floating' ||
+            (this.allowed() && !Main.overview.visible && (!ownApp || ownApp.get_id()!==DESKTOP)));
         if(!this.expanded){
             for(const r of RIVERS)for(const node of this.buttons[r])node.button.hide();
             return;
