@@ -582,6 +582,27 @@ class TapeSession {
             line.add_child(new St.Label({text:key,style_class:'arandu-help-shortcut'}));
             helpRows.add_child(line);
         }
+        helpRows.add_child(new St.Label({text:'SOBRE O ARANDU',style_class:'arandu-help-title'}));
+        for(const info of ['Desenvolvimento: Rafhael Brum Werlang',
+            'Aprendizagem significativa e acessibilidade',
+            'DOI: ainda não registrado nesta compilação',
+            'Licenciamento: revisão pendente']){
+            const label=new St.Label({text:info,style_class:'arandu-help-description'});
+            label.clutter_text.line_wrap=true;
+            helpRows.add_child(label);
+        }
+        for(const [name,uri] of [
+            ['GitHub · código e documentação','https://github.com/werlangunipampa-web/ARANDU-TAPE'],
+            ['Releases · versões e atualizações','https://github.com/werlangunipampa-web/ARANDU-TAPE/releases'],
+            ['Zenodo · consultar registros','https://zenodo.org/']
+        ]){
+            const link=new St.Button({label:name,style_class:'arandu-help-close',can_focus:true});
+            link.connect('clicked',()=>{
+                try{Gio.AppInfo.launch_default_for_uri(uri,null);}
+                catch(_){Main.notify('ARANDU TAPE','Não foi possível abrir o endereço.');}
+            });
+            helpRows.add_child(link);
+        }
         const foot=new St.Button({label:'Fechar  ×',style_class:'arandu-help-close',can_focus:true});
         foot.connect('clicked',()=>{this.helpBox.hide();this.scheduleHelpSleep();});this.helpBox.add_child(foot);
         this.root.add_child(this.helpBox);
