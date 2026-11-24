@@ -180,6 +180,9 @@ class Desktop(Gtk.Application):
         tupa_shortcut = Gtk.Button(label="Tupã · ChatGPT / modelos")
         tupa_shortcut.connect("clicked", lambda *_: self.show_tupa())
         self.tools_box.append(tupa_shortcut)
+        about_shortcut = Gtk.Button(label="Sobre o ARANDU")
+        about_shortcut.connect("clicked", self.show_about)
+        self.tools_box.append(about_shortcut)
         self.clock_button.set_label(clock_text())
         GLib.timeout_add_seconds(60, self.update_seed_clock)
 
@@ -1183,13 +1186,23 @@ class Desktop(Gtk.Application):
         self.clear_content()
         self.detail_revealer.set_reveal_child(True)
         self.content.append(self.text("Sobre o ARANDU Desktop", "arandu-title"))
-        self.content.append(self.text("Versão: " + VERSION + " (protótipo GTK4 · navegação local)"))
+        self.content.append(self.text("Versão instalada: " + VERSION + " (protótipo GTK4)"))
         self.content.append(self.text("Desenvolvimento: Rafhael Brum Werlang"))
-        self.content.append(self.text("ARANDU TAPE, TOPBAR e ECA são projetos distintos."))
-        self.content.append(self.text("Contrato de sessão:\n" +
-                                      json.dumps(self.session.status(), ensure_ascii=False, indent=2)))
         self.content.append(self.text(
-            "Licenciamento e distribuição: verificar as licenças do repositório antes de publicar pacotes."))
+            "Pesquisa: aprendizagem significativa, acessibilidade e interação humano-computador."))
+        self.content.append(self.text(
+            "DOI geral e DOI desta versão: ainda não registrados nesta compilação."))
+        self.content.append(self.text(
+            "Licenciamento, titularidade e colaboradores: sujeitos à revisão antes da distribuição científica."))
+        self.content.append(self.text(
+            "Referência provisória: Werlang, R. B. ARANDU TAPE: Adaptive Desktop Environment [software]. "
+            "Para citar uma release arquivada, use a referência e o DOI do registro Zenodo correspondente."))
+        for label, uri in (
+            ("Código e documentação · GitHub", "https://github.com/werlangunipampa-web/ARANDU-TAPE"),
+            ("Releases e histórico", "https://github.com/werlangunipampa-web/ARANDU-TAPE/releases"),
+            ("Zenodo · consultar registros", "https://zenodo.org/"),
+        ):
+            self.content.append(Gtk.LinkButton.new_with_label(uri, label))
 
 
 if __name__ == "__main__":
