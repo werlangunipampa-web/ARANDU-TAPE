@@ -588,7 +588,7 @@ class TapeSession {
             'DOI: ainda não registrado nesta compilação',
             'Licenciamento: revisão pendente']){
             const label=new St.Label({text:info,style_class:'arandu-help-description'});
-            label.clutter_text.line_wrap=true;
+            if (label.clutter_text) label.clutter_text.line_wrap=true;
             helpRows.add_child(label);
         }
         for(const [name,uri] of [
