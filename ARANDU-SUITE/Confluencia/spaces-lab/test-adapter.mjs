@@ -15,10 +15,14 @@ class Actor {
     set_child(a){this.child=a;}
     get_child(){return this.child;}
     set_icon_size(n){this.icon_size=n;}
+    set_pivot_point(x,y){this.pivot=[x,y];}
+    set_scale(x,y){this.scale=[x,y];}
+    remove_all_transitions(){this.transitionsCancelled=true;}
+    ease(opts){this.lastEase=opts;if('width' in opts){this.set_position(opts.x,opts.y);this.set_size(opts.width,opts.height);}if('scale_x' in opts)this.set_scale(opts.scale_x,opts.scale_y);}
     setSensitive(v){this.sensitive=v;}
     show(){this.visible=true;}
     hide(){this.visible=false;}
-    set_position(x,y){this.pos=[x,y];}
+    set_position(x,y){this.pos=[x,y];this.positions=(this.positions||0)+1;}
     set_size(w,h){this.size=[w,h];}
     destroy(){this.destroyed=true;}
 }
@@ -42,7 +46,7 @@ const main={layoutManager:layout,extensionManager:manager,sessionMode:new Actor(
     overview:new Actor({visible:false}),panel:{addToStatusArea(){}},notify(){}};
 let pointer=[-750,100,0],grabs=0;
 const stage=new Actor();stage.grab=()=>{grabs++;return {get_seat_state:()=>1,dismiss(){grabs--;}};};
-const fake={Clutter:{EventType:{KEY_PRESS:1,MOTION:2,BUTTON_RELEASE:3},ModifierType:{BUTTON1_MASK:1,BUTTON2_MASK:2,BUTTON3_MASK:4},GrabState:{POINTER:1},KEY_Escape:65307,EVENT_PROPAGATE:false,EVENT_STOP:true},
+const fake={Clutter:{AnimationMode:{EASE_OUT_QUAD:1},EventType:{KEY_PRESS:1,MOTION:2,BUTTON_RELEASE:3},ModifierType:{BUTTON1_MASK:1,BUTTON2_MASK:2,BUTTON3_MASK:4},GrabState:{POINTER:1},KEY_Escape:65307,EVENT_PROPAGATE:false,EVENT_STOP:true},
     Gio:{FileIcon:Actor},St:{Icon:Actor,Widget:Actor,Button:Actor},Meta:{WindowType:{NORMAL:1},MaximizeFlags:{BOTH:3}},
     GLib:{PRIORITY_DEFAULT:0,SOURCE_REMOVE:false,Source:{remove:n=>timers.delete(n)},
         timeout_add:(_p,_ms,fn)=>{timers.set(++id,fn);return id;}},
@@ -81,11 +85,25 @@ lab._edgeEnabled=true;lab._sync();assert(lab._edgeTimer);
 lab._sampleEdge();assert.equal(lab._edge.direction,'n');
 assert.equal(lab._edgeHandle.visible,true);assert.equal(lab._edgeGlow.visible,true);
 assert.equal(calls.length,0);
+assert.deepEqual(lab._edgeHandle.size,[18,18]);
+assert.equal(lab._edgeHandle.get_child().icon_size,12);
+const firstPresence=lab._presence, firstTimer=firstPresence.timer;
+lab._sampleEdge();assert.equal(lab._presence.timer,firstTimer);
+const dwell=timers.get(firstTimer);timers.delete(firstTimer);dwell();
+assert.deepEqual(lab._edgeHandle.size,[32,32]);
+assert.equal(lab._edgeHandle.get_child().icon_size,24);
+assert.deepEqual(lab._edgeHandle.get_child().scale,[1,1]);
+assert.equal(lab._edgeHandle.lastEase.duration,150);
+assert.equal(calls.length,0);
 // Blue master is separate from the golden NE resize corner.
 pointer=[-500,100,0];lab._sampleEdge();assert.equal(lab._edge.direction,'ne');
 assert.equal(lab._masterHandle.visible,false);
 pointer=[-515,157,0];lab._sampleEdge();assert.equal(lab._masterHandle.visible,true);
 assert.equal(lab._edgeHandle.visible,false);assert.equal(calls.length,0);
+assert.deepEqual(lab._masterHandle.size,[20,20]);
+const masterTimer=lab._presence.timer,masterDwell=timers.get(masterTimer);timers.delete(masterTimer);masterDwell();
+assert.deepEqual(lab._masterHandle.size,[34,34]);assert.equal(lab._masterHandle.get_child().icon_size,26);
+assert.equal(calls.length,0);
 lab._activateMaster();assert.deepEqual(calls.pop(),['max',3]);
 assert.equal(lab._masterHandle.visible,false);
 lab._activateMaster();assert.equal(calls.length,0);
@@ -95,12 +113,14 @@ pointer=[-500,500,0];lab._sampleEdge();assert.equal(lab._edge.direction,'se');
 const evt=(x,y,type=2)=>({get_button:()=>1,get_coords:()=>[x,y],type:()=>type});
 lab._edgePress(evt(-505,495));assert.equal(grabs,1);
 lab._edgeMotion(evt(-455,525));assert.deepEqual(lab._preview.size,[550,430]);assert.equal(calls.length,0);
+const positions=lab._preview.positions;lab._edgeMotion(evt(-455,525));assert.equal(lab._preview.positions,positions);
 lab._edgeRelease(evt(-455,525,3));assert.deepEqual(calls.pop(),['resize',true,-1000,100,550,430]);assert.equal(grabs,0);
 pointer=[-1000,100,0];lab._sampleEdge();assert.equal(lab._edge.direction,'nw');
 lab._edgePress(evt(-995,105));lab._edgeRelease(evt(-995,105,3));assert.equal(calls.length,0);
 lab._sampleEdge();lab._edgePress(evt(-995,105));
 stage.emit('captured-event',{type:()=>1,get_key_symbol:()=>65307});assert.equal(grabs,0);assert.equal(calls.length,0);
-pointer=[-750,300,0];lab._sampleEdge();assert.equal(lab._edgeHandle.visible,false);
+pointer=[-750,100,0];lab._sampleEdge();const abandoned=lab._presence.timer;
+pointer=[-750,300,0];lab._sampleEdge();assert.equal(lab._edgeHandle.visible,false);assert.equal(timers.has(abandoned),false);
 lab._edgeEnabled=false;lab._sync();assert.equal(lab._edgeTimer,0);
 lab._startResize();lab.disable();assert.equal(chrome.size,0);assert.equal(timers.size,0);
 assert.equal(win.signals.size,0);assert.equal(display.signals.size,0);assert.equal(stage.signals.size,0);
