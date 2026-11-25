@@ -29,3 +29,13 @@ O módulo matemático é puro, não opera janelas. Seu classificador de margens 
 Executar da raiz: `node ARANDU-SUITE/Confluencia/design-reference/test-math.mjs`.
 
 Esta pasta não altera instaladores, schema, extensão ativa, cursor, nem sessão. A integração executável exige análise dos recursos e interfaces gráficas mínimas faltantes, confirmação de escopo público e testes em GNOME 46/X11 real. Não remover as decorações ou indicadores nativos antes de validar recuperação.
+
+## Segunda etapa — fronteira de autorização e estilos
+
+- `window-intent-gate.mjs`: contrato novo, sem dependência de GJS ou execução real. Recebe um contexto fornecido pelo futuro adaptador, exige identidade da janela focada, capacidade da operação, sessão permitida e ações explícitas de início/liberação. Encerramento passa por uma confirmação separada, de uso único. Redimensionamento exige prévia geométrica dentro da área útil, invalidada quando a área muda; prévia inválida elimina a anterior.
+- O futuro adaptador deve cancelar a intenção em Esc, troca de foco (inclusive ida e volta), bloqueio, mudança de monitor, grab nativo ou desativação, e revalidar a janela imediatamente antes da operação Meta. O gate não observa eventos sozinho nem substitui a verificação de mínimos/tamanho aceitos pelo aplicativo. Nenhuma ação real é habilitada por este commit.
+- `sensory-reference.css`: seleção das regras A209I encontradas no stylesheet local, com cores da Alça, flechas e contorno da prévia nos cinco modos Original, Claro, Contraste, Luz Reduzida e Sereno. Não é uma importação completa: paleta, zonas e regras globais não foram incorporadas. Ainda não é carregado pela extensão.
+- Teste: `node ARANDU-SUITE/Confluencia/design-reference/test-window-intent-gate.mjs`; incluído na CI de validação da suíte.
+- Divergência local confirmada: `_dispatch(intent, win, deliberateClose=false)` chama `win.delete` diretamente quando `deliberateClose===true`, ao contrário do comentário no início do módulo. O contrato proposto não permite essa exceção; a instalação local permanece intacta.
+
+Antes da integração executável, recuperar os seis SVGs ausentes e revisar somente as interfaces necessárias da Foundation, sem exportar extension.js inteiro, memória, ECA ou dados pessoais. Manter fallback nativo para decorações e eliminar a dependência do subprocesso X11 no primeiro adaptador experimental. Comparar com o comportamento local em GNOME 46/X11.
