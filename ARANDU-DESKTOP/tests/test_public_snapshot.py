@@ -21,6 +21,9 @@ class SnapshotAudit(unittest.TestCase):
 
     def test_checkout_snapshot(self):
         commit, count, flags, review = audit.scan("HEAD")
+        print(f'Public snapshot {commit}: {count} entries, {len(flags)} blocking indicators, {len(review)} research references')
+        for path in review:
+            print(f'REVIEW: {path!r}')
         self.assertEqual(len(commit), 40)
         self.assertGreater(count, 0)
         self.assertEqual(flags, [])
