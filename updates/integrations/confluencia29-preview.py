@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 
-DEFAULT = Path.home()/".local/share/gnome-shell/extensions/confluencia@arandulab"
+DEFAULT = Path.home()/".local/share/gnome-shell/extensions/confluencia@arandulab/extension.js"
 INSERT = """        // ARANDU_UPDATE_V03_START — explicit access in Semente controls.
         // A center launcher, NOT a verified-update notification or installer.
         this.aranduUpdateButton = new St.Button({
@@ -65,10 +65,16 @@ def main():
     args.out.write_text(revised,encoding='utf-8')
     # node --check checks parsing only; no GNOME Shell execution occurs.
     if shutil.which('node'):
-        try: subprocess.run(['node','--check',str(args.out)],check=True,timeout=10)
+        # GNOME extension uses ES module imports, so check a temporary .mjs copy.
+        module_copy=args.out.with_suffix('.mjs')
+        try:
+            module_copy.write_text(revised,encoding='utf-8')
+            subprocess.run(['node','--check',str(module_copy)],check=True,timeout=10)
         except (subprocess.CalledProcessError,subprocess.TimeoutExpired):
             args.out.unlink(missing_ok=True)
             parser.error('JavaScript syntax check failed')
+        finally:
+            module_copy.unlink(missing_ok=True)
     print(json.dumps({"status":"staged_not_installed","output":str(args.out),
                       "live_extension_modified":False,"installation_enabled":False},ensure_ascii=False))
 if __name__=='__main__':
