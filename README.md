@@ -1,5 +1,7 @@
 # ARANDU TAPE
 
+[English](README.en.md)
+
 **Navegação gráfica adaptativa para Linux, com foco em acessibilidade, autonomia e aprendizagem significativa.**
 
 O ARANDU TAPE é um projeto experimental que organiza a interação entre aplicativos e janelas por uma **Semente central** e três **Rios**: Memória (itens recentes), Abertos (janelas da sessão) e Frequentes (aplicativos usados com frequência). Os medalhões oferecem pontos de navegação por ponteiro e teclado. O projeto busca uma interface discreta, reversível e adaptável às necessidades humanas.
@@ -31,6 +33,9 @@ Prefira um clone Git para testes completos e rastreabilidade. O ZIP de código-f
 - [Design Core e identidade visual](docs/DESIGN_CORE.md)
 - [Fundamentação filosófica e pedagógica pública](docs/FUNDAMENTACAO_PUBLICA.md)
 - [Arquitetura e acessibilidade](ARANDU-SUITE/docs/ARQUITETURA-E-ACESSIBILIDADE.md)
+- [Guia de acessibilidade](docs/ACESSIBILIDADE.md)
+- [Privacidade](docs/PRIVACIDADE.md) · [Segurança](SECURITY.md) · [Contribuição](CONTRIBUTING.md)
+- [Histórico de mudanças](CHANGELOG.md)
 - [Roteiro de evolução](ARANDU-SUITE/docs/ROADMAP.md)
 - [Política de publicação científica e Zenodo](docs/PUBLICACAO_CIENTIFICA_ZENODO.md)
 
