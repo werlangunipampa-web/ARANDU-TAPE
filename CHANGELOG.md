@@ -17,6 +17,8 @@ Identificadores abaixo são marcos de componentes no código e documentação, n
 - Etiqueta passiva de sinais em camada própria quando suportada, com posicionamento por menor sobreposição à janela ativa e fallback; sem alteração da posição persistida da Semente. Validação gráfica pendente.
 - Representação compacta e reversível da Semente em cantos de menor sobreposição, sem alterar a âncora manual dos Rios. Ação explícita reabre navegação; validação gráfica pendente.
 - Contrato puro de gestos Alça Viva e Flechas, com testes de intenção; reserva superior nativa em Desktop GTK4, mapa GTK3 e Opy. Não constitui integração de gestos com GNOME ou Sway; validação visual e sincronização com a implementação local pendentes.
+- Laboratório GNOME 46 opt-in: oito flechas contextuais de redimensionamento, prévia e Flecha Mestre azul; CI aprovada em c8e16cd. Validação real pendente.
+- Evolução local documentada separadamente: Nove Flechas, Contorno Vivo, Movimento Suave, Presença Viva e Nitidez Viva; não incluída automaticamente na release. Ver [registro](docs/EVOLUCAO_ESPACOS_VIVOS.md).
 - Pendências: revisão de divulgação, direitos e licença, validação real e aprovação do snapshot.
 
 ## Confluência / Suíte GNOME
