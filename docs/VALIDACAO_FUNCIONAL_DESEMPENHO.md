@@ -73,3 +73,7 @@ Complementar, em ensaios separados, com tempo de abertura de aplicativo, respost
 Estados: aprovado, reprovado, não executado, não aplicável com justificativa. Bloquear release científica em caso de regressão grave, perda de dados, falha de recuperação, ações involuntárias ou indicadores de privacidade comprometidos. Fixar critérios quantitativos de desempenho antes de declarar metas atingidas. Direitos, licença e revisão de divulgação permanecem portões independentes.
 
 Referências: [Design Core](DESIGN_CORE.md), [Acessibilidade](ACESSIBILIDADE.md), [Privacidade](PRIVACIDADE.md), [Estado e versões](ESTADO_E_VERSOES.md), [Política Zenodo](PUBLICACAO_CIENTIFICA_ZENODO.md).
+
+## Complemento: Cabeçalho Vivo e gestos
+
+Confirmar a reserva superior de 52 px lógicos em Desktop, mapa e Opy, sem sobreposição do conteúdo ou dos controles existentes; testar dimensões menores, escala e teclado. Fechar a Opy deve fechar somente sua interface. O classificador Python de gestos ainda não está ligado a janelas reais. Registrar Alça Viva, flechas gráficas e Folha Digital como não executados até localizar/sincronizar a implementação autorizada. Não substituir as decorações nativas por gestos não validados. Testar prévia, cancelamento, liberação explícita, identidade do alvo, confirmação de encerramento e reserva inferior em revisão posterior.
