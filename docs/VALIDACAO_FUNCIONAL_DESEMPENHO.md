@@ -96,3 +96,13 @@ Executar somente em GNOME 46 de teste, sem Foundation ativa e com janelas descar
 Status inicial de F01–F08: **não executados no ambiente gráfico real**. Testes simulados cobrem parte dos contratos, mas não contam como aprovação desses ensaios. Registrar separadamente candidato público e instalação local. Não publicar capturas que contenham documentos, títulos de janelas ou informações pessoais.
 
 O estudo comparativo com participantes é tratado separadamente em [PROTOCOLO_PESQUISA_INTERACAO.md](PROTOCOLO_PESQUISA_INTERACAO.md).
+
+## Pré-teste local sem instalação
+
+Em clone novo da branch de revisão, com árvore limpa e SHA integral identificado:
+
+```bash
+/usr/bin/python3 -B scripts/preflight-grafico.py --commit "$(git rev-parse HEAD)"
+```
+
+O pré-teste executa triagem, barreira de escopo, testes Python, geometria/mocks JavaScript, build temporário e sintaxe, verifica presença de GTK3/GTK4 e CFF quando disponível e consulta somente a versão GNOME, tipo de sessão e existência de extensão ARANDU/Confluência ativa. Não exibe UUIDs de outras extensões, nome de usuário, hostname, credenciais ou saída bruta de comandos. Não instala, habilita, desabilita ou modifica extensões, não executa a GUI nem acessa serviços de pesquisa. O diretório temporário do build é descartado. O status isolated_session_candidate é uma triagem, não prova de isolamento completo; se houver conflito, não testar o laboratório na sessão corrente. Resultado graphical_validation permanece not_executed. Código de saída informa testes técnicos obrigatórios, não autorização para habilitar nem publicar. Dependências ausentes devem ser registradas, não instaladas automaticamente.
