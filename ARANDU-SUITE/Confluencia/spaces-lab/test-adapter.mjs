@@ -36,7 +36,7 @@ const win=Object.assign(new Actor(),{
 });
 const display=new Actor({focus_window:win});
 const manager=new Actor();let foundation=false;manager.lookup=()=>foundation?{state:1}:null;
-const layout=new Actor();layout.addTopChrome=(a,o)=>{assert.equal(o.affectsInputRegion,a.style_class==='arandu-lab-edge-handle');assert.equal(o.affectsStruts,false);chrome.add(a);};
+const layout=new Actor();layout.addTopChrome=(a,o)=>{assert.equal(o.affectsInputRegion,['arandu-lab-edge-handle','arandu-lab-master-handle'].includes(a.style_class));assert.equal(o.affectsStruts,false);chrome.add(a);};
 layout.removeChrome=a=>assert(chrome.delete(a));
 const main={layoutManager:layout,extensionManager:manager,sessionMode:new Actor({isLocked:false}),
     overview:new Actor({visible:false}),panel:{addToStatusArea(){}},notify(){}};
@@ -53,7 +53,7 @@ const code=fs.readFileSync(new URL('./extension.js',import.meta.url),'utf8')
     .replace(/^import .*;\s*$/gm,'').replace('export default class','class');
 const Lab=vm.runInNewContext(code+'\nSpacesLab;',fake);
 const lab=new Lab();lab.enable();
-assert.equal(chrome.size,3);
+assert.equal(chrome.size,4);
 assert.equal(lab._edgeHandle.visible,false);assert.equal(timers.size,0);
 assert.equal(lab._actions.imersao.sensitive,true);
 assert.equal(lab._actions.confirm.sensitive,false);
@@ -81,6 +81,16 @@ lab._edgeEnabled=true;lab._sync();assert(lab._edgeTimer);
 lab._sampleEdge();assert.equal(lab._edge.direction,'n');
 assert.equal(lab._edgeHandle.visible,true);assert.equal(lab._edgeGlow.visible,true);
 assert.equal(calls.length,0);
+// Blue master is separate from the golden NE resize corner.
+pointer=[-500,100,0];lab._sampleEdge();assert.equal(lab._edge.direction,'ne');
+assert.equal(lab._masterHandle.visible,false);
+pointer=[-515,157,0];lab._sampleEdge();assert.equal(lab._masterHandle.visible,true);
+assert.equal(lab._edgeHandle.visible,false);assert.equal(calls.length,0);
+lab._activateMaster();assert.deepEqual(calls.pop(),['max',3]);
+assert.equal(lab._masterHandle.visible,false);
+lab._activateMaster();assert.equal(calls.length,0);
+pointer=[-515,157,0];lab._sampleEdge();display.emit('notify::focus-window');
+lab._activateMaster();assert.equal(calls.length,0);
 pointer=[-500,500,0];lab._sampleEdge();assert.equal(lab._edge.direction,'se');
 const evt=(x,y,type=2)=>({get_button:()=>1,get_coords:()=>[x,y],type:()=>type});
 lab._edgePress(evt(-505,495));assert.equal(grabs,1);
