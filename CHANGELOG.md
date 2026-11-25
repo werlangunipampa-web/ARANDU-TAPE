@@ -13,6 +13,7 @@ Identificadores abaixo são marcos de componentes no código e documentação, n
 - Documentação de privacidade, segurança, contribuição, acessibilidade e apresentação em inglês.
 - Padrão do temporizador dos Rios alterado para desligado; escolha explícita e preferências salvas preservadas. Testes de contrato acrescentados; validação real pendente.
 - Painel da Semente com informações sob demanda e acesso aos avisos/calendário e controles nativos. Ocultação própria da barra suspensa até equivalência dos indicadores; removida sondagem de 300 ms. Testes reais pendentes.
+- Espelhamento passivo de sinais nativos na Semente, sem captura de dispositivos nem armazenamento de notificações. Ausência de sinal não comprova inatividade. Validação real e visibilidade independente ainda pendentes.
 - Pendências: revisão de divulgação, direitos e licença, validação real e aprovação do snapshot.
 
 ## Confluência / Suíte GNOME
