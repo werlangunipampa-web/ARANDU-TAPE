@@ -57,3 +57,7 @@ Antes da publicação, preencher e aprovar o checklist de titularidade, direitos
 ## Atualização de preparação — Espaços Vivos
 
 Consultar a [ficha de depósito bilíngue](FICHA_DEPOSITO_ZENODO.md) e o [registro de evolução](EVOLUCAO_ESPACOS_VIVOS.md). Manter CITATION.cff como fonte única de metadados até necessidade justificada de .zenodo.json; se ambos existirem, Zenodo ignora o CFF na importação. A ficha não deve ser depositada como descrição definitiva sem confirmar os componentes do snapshot. Em 24/11/2026, PR #3 ainda em rascunho, CI do snapshot c8e16cd aprovada, nenhuma release encontrada. Cinco patches locais testados offline não integram automaticamente o candidato público. Titularidade, licença, divulgação e testes gráficos reais continuam sendo portões obrigatórios.
+
+## Ficha de liberação
+
+A [ficha de liberação do snapshot](LIBERACAO_SNAPSHOT_ZENODO.md) consolida as decisões de titularidade, licenciamento por grupo, evidências e aprovação final. Preencher antes de publicar; nenhum campo pendente autoriza distribuição. Conferir a licença efetiva no Zenodo, que exige esse campo e apresenta CC BY 4.0 como padrão no depósito manual.
