@@ -13,12 +13,12 @@
 
 O método D-Bus `org.arandulab.Tape.Windows1.AssistiveCommand` aceita tokens como `river:memory`, `river:open`, `river:frequent`, `node:next`, `node:previous`, `node:activate`, `node:cancel`, `seed:expand`, `seed:collapse` e `seed:toggle`. A interface devolve um booleano de aceitação; isso não garante sucesso do efeito final.
 
-## Modalidades planejadas — ainda não integradas
+## Modalidades experimentais e planejadas
 
-- **Voz:** reconhecimento local de palavras e frases, com confirmação de ações sensíveis.
+- **Voz:** o mapa GTK3 possui reconhecimento local experimental de frase curta por Vosk, sob ação explícita e com modelo/gravador instalados. Voz contínua e controle multimodal completo não estão validados.
 - **Cabeça / pescoço:** movimentos pequenos calibrados, tolerância a tremores e seleção por permanência.
 - **Mãos:** gestos configuráveis captados por webcam.
-- **Tecla única:** varredura de itens, velocidade regulável e confirmação.
+- **Acionador:** varredura experimental de medalhões com velocidade regulável e confirmação por combinação de teclas. Não equivale a suporte universal de qualquer tecla ou dispositivo.
 - **Combinação:** selecionar por movimento e confirmar pela voz ou tecla.
 
 Todas deverão acionar o mesmo conjunto de intenções, sem recriar diferentes interfaces.
@@ -30,3 +30,6 @@ Processamento local quando possível; câmera e microfone desligados por padrão
 ## Estado de validação
 
 A ponte D-Bus e a extensão responderam em sessão GNOME 46 X11; os testes da interface por teclado/ativação e as camadas gráficas ainda exigem validação de ponta a ponta. Não apresentar o protótipo como ferramenta assistiva clinicamente validada.
+
+
+Consulte [guia de acessibilidade](../../docs/ACESSIBILIDADE.md) e [privacidade](../../docs/PRIVACIDADE.md) para distinguir recursos existentes, requisitos e metas.
