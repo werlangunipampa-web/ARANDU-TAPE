@@ -28,6 +28,8 @@ Prefira um clone Git para testes completos e rastreabilidade. O ZIP de código-f
 ## Documentação e pesquisa
 
 - [Índice de documentação](docs/README.md)
+- [Design Core e identidade visual](docs/DESIGN_CORE.md)
+- [Fundamentação filosófica e pedagógica pública](docs/FUNDAMENTACAO_PUBLICA.md)
 - [Arquitetura e acessibilidade](ARANDU-SUITE/docs/ARQUITETURA-E-ACESSIBILIDADE.md)
 - [Roteiro de evolução](ARANDU-SUITE/docs/ROADMAP.md)
 - [Política de publicação científica e Zenodo](docs/PUBLICACAO_CIENTIFICA_ZENODO.md)
