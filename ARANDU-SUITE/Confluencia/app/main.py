@@ -119,6 +119,7 @@ class Window(Gtk.ApplicationWindow):
                               min(730,area.height-42) if area else 730)
         self.set_size_request(560,410)
         head=styled(Gtk.HeaderBar(),"top");head.set_show_close_button(True)
+        head.set_size_request(-1, 52) # Reserva de layout; controles nativos preservados.
         self.set_titlebar(head);brand=box(spacing=9);brand.pack_start(svg_image("marca.svg",38),False,False,0)
         words=box(Gtk.Orientation.VERTICAL,1)
         words.set_valign(Gtk.Align.CENTER)
