@@ -45,3 +45,7 @@ Fontes:
 6. Autorizar e publicar release do snapshot específico, verificar DOI e licenças no registro Zenodo.
 
 Não se declara originalidade integral nem se atribui licença por inferência. Nenhum DOI foi gerado nesta etapa.
+
+## Ação corretiva posterior ao snapshot auditado
+
+A fotografia de origem não comprovada foi removida da árvore candidata à release. O mapa GTK passou a desenhar uma vinheta abstrata original por operações Cairo (gradiente, formas e curvas), sem importar fotografias ou texturas. Commits 6a87ec24d5754d5c3732b8214ab7549001660bd1 e a7c9713d7da2de39f5672f067ffd6017419c50a4. A alteração não remove o arquivo de commits históricos e não certifica os direitos dos demais ativos. Teste contratual adicionado; validação visual no GTK real pendente. Não declarar a fotografia como licenciada; continuar revisão da titularidade e divulgação dos demais componentes.
