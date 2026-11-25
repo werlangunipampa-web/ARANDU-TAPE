@@ -32,3 +32,9 @@ Testar primeiro o aplicativo GTK4 independente no clone de revisão, sem modo de
 O laboratório de extensão GNOME deve permanecer desabilitado na sessão atual. Os ensaios F01–F08 exigem sessão de teste separada GNOME 46/X11, sem as extensões ARANDU/Confluência ativas. Todos os ensaios gráficos continuam não executados neste registro.
 
 Este documento foi acrescentado após o SHA avaliado; o head final precisará de nova validação e revisão. Não constitui autorização de depósito.
+
+## Primeiro ensaio visual GTK4 — relato do responsável
+
+No clone do candidato de pré-validação, o responsável informou: abertura normal, três Rios visíveis, medalhões responsivos, cabeçalho sem sobreposição, painel Sobre funcional e encerramento sem interferência na sessão principal. A expansão/recolhimento da Semente ficou **não confirmada**. Seis de sete verificações confirmadas; não presumir causa nem reprovação de um mecanismo específico. O ensaio não valida as extensões GNOME.
+
+Correções propostas após o relato: preservar a alocação do filho principal do Gtk.Overlay, ocultando apenas sua pintura quando recolhido (fundo não interativo), e acrescentar controle acessível explícito de alternância no protótipo GTK4, com rótulo sincronizado. Não alterar a dimensão da Semente nem a instalação local. Testes simulados exercitam os corpos reais dos métodos. Reteste visual obrigatório; não marcar o item como aprovado antes do relato. O botão adicional é uma alternativa de diagnóstico/acessibilidade do protótipo, não alteração automática da gramática gráfica definitiva.
