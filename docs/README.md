@@ -32,6 +32,7 @@ Este índice distingue manuais de uso, registros de desenvolvimento e documentos
 | Citação e DOI | [Política Zenodo](PUBLICACAO_CIENTIFICA_ZENODO.md) e [CITATION.cff](../CITATION.cff) |
 | Reprodutibilidade da release | [Manifesto e pacote local](REPRODUTIBILIDADE_RELEASE.md) |
 | Decisões pendentes | [Revisão de divulgação e autorização](PENDENCIAS_PUBLICACAO.md) |
+| Delimitação de ativos e pesquisa | [Inventário funcional e retenção](DELIMITACAO_ATIVOS_PESQUISA.md) |
 | Licenciamento e identidade | [Política aprovada e limites](POLITICA_LICENCIAMENTO_IDENTIDADE.md) |
 | Liberação do snapshot | [Ficha de aceite, direitos e licenças](LIBERACAO_SNAPSHOT_ZENODO.md) |
 | Procedência e direitos | [Auditoria preliminar](AUDITORIA_PRELIMINAR_DOI.md) e [inventário](INVENTARIO_PROCEDENCIA_LICENCIAMENTO.md) |
