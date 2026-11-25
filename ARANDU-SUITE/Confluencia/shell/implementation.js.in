@@ -109,6 +109,7 @@ class TapeSession {
         this.buildDesktop();
         this.bindSeedSignals();
         this.watchSeedWindow();
+        this.signal(this.settings,'changed::adaptive-seed-dock',()=>this.updateSeedDock());
         this.signal(global.stage,'captured-event',(_stage,event)=>this.helpGlobalEvent(event));
         this.signal(global.stage,'captured-event',(_stage,event)=>this.navigationKeyEvent(event));
         this.signal(global.stage,'captured-event',(_stage,event)=>this.navigationOutsideEvent(event));
@@ -123,8 +124,8 @@ class TapeSession {
         this.signal(global.display,'window-created',()=>this.schedule());
         this.signal(global.window_manager,'destroy',()=>this.schedule());
         this.signal(Main.layoutManager,'monitors-changed',()=>this.position());
-        this.signal(Main.overview,'showing',()=>{this.seedOverview=true;if(this.layer==='floating')this.root.hide();this.refreshSeedSignals();});
-        this.signal(Main.overview,'hidden',()=>{this.seedOverview=false;this.refreshSeedSignals();this.schedule();});
+        this.signal(Main.overview,'showing',()=>{this.seedOverview=true;if(this.layer==='floating')this.root.hide();this.updateSeedDock();this.refreshSeedSignals();});
+        this.signal(Main.overview,'hidden',()=>{this.seedOverview=false;this.updateSeedDock();this.refreshSeedSignals();this.schedule();});
         this.signal(this.privacy,'changed::remember-recent-files',()=>{this.lastFocus='';this.schedule();});
         this.record(); this.refresh();
     }
@@ -213,6 +214,8 @@ class TapeSession {
         this.setHighContrast(false);
         this.setSwitchShortcut('space');
         this.setBarMode('visible');
+        this.settings.set_boolean('adaptive-seed-dock',true);
+        this.updateSeedDock();
         this.updateAccessibilityLabels();
     }
     toggleAccessibility() {
@@ -232,6 +235,7 @@ class TapeSession {
         this.accessibilityLabels.contrast.set_label('Alto contraste: '+(contrast?'ligado':'desligado'));
         this.accessibilityLabels.switch.set_label('Acionador: '+switchName);
         this.accessibilityLabels.bar.set_label('Recuperar barra GNOME');
+        this.accessibilityLabels.dock?.set_label('Semente adaptativa: '+(this.settings.get_boolean('adaptive-seed-dock')?'ligada':'desligada'));
     }
     // Varredura opcional: nunca abre um programa automaticamente.
     // Uma tecla ou acionador inicia a varredura e confirma o item destacado.
@@ -664,7 +668,7 @@ class TapeSession {
             }catch(_){this.seedSources[name]=null;}
         }
         if(typeof Main.sessionMode?.connect==='function')
-            this.signal(Main.sessionMode,'updated',()=>this.refreshSeedSignals());
+            this.signal(Main.sessionMode,'updated',()=>{this.updateSeedDock();this.refreshSeedSignals();});
         this.refreshSeedSignals();
     }
     refreshSeedSignals() {
@@ -700,10 +704,52 @@ class TapeSession {
         const win=global.display.focus_window;
         if(win && typeof win.connect==='function'){
             for(const name of ['position-changed','size-changed']){
-                try{this.seedWindowLinks.push([win,win.connect(name,()=>this.positionSeedSignalBadge())]);}catch(_){}
+                try{this.seedWindowLinks.push([win,win.connect(name,()=>{this.updateSeedDock();this.positionSeedSignalBadge();})]);}catch(_){}
             }
         }
+        this.updateSeedDock();
         this.positionSeedSignalBadge();
+    }
+    // Compacta somente a representação recolhida. O ponto manual dos Rios não muda.
+    updateSeedDock() {
+        const dock=this.seedDock;
+        if(!dock || !this.area || !this.seedPoint || this.stopping)return;
+        const permitted=this.allowed() && !this.seedOverview && !Main.overview.visible;
+        if(!permitted || !this.settings.get_boolean('adaptive-seed-dock') ||
+            this.expanded || this.navigationOverlay || this.drag ||
+            this.controlScroll?.visible || this.helpBox?.visible) {
+            dock.hide();if(this.seed)this.seed.show();return;
+        }
+        const win=global.display.focus_window;
+        let frame=null;
+        try{frame=win?.get_frame_rect?.();}catch(_){}
+        const a=this.area,[sx,sy]=this.seedPoint;
+        const overlap=(x,y,w,h)=>frame?
+            Math.max(0,Math.min(x+w,frame.x+frame.width)-Math.max(x,frame.x))*
+            Math.max(0,Math.min(y+h,frame.y+frame.height)-Math.max(y,frame.y)):0;
+        // Não intervir na janela do próprio mapa nem em tela cheia exclusiva.
+        const app=win && this.tracker.get_window_app(win);
+        if(!frame || app?.get_id()===DESKTOP || win?.is_fullscreen?.() ||
+            a.width<64 || a.height<64 || overlap(a.x+sx-75,a.y+sy-75,150,150)===0) {
+            dock.hide();this.seed.show();return;
+        }
+        if(dock.visible && (dock.hover || global.stage?.get_key_focus?.()===dock))return;
+        const size=48,margin=8;
+        const left=a.x+margin,right=a.x+a.width-size-margin;
+        const top=a.y+margin,bottom=a.y+a.height-size-margin;
+        const choices=[[left,top],[right,top],[left,bottom],[right,bottom]];
+        const distance=([x,y])=>Math.hypot(x+size/2-a.x-sx,y+size/2-a.y-sy);
+        choices.sort((p,q)=>overlap(...p,size,size)-overlap(...q,size,size)||distance(p)-distance(q));
+        const [x,y]=choices[0];
+        dock.set_position(Math.round(x),Math.round(y));
+        dock.show();this.seed.hide();
+    }
+    openSeedDock() {
+        if(!this.allowed() || !this.seedDock?.visible)return false;
+        this.enterNavigation();
+        this.setExpanded(true);
+        this.seed.grab_key_focus?.();
+        return true;
     }
     positionSeedSignalBadge() {
         const badge=this.seedSignalBadge;
@@ -732,7 +778,10 @@ class TapeSession {
             Math.max(0,Math.min(bx+w,frame.x+frame.width)-Math.max(bx,frame.x))*
             Math.max(0,Math.min(by+h,frame.y+frame.height)-Math.max(by,frame.y)):0;
         const distance=([bx,by])=>Math.hypot(bx-preferred[0],by-preferred[1]);
-        candidates.sort((a,b)=>overlap(a)-overlap(b)||distance(a)-distance(b));
+        const dock=this.seedDock;
+        const dp=dock?.visible?dock.get_position?.():null;
+        const dockOverlap=([bx,by])=>dp?Math.max(0,Math.min(bx+w,dp[0]+48)-Math.max(bx,dp[0]))*Math.max(0,Math.min(by+h,dp[1]+48)-Math.max(by,dp[1])):0;
+        candidates.sort((a,b)=>dockOverlap(a)-dockOverlap(b)||overlap(a)-overlap(b)||distance(a)-distance(b));
         const [bx,by]=candidates[0];
         badge.set_position(Math.round(bx),Math.round(by));
     }
@@ -879,6 +928,14 @@ class TapeSession {
             layout.addTopChrome(this.seedSignalBadge,{affectsStruts:false,affectsInputRegion:false,trackFullscreen:false});
             this.seedSignalIndependent=true;
         }else this.root.add_child(this.seedSignalBadge);
+        if(this.seedSignalIndependent){
+            this.seedDock=new St.Button({style_class:'arandu-seed-dock',can_focus:true,reactive:true,
+                track_hover:true,visible:false,accessible_name:'Semente recolhida · abrir Rios'});
+            this.seedDock.set_child(this.icon('semente',36));
+            this.seedDock.set_size(48,48);
+            this.seedDock.connect('clicked',()=>this.openSeedDock());
+            layout.addTopChrome(this.seedDock,{affectsStruts:false,affectsInputRegion:true,trackFullscreen:true});
+        }
         this.controlBox=new St.BoxLayout({vertical:true,style_class:'arandu-seed-controls',visible:false});
         this.accessibilityLabels={};
         const addTitle=text=>this.controlBox.add_child(new St.Label({
@@ -921,6 +978,11 @@ class TapeSession {
         this.accessibilityLabels.switch=addAction('Acionador: Super+Alt+Espaço',()=>{
             const selected=this.settings.get_strv('arandu-varredura-acionar');
             this.setSwitchShortcut(selected.includes('<Super><Alt>s')?'space':'s');
+        });
+        addTitle('POSICIONAMENTO');
+        this.accessibilityLabels.dock=addAction('Semente adaptativa',()=>{
+            this.settings.set_boolean('adaptive-seed-dock',!this.settings.get_boolean('adaptive-seed-dock'));
+            this.updateSeedDock();
         });
         addTitle('PROTEÇÃO DO SISTEMA');
         this.accessibilityLabels.bar=addAction('Recuperar barra GNOME',()=>this.setBarMode('visible'));
@@ -1072,6 +1134,7 @@ class TapeSession {
         const seedX=limit(w*.52+px*w*.20,95,w-95);
         const seedY=limit(h*.72+py*h*.18,100,h-100);
         this.seedPoint=[seedX,seedY];
+        this.updateSeedDock();
         this.positionSeedSignalBadge();
         this.seed.set_position(Math.round(seedX-75),Math.round(seedY-75));
         if(this.helpButton)this.positionHelp();
@@ -1213,6 +1276,8 @@ class TapeSession {
             if(this.helpHint)this.helpHint.hide();
             if(this.controlScroll)this.controlScroll.hide();
         }
+        this.updateSeedDock();
+        this.positionSeedSignalBadge();
         this.scheduleSeedSleep();
         this.refresh();this.highlightSelection();
         this.applyMedallionVisibility();
@@ -1229,6 +1294,8 @@ class TapeSession {
         const ownApp=focused && this.tracker.get_window_app(focused);
         this.root.visible=this.layer!=='floating' ||
             (this.allowed() && !Main.overview.visible && (!ownApp || ownApp.get_id()!==DESKTOP));
+        this.updateSeedDock();
+        this.positionSeedSignalBadge();
         if(!this.expanded){
             for(const r of RIVERS)for(const node of this.buttons[r])node.button.hide();
             return;
@@ -1304,6 +1371,7 @@ class TapeSession {
             this.seedSignalBadge.destroy();
         }
         this.seedSignalBadge=null;
+        if(this.seedDock){Main.layoutManager.removeChrome(this.seedDock);this.seedDock.destroy();this.seedDock=null;}
         if(this.root)this.root.destroy();
         if(this.panel)this.panel.destroy();
         this.root=null;this.panel=null;this.service=null;
