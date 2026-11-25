@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Session-start check. Never announces availability without a trusted local version."""
+"""Read-only ARANDU update check at graphical login; never installs or notifies."""
 import json
+import os
 import pathlib
 import sys
+import tempfile
 
 BASE = pathlib.Path.home() / ".local/share/arandu/updates"
 sys.path.insert(0, str(BASE / "client"))
@@ -10,12 +12,23 @@ from arandu_update_check import check
 
 def main():
     state = check()
-    # Do not notify on a remote release alone: installed version and signature
-    # validation are not implemented yet. A local status may be consumed by UI.
     state["update_available"] = False
     state["notification_sent"] = False
-    # No automatic writes, notifications or execution in preview mode.
-    print(json.dumps(state, ensure_ascii=False, sort_keys=True))
+    # A remote release is not yet a verified upgrade to the locally installed build.
+    folder = pathlib.Path.home() / ".cache/arandu/updates"
+    folder.mkdir(mode=0o700, parents=True, exist_ok=True)
+    if folder.is_symlink():
+        return 1
+    fd, name = tempfile.mkstemp(prefix=".status-", suffix=".json", dir=folder)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            json.dump(state, handle, ensure_ascii=False, sort_keys=True)
+            handle.write("\n")
+        os.chmod(name, 0o600)
+        os.replace(name, folder / "status.json")
+    finally:
+        if os.path.exists(name):
+            os.unlink(name)
     return 0
 
 if __name__ == "__main__":
