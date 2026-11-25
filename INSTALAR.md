@@ -91,8 +91,11 @@ Para diagnóstico, veja [docs/COMANDOS-E-DIAGNOSTICO.md](ARANDU-SUITE/docs/COMAN
 
 ## Avisos sobre acessibilidade
 
-A ponte D-Bus permite comandos assistivos experimentais, mas **reconhecimento de voz, rastreamento da cabeça e gestos de mãos ainda não estão disponíveis para uso final**. O sistema não deve ser tratado como tecnologia assistiva validada clinicamente ou em testes com usuários.
+A ponte D-Bus permite comandos assistivos experimentais. O mapa GTK3 oferece reconhecimento local de uma frase curta sob ação explícita, com Vosk e dependências opcionais instaladas. Voz contínua, rastreamento da cabeça e gestos de mãos ainda não estão validados para uso final. O sistema não deve ser tratado como tecnologia assistiva validada clinicamente ou em testes com usuários.
 
 ## Download de versões
 
 Enquanto não houver release aprovada, o clone Git é recomendado para desenvolvimento e auditoria de snapshot. O ZIP gerado pelo GitHub contém o código, não o histórico Git nem um instalador de um clique. A triagem científica exige um clone Git. Consulte [estado e versões](docs/ESTADO_E_VERSOES.md) e [publicação científica](docs/PUBLICACAO_CIENTIFICA_ZENODO.md).
+
+
+Consulte [acessibilidade](docs/ACESSIBILIDADE.md) e [privacidade](docs/PRIVACIDADE.md) antes de usar os recursos opcionais.
