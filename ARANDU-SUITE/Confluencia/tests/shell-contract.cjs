@@ -61,7 +61,12 @@ const overview=new Actor();overview.visible=false;
 let pointer=[10,1], hideConflict=false;
 const stage=new Actor();stage.set_key_focus=actor=>stage.keyFocus=actor;stage.get_key_focus=()=>stage.keyFocus;
 let nativeCalendarOpened=0,nativeSettingsOpened=0;
-const panelActor=Object.assign(new Actor(),{addToStatusArea(){},statusArea:{dateMenu:{menu:{open(){nativeCalendarOpened++;}}},quickSettings:{menu:{open(){nativeSettingsOpened++;}}}}});
+const signalCamera=new Actor({visible:false}), signalMic=new Actor({visible:false}), signalRecording=new Actor({visible:false}), signalRemote=new Actor({visible:false}), signalSharing=new Actor({visible:false}), signalNotices=new Actor({visible:false,icon_name:'message-indicator-symbolic'});
+const panelActor=Object.assign(new Actor(),{addToStatusArea(){},statusArea:{
+    dateMenu:{_indicator:signalNotices,menu:{open(){nativeCalendarOpened++;}}},
+    quickSettings:{_camera:{_indicator:signalCamera},_volumeInput:{_indicator:signalMic},_remoteAccess:{_indicator:signalRemote},menu:{open(){nativeSettingsOpened++;}}},
+    screenRecording:signalRecording,screenSharing:signalSharing
+}});
 const main={layoutManager:layout,overview,sessionMode:{isLocked:false},panel:panelActor,extensionManager:{lookup:()=>hideConflict?{state:1}:null},
     wm:{addKeybinding(){key=true;},removeKeybinding(){key=false;}},
     activateWindow(w){focused=w;},notify(){}};
@@ -93,6 +98,36 @@ const s=new Session('/teste',settings);s.start();
 assert(service && key);assert.equal(s.root.get_parent(),bg);
 assert(s.helpButton && s.helpBox);
 assert(s.controlScroll && s.controlBox);
+assert.equal(s.seedSignalBadge.visible,false);
+assert.match(s.seedSignalDetail.text,/atividade desconhecida/);
+signalCamera.visible=true;signalCamera.emit('notify::visible');
+assert.equal(s.seedSignalBadge.visible,true);
+assert.match(s.seedSignalBadge.text,/Câmera/);
+assert.equal(s.seedSignalBadge.reactive,false);
+signalMic.visible=true;signalMic.emit('notify::visible');
+assert.match(s.seedSignalBadge.text,/Microfone/);
+signalRecording.visible=true;signalRecording.emit('notify::visible');
+assert.match(s.seedSignalBadge.text,/Gravação GNOME/);
+signalRemote.visible=true;signalRemote.emit('notify::visible');
+assert.match(s.seedSignalBadge.text,/Captura remota/);
+signalSharing.visible=true;signalSharing.emit('notify::visible');
+assert.match(s.seedSignalBadge.text,/Compartilhamento/);
+signalNotices.visible=true;signalNotices.emit('notify::visible');
+assert.match(s.seedSignalBadge.text,/Avisos/);
+signalNotices.icon_name='notifications-disabled-symbolic';signalNotices.emit('notify::icon-name');
+assert.match(s.seedSignalBadge.text,/Não perturbe/);
+assert(!s.seedSignalBadge.text.includes('Avisos'));
+s.scheduleSeedSleep();assert.equal(s.seedSleepId,0);
+s.setExpanded(false);assert.equal(s.seedSignalBadge.visible,true);
+main.sessionMode.isLocked=true;s.refreshSeedSignals();assert.equal(s.seedSignalBadge.visible,false);
+main.sessionMode.isLocked=false;s.refreshSeedSignals();assert.equal(s.seedSignalBadge.visible,true);
+for(const actor of [signalCamera,signalMic,signalRecording,signalRemote,signalSharing,signalNotices]){
+    actor.visible=false;actor.emit('notify::visible');
+}
+assert.equal(s.seedSignalBadge.visible,false);
+assert.match(s.seedSignalDetail.text,/atividade desconhecida/);
+assert(s.seedSleepId && pending.has(s.seedSleepId));
+
 assert.equal(s.controlScroll.visible,false);
 s.toggleAccessibility();assert.equal(s.controlScroll.visible,true);
 assert.notEqual(s.seedInformation.text,'Data e hora sob demanda');
@@ -401,6 +436,7 @@ main.sessionMode.isLocked=true;assert.equal(JSON.parse(s.Snapshot()).windows.len
 assert.equal(JSON.parse(s.AssistiveStatus()).available,false);
 main.sessionMode.isLocked=false;privacy=true;s.Clear();assert.equal(JSON.parse(s.Snapshot()).recent.length,0);
 const oldRoot=s.root;s.stop();assert.equal(panelActor.visible,true);assert(!key && !service && oldRoot.destroyed);assert.equal(pending.size,0);
+for(const actor of [signalCamera,signalMic,signalRecording,signalRemote,signalSharing,signalNotices])assert.equal(actor.handlers.size,0);
 console.log('Contrato do Shell validado com objetos de teste: janelas, foco, contagens, privacidade, camadas e 60 ciclos de expansão.');
 
 assert.equal(s.AssistiveCommand('river:open'),true);
