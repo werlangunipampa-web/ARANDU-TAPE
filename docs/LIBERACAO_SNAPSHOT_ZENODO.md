@@ -71,3 +71,7 @@ Executar scripts/verificar-escopo-release.py com o SHA integral do candidato. A 
 ## Separação técnica implementada
 
 O candidato substitui a dependência experimental por um contrato público de ações e retira a interface de importação experimental. Os seis caminhos em retenção foram excluídos da árvore candidata; verificar o SHA final e repetir a revisão humana. O histórico público anterior não foi apagado. A autorização de licenciamento e a validação em ambiente real continuam necessárias.
+
+## Preparação de licenças e pré-teste gráfico
+
+Consultar a [minuta de aplicação](MINUTA_APLICACAO_LICENCAS.md), que discrimina escopos, avisos e condições para a concessão definitiva. O [pré-teste local](VALIDACAO_FUNCIONAL_DESEMPENHO.md) não instala nem habilita extensões. A aprovação de triagem e testes automatizados não substitui ensaios gráficos, autorização de titulares ou revisão de licenças.
