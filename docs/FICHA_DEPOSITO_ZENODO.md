@@ -46,3 +46,7 @@ Quando o snapshot final for aprovado: validar CFF, scanner e CI, revisar todo o 
 - https://help.zenodo.org/docs/github/enable-repository/
 
 Este rascunho não é uma licença, um depósito, um DOI ou uma aprovação de publicação. Revisar a descrição conforme o conteúdo efetivamente distribuído.
+
+## Documentação científica complementar
+
+O depósito pretendido poderá incluir a [arquitetura e contribuições científicas](ARQUITETURA_CONTRIBUICOES_CIENTIFICAS.md) e o [protocolo proposto de pesquisa](PROTOCOLO_PESQUISA_INTERACAO.md), após revisão de divulgação. A relação com aprendizagem significativa é heurística de design; não se afirma validação da teoria, aprendizagem computacional, superioridade de desempenho ou novidade mundial. O protocolo ainda não foi executado.
