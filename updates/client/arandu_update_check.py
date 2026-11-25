@@ -30,8 +30,22 @@ def check(timeout=5):
                 return {"status": "unavailable", "reason": "oversize"}
     except urllib.error.HTTPError as error:
         if error.code == 404:
-            # latest may be absent or repository access may have failed.
-            return {"status": "no_stable_release_or_inaccessible", "reason": "http_404"}
+            # /releases/latest excludes prereleases. Confirm that the official
+            # repository is reachable before treating 404 as an empty stable channel.
+            probe = urllib.request.Request(
+                "https://api.github.com/repos/werlangunipampa-web/ARANDU-TAPE",
+                headers={
+                    "Accept": "application/vnd.github+json",
+                    "User-Agent": "ARANDU-Update-ReadOnly/0.3",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                })
+            try:
+                with urllib.request.urlopen(probe, timeout=timeout) as response:
+                    if response.status == 200:
+                        return {"status": "no_stable_release"}
+            except (urllib.error.URLError, TimeoutError, ValueError, OSError):
+                pass
+            return {"status": "unavailable", "reason": "release_404_repository_unconfirmed"}
         if error.code in (403, 429):
             return {"status": "unavailable", "reason": "rate_limited_or_forbidden", "http_status": error.code}
         return {"status": "unavailable", "reason": "http_error", "http_status": error.code}
