@@ -27,6 +27,7 @@ class Actor {
     set_height(h) {this.height=h;}
     contains(other) {while(other){if(other===this)return true;other=other.parent;}return false;}
     set_position(x,y) {this.pos=[x,y];}
+    get_position(){return this.pos||[0,0];}
     set_scale(x,y) {this.scale=[x,y];}
     set_style(s){this.style=s;}
     set_label(v){this.label=v;}
@@ -40,7 +41,7 @@ class Actor {
 class Panel extends Actor {
     constructor(){super();this.menu={addAction:(s,f)=>({label:{set_text(){}},click:f})};}
 }
-const prefs=new Map([['recent','[]'],['frequency','{}'],['medallion-scale',1],['high-contrast',false],['scan-interval-ms',3500],['panel-mode','visible'],['monitor-target','focused'],['fixed-monitor-index',0],['navigation-idle-ms',0]]);
+const prefs=new Map([['recent','[]'],['frequency','{}'],['medallion-scale',1],['high-contrast',false],['scan-interval-ms',3500],['panel-mode','visible'],['monitor-target','focused'],['fixed-monitor-index',0],['navigation-idle-ms',0],['adaptive-seed-dock',true]]);
 const settings=Object.assign(new Actor(),{get_string:k=>prefs.get(k),set_string:(k,v)=>prefs.set(k,v),
     get_double:k=>prefs.get(k)||0,set_double:(k,v)=>prefs.set(k,v),
     get_boolean:k=>!!prefs.get(k),set_boolean:(k,v)=>prefs.set(k,v),
@@ -142,6 +143,47 @@ for(const actor of [signalCamera,signalMic,signalRecording,signalRemote,signalSh
 assert.equal(s.seedSignalBadge.visible,false);
 assert.match(s.seedSignalDetail.text,/atividade desconhecida/);
 assert(s.seedSleepId && pending.has(s.seedSleepId));
+
+// Semente compacta: cobertura da posição manual, sem mover âncora ou os Rios.
+const originalPoint=[...s.seedPoint];
+const originalAnchor=[settings.get_double('anchor-x'),settings.get_double('anchor-y')];
+assert(s.seedDock && s.seedDock.get_parent()===topChrome);
+assert.equal(s.seedDock.visible,false);
+assert.equal(topOptions.get(s.seedDock).affectsInputRegion,true);
+assert.equal(topOptions.get(s.seedDock).affectsStruts,false);
+assert.equal(topOptions.get(s.seedDock).trackFullscreen,true);
+a.get_frame_rect=()=>({x:350,y:150,width:1016,height:618});
+s.updateSeedDock();
+assert.equal(s.seedDock.visible,true);assert.equal(s.seed.visible,false);
+assert.equal(s.seedDock.pos[0],8);
+assert.deepEqual([...s.seedPoint],originalPoint);
+assert.deepEqual([settings.get_double('anchor-x'),settings.get_double('anchor-y')],originalAnchor);
+// Não deslocar o botão enquanto a pessoa aponta para ele.
+const compactPosition=[...s.seedDock.pos];s.seedDock.hover=true;
+a.get_frame_rect=()=>({x:0,y:30,width:1100,height:738});
+s.updateSeedDock();assert.deepEqual([...s.seedDock.pos],compactPosition);
+s.seedDock.hover=false;s.updateSeedDock();assert.equal(s.seedDock.pos[0],1310);
+signalCamera.visible=true;signalCamera.emit('notify::visible');
+const [dx,dy]=s.seedDock.pos,[bx,by]=s.seedSignalBadge.pos;
+assert(dx+48<=bx || bx+240<=dx || dy+48<=by || by+64<=dy);
+signalCamera.visible=false;signalCamera.emit('notify::visible');
+assert.equal(s.openSeedDock(),true);
+assert.equal(s.expanded,true);assert.equal(s.navigationOverlay,true);
+assert.equal(s.seedDock.visible,false);assert.equal(s.seed.visible,true);
+s.cancelSelection();assert.equal(s.seedDock.visible,true);
+settings.set_boolean('adaptive-seed-dock',false);s.updateSeedDock();
+assert.equal(s.seedDock.visible,false);assert.equal(s.seed.visible,true);
+settings.set_boolean('adaptive-seed-dock',true);s.updateSeedDock();
+assert.equal(s.seedDock.visible,true);
+main.sessionMode.isLocked=true;main.sessionMode.emit('updated');
+assert.equal(s.seedDock.visible,false);assert.equal(s.openSeedDock(),false);
+main.sessionMode.isLocked=false;main.sessionMode.emit('updated');
+assert.equal(s.seedDock.visible,true);
+overview.emit('showing');assert.equal(s.seedDock.visible,false);
+overview.emit('hidden');assert.equal(s.seedDock.visible,true);
+a.is_fullscreen=()=>true;s.updateSeedDock();assert.equal(s.seedDock.visible,false);
+delete a.is_fullscreen;delete a.get_frame_rect;s.updateSeedDock();
+assert.equal(s.seedDock.visible,false);assert.equal(s.seed.visible,true);
 
 assert.equal(s.controlScroll.visible,false);
 s.toggleAccessibility();assert.equal(s.controlScroll.visible,true);
@@ -450,7 +492,7 @@ privacy=false;assert.equal(JSON.parse(s.Snapshot()).recent.length,0);
 main.sessionMode.isLocked=true;assert.equal(JSON.parse(s.Snapshot()).windows.length,0);assert.equal(s.Activate('12'),false);
 assert.equal(JSON.parse(s.AssistiveStatus()).available,false);
 main.sessionMode.isLocked=false;privacy=true;s.Clear();assert.equal(JSON.parse(s.Snapshot()).recent.length,0);
-const oldRoot=s.root, oldBadge=s.seedSignalBadge;s.stop();assert.equal(oldBadge.destroyed,true);assert.equal(topChrome.children.length,0);assert.equal(topOptions.size,0);assert.equal(panelActor.visible,true);assert(!key && !service && oldRoot.destroyed);assert.equal(pending.size,0);
+const oldRoot=s.root, oldBadge=s.seedSignalBadge, oldDock=s.seedDock;s.stop();assert.equal(oldBadge.destroyed,true);assert.equal(oldDock.destroyed,true);assert.equal(topChrome.children.length,0);assert.equal(topOptions.size,0);assert.equal(panelActor.visible,true);assert(!key && !service && oldRoot.destroyed);assert.equal(pending.size,0);
 for(const actor of [signalCamera,signalMic,signalRecording,signalRemote,signalSharing,signalNotices])assert.equal(actor.handlers.size,0);
 console.log('Contrato do Shell validado com objetos de teste: janelas, foco, contagens, privacidade, camadas e 60 ciclos de expansão.');
 
