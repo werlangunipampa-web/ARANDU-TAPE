@@ -49,12 +49,12 @@ const settings=Object.assign(new Actor(),{get_string:k=>prefs.get(k),set_string:
 let privacy=true;
 class Privacy extends Actor {get_boolean(){return privacy;}}
 let service=false, key=false, actions=[], windowList=[], focused=null;
-const tracked=new Set();const bg=new Actor();const chrome=new Actor();
+const tracked=new Set();const bg=new Actor();const chrome=new Actor();const topChrome=new Actor();const topOptions=new Map();
 const layout=Object.assign(new Actor(),{
     _backgroundGroup:bg,primaryMonitor:{index:0,x:0,y:0,width:1366,height:768},
     monitors:[{index:0,x:0,y:0,width:1366,height:768},{index:1,x:1366,y:0,width:1080,height:900},{index:2,x:2446,y:0,width:1200,height:900}],
     getWorkAreaForMonitor:i=>({x:layout.monitors[i].x,y:30,width:layout.monitors[i].width,height:layout.monitors[i].height-30}),
-    addChrome(actor){chrome.add_child(actor);},removeChrome(actor){chrome.remove_child(actor);},
+    addChrome(actor){chrome.add_child(actor);},addTopChrome(actor,options){topChrome.add_child(actor);topOptions.set(actor,options);},removeChrome(actor){actor.get_parent()?.remove_child(actor);topOptions.delete(actor);},
     trackChrome(actor){tracked.add(actor);},untrackChrome(actor){assert(tracked.delete(actor));}
 });
 const overview=new Actor();overview.visible=false;
@@ -67,7 +67,7 @@ const panelActor=Object.assign(new Actor(),{addToStatusArea(){},statusArea:{
     quickSettings:{_camera:{_indicator:signalCamera},_volumeInput:{_indicator:signalMic},_remoteAccess:{_indicator:signalRemote},menu:{open(){nativeSettingsOpened++;}}},
     screenRecording:signalRecording,screenSharing:signalSharing
 }});
-const main={layoutManager:layout,overview,sessionMode:{isLocked:false},panel:panelActor,extensionManager:{lookup:()=>hideConflict?{state:1}:null},
+const main={layoutManager:layout,overview,sessionMode:new Actor({isLocked:false}),panel:panelActor,extensionManager:{lookup:()=>hideConflict?{state:1}:null},
     wm:{addKeybinding(){key=true;},removeKeybinding(){key=false;}},
     activateWindow(w){focused=w;},notify(){}};
 const apps=new Map();
@@ -104,6 +104,21 @@ signalCamera.visible=true;signalCamera.emit('notify::visible');
 assert.equal(s.seedSignalBadge.visible,true);
 assert.match(s.seedSignalBadge.text,/Câmera/);
 assert.equal(s.seedSignalBadge.reactive,false);
+assert.equal(s.seedSignalBadge.get_parent(),topChrome);
+assert.equal(topOptions.get(s.seedSignalBadge).affectsInputRegion,false);
+assert.equal(topOptions.get(s.seedSignalBadge).affectsStruts,false);
+assert.equal(topOptions.get(s.seedSignalBadge).trackFullscreen,false);
+assert.equal(tracked.has(s.seedSignalBadge),false);
+// A janela cobre a posição preferida, mas não o canto superior esquerdo.
+a.get_frame_rect=()=>({x:350,y:150,width:1016,height:618});
+s.positionSeedSignalBadge();assert.equal(s.seedSignalBadge.pos[0],8);
+assert(s.seedSignalBadge.pos[1]>=38);
+// Sem espaço livre, manter a etiqueta dentro da área útil, sem mover a janela.
+a.get_frame_rect=()=>({x:0,y:30,width:1366,height:738});
+s.positionSeedSignalBadge();assert(s.seedSignalBadge.pos[0]>=8 && s.seedSignalBadge.pos[0]+240<=1366-8);
+delete a.get_frame_rect;
+overview.emit('showing');assert.equal(s.seedSignalBadge.visible,false);
+overview.emit('hidden');assert.equal(s.seedSignalBadge.visible,true);
 signalMic.visible=true;signalMic.emit('notify::visible');
 assert.match(s.seedSignalBadge.text,/Microfone/);
 signalRecording.visible=true;signalRecording.emit('notify::visible');
@@ -119,8 +134,8 @@ assert.match(s.seedSignalBadge.text,/Não perturbe/);
 assert(!s.seedSignalBadge.text.includes('Avisos'));
 s.scheduleSeedSleep();assert.equal(s.seedSleepId,0);
 s.setExpanded(false);assert.equal(s.seedSignalBadge.visible,true);
-main.sessionMode.isLocked=true;s.refreshSeedSignals();assert.equal(s.seedSignalBadge.visible,false);
-main.sessionMode.isLocked=false;s.refreshSeedSignals();assert.equal(s.seedSignalBadge.visible,true);
+main.sessionMode.isLocked=true;main.sessionMode.emit('updated');assert.equal(s.seedSignalBadge.visible,false);
+main.sessionMode.isLocked=false;main.sessionMode.emit('updated');assert.equal(s.seedSignalBadge.visible,true);
 for(const actor of [signalCamera,signalMic,signalRecording,signalRemote,signalSharing,signalNotices]){
     actor.visible=false;actor.emit('notify::visible');
 }
@@ -435,7 +450,7 @@ privacy=false;assert.equal(JSON.parse(s.Snapshot()).recent.length,0);
 main.sessionMode.isLocked=true;assert.equal(JSON.parse(s.Snapshot()).windows.length,0);assert.equal(s.Activate('12'),false);
 assert.equal(JSON.parse(s.AssistiveStatus()).available,false);
 main.sessionMode.isLocked=false;privacy=true;s.Clear();assert.equal(JSON.parse(s.Snapshot()).recent.length,0);
-const oldRoot=s.root;s.stop();assert.equal(panelActor.visible,true);assert(!key && !service && oldRoot.destroyed);assert.equal(pending.size,0);
+const oldRoot=s.root, oldBadge=s.seedSignalBadge;s.stop();assert.equal(oldBadge.destroyed,true);assert.equal(topChrome.children.length,0);assert.equal(topOptions.size,0);assert.equal(panelActor.visible,true);assert(!key && !service && oldRoot.destroyed);assert.equal(pending.size,0);
 for(const actor of [signalCamera,signalMic,signalRecording,signalRemote,signalSharing,signalNotices])assert.equal(actor.handlers.size,0);
 console.log('Contrato do Shell validado com objetos de teste: janelas, foco, contagens, privacidade, camadas e 60 ciclos de expansão.');
 
