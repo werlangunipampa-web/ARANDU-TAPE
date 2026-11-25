@@ -63,3 +63,7 @@ O responsável, Rafhael Brum Werlang, informou que o ARANDU é projeto pessoal i
 ## Aprovação da estrutura de licenciamento
 
 O responsável aprovou GPL versão 3 para o ambiente gráfico próprio, CC BY 4.0 para a documentação autoral autorizada, manutenção dos núcleos/algoritmos experimentais privados e reserva de direitos sobre a identidade visual e marca. Ver [política de licenciamento e identidade](POLITICA_LICENCIAMENTO_IDENTIDADE.md). A variante GPL, a licença dos ativos funcionais, a procedência, a compatibilidade e os avisos continuam pendentes. Não confundir esta decisão com concessão de licença sobre todo o snapshot ou autorização de release.
+
+## Barreira adicional de escopo
+
+Executar scripts/verificar-escopo-release.py com o SHA integral do candidato. A [delimitação de ativos e pesquisa](DELIMITACAO_ATIVOS_PESQUISA.md) registra seis caminhos em retenção conservadora para o primeiro depósito e classifica 22 SVGs rastreados. Enquanto houver retenção, não liberar a release, mesmo com CI e triagem de credenciais aprovadas. A barreira é somente leitura e não remove conteúdo.
