@@ -18,6 +18,7 @@ except (ImportError, ValueError) as exc:
     raise SystemExit(f"Opy: GTK4 indisponível: {exc}") from exc
 
 from session.windows import list_windows, focus_window
+from window_gestures import HEADER_MIN_HEIGHT
 
 
 def available():
@@ -60,6 +61,12 @@ class Opy(Gtk.Application):
         self.window.set_title("Opy · Encontro das janelas")
         self.window.set_default_size(660, 460)
         self.window.add_css_class("opy")
+        # Opy é um painel de encontro: fechar somente a própria interface.
+        header = Gtk.HeaderBar()
+        header.set_size_request(-1, HEADER_MIN_HEIGHT)
+        header.set_show_title_buttons(True)
+        header.set_decoration_layout(":close")
+        self.window.set_titlebar(header)
         css = Gtk.CssProvider()
         css.load_from_data(CSS.encode("utf-8"))
         Gtk.StyleContext.add_provider_for_display(
