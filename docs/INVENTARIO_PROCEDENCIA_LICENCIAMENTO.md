@@ -49,3 +49,23 @@ Não se declara originalidade integral nem se atribui licença por inferência. 
 ## Ação corretiva posterior ao snapshot auditado
 
 A fotografia de origem não comprovada foi removida da árvore candidata à release. O mapa GTK passou a desenhar uma vinheta abstrata original por operações Cairo (gradiente, formas e curvas), sem importar fotografias ou texturas. Commits 6a87ec24d5754d5c3732b8214ab7549001660bd1 e a7c9713d7da2de39f5672f067ffd6017419c50a4. A alteração não remove o arquivo de commits históricos e não certifica os direitos dos demais ativos. Teste contratual adicionado; validação visual no GTK real pendente. Não declarar a fotografia como licenciada; continuar revisão da titularidade e divulgação dos demais componentes.
+
+## Revisão da composição — candidato e82a20a
+
+Data local: 24/11/2026. Árvore completa do head `e82a20a5b1c2da5d60a1ce5b26b306e1f3b82668`: 173 blobs, resposta Git não truncada, modos regulares 100644/100755. Não há LICENSE/COPYING/NOTICE geral identificado. A fotografia paisagem.jpg está ausente da árvore; a história anterior permanece. Há 22 SVGs rastreados (18 anteriores + quatro recuperados da instalação), além dos nove SVGs que o build do laboratório gera proceduralmente; os gerados não são blobs independentes desse snapshot.
+
+Evidência: [Desktop](https://github.com/werlangunipampa-web/ARANDU-TAPE/actions/runs/45536443964) e [Suite](https://github.com/werlangunipampa-web/ARANDU-TAPE/actions/runs/45536444040) concluíram com sucesso. O log Desktop registrou 105 testes e triagem de 173 entradas, 0 indicadores bloqueantes e 10 referências de pesquisa no commit de merge da CI `27cd8596e7699f15c76d52a2a608e17bdb31fd92`. Triagem por padrões não equivale a prova de segurança, procedência ou autorização de divulgação.
+
+| Grupo | Procedência / forma de distribuição | Decisão pendente |
+| --- | --- | --- |
+| Quatro SVGs de referência e matemática recuperada | Cópia do inventário local; hashes e nomes no README design-reference | Confirmar titulares e direitos, incluindo estilos locais |
+| Nove arcos e flechas do laboratório | Geração por build.py, rotação e variante azul de desenho desenvolvido no projeto | Revisão autoral, cultural e autorização de licença |
+| Paisagem procedural Cairo | Substituição criada no candidato; sem fotografia incorporada | Confirmar titularidade do código |
+| Confluência, TOPBAR, GTK4, scripts, testes | Código rastreado; não confundir commit com comprovação de direitos | Revisão de derivação, contribuições e compatibilidade |
+| Núcleo Rust rastreado | Cargo.toml declara MIT; sem dependências declaradas | Preservar declaração e confirmar titular/aviso antes de redistribuir |
+| Python, PyGObject, GTK3, Cairo, librsvg, libwnck | Instalador indica pacotes externos da distribuição; não são distribuídos como bibliotecas incorporadas na árvore examinada | Identificar versões e licenças dos itens efetivamente usados/redistribuídos; avaliar vinculação e compatibilidade |
+| GNOME Shell/GJS, GLib e utilitários | APIs e ferramentas externas verificadas nos instaladores; TOPBAR copiada de fonte local | Confirmar procedência da TOPBAR; documentar versões e avisos aplicáveis |
+| Sway, Foot e outras ferramentas opcionais | Dependências de sessão, não implementação de compositor próprio | Inventariar versões no ambiente de teste, não prometer redistribuição ou suporte universal |
+| Documentação e contratos de pesquisa | Rastreada no snapshot; parte ainda sujeita a revisão | Aprovar divulgação de cada referência de pesquisa e licença própria da documentação |
+
+A enumeração de árvore não substitui uma inspeção de todos os conteúdos. O pacote final deve ser revisto incluindo arquivos gerados, licenças, dependências realmente incorporadas e limites dos recursos opcionais. Não empacotar a pasta de trabalho inteira ou anexar arquivos de instalação local ao Zenodo. Ver [ficha de liberação](LIBERACAO_SNAPSHOT_ZENODO.md) para decisão formal.
