@@ -282,11 +282,11 @@ bash ARANDU-DESKTOP/session/start-nested.sh
 
 A opção existente de sessão no login usa os mesmos arquivos do clone. **Não selecionar o login ARANDU como ambiente principal até validar a 0.7.5 no Sway aninhado.**
 
-## 0.7.7 — Ontologia transversal; atualização a partir do VAIO
+## 0.7.7 — Autorização pública de ações; candidato científico
 
-A Semente recolhida/expandida usa os SVG originais e `seed_presentation.py`, sem alterar o arandu-core canônico. `ontology_contract.py` mapeia algumas intenções a fontes ontológicas e rejeita ações sensíveis sem intenção/confirmação. **É um guardrail parcial**, não uma auditoria completa da AO nem prova de equivalência com a máquina de estados Rust.
+A Semente recolhida/expandida usa os SVG originais e `seed_presentation.py`. O contrato público `action_contract.py` exige intenção humana explícita e confirmação quando aplicável; não importa módulos experimentais de pesquisa. É uma barreira parcial de autorização, não uma validação de aprendizagem significativa.
 
-**Tupã**: ChatGPT (no navegador) é a opção inicial. Outras APIs ou Ollama só funcionam mediante escolha explícita e configuração; não existe incorporação automática desta conversa nem leitura da ECA. A ponte `eca_bridge.py` permite examinar exportações experimentais JSON somente leitura, nunca a Semente oficial. `adaptation.py` observa indicadores locais sob demanda, sugere modo econômico e permite aplicar/desfazer alterações exclusivamente na apresentação GTK. O adaptador de Bluetooth lista dispositivos pareados sob clique e permite conectar/desconectar; o fone Philips depende de pareamento real no VAIO.
+**Tupã**: ChatGPT (no navegador) é a opção inicial. Outras APIs ou Ollama só funcionam mediante escolha explícita e configuração; não existe incorporação automática desta conversa nem leitura da ECA. A edição pública não inclui leitor de exportações experimentais nem acesso ao estado de pesquisa. `adaptation.py` observa indicadores locais sob demanda, sugere modo econômico e permite aplicar/desfazer alterações exclusivamente na apresentação GTK. O adaptador de Bluetooth lista dispositivos pareados sob clique e permite conectar/desconectar; o fone Philips depende de pareamento real no VAIO.
 
 **Atenção:** a interface 0.7.7 e os contratos novos estão publicados, mas não foram validados na sessão gráfica VAIO. Antes de trabalho diário, validar suíte unitária completa, Sway aninhado, Opy, fechamento, saída, ChatGPT, Bluetooth, captura/clipboard, áudio e fallback para GNOME. Não chamar 0.7.7 de estável sem esses ensaios.
 
