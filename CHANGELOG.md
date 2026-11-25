@@ -11,7 +11,8 @@ Identificadores abaixo são marcos de componentes no código e documentação, n
 - Desativação do script legado de publicação conjunta sem revisão.
 - Manuais, matriz de versões, índice, Design Core e fundamentação pública.
 - Documentação de privacidade, segurança, contribuição, acessibilidade e apresentação em inglês.
-- Pendências: revisão de divulgação, direitos e licença, comportamento do temporizador dos Rios, validação real e aprovação do snapshot.
+- Padrão do temporizador dos Rios alterado para desligado; escolha explícita e preferências salvas preservadas. Testes de contrato acrescentados; validação real pendente.
+- Pendências: revisão de divulgação, direitos e licença, validação real e aprovação do snapshot.
 
 ## Confluência / Suíte GNOME
 
