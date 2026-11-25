@@ -107,6 +107,7 @@ class TapeSession {
         this.updateBar();
         this.signal(this.settings,'changed::panel-mode',()=>this.updateBar());
         this.buildDesktop();
+        this.bindSeedSignals();
         this.signal(global.stage,'captured-event',(_stage,event)=>this.helpGlobalEvent(event));
         this.signal(global.stage,'captured-event',(_stage,event)=>this.navigationKeyEvent(event));
         this.signal(global.stage,'captured-event',(_stage,event)=>this.navigationOutsideEvent(event));
@@ -638,11 +639,70 @@ class TapeSession {
         // A preferência antiga é preservada; não é aplicada nesta revisão.
         if(!this.hideTopBarConflict())this.restorePanel();
     }
+    // Observação passiva dos indicadores nativos; não abre dispositivos.
+    // Propriedades internas verificadas no GNOME 46. Ausência não implica inatividade.
+    bindSeedSignals() {
+        const area=Main.panel?.statusArea;
+        const quick=area?.quickSettings;
+        this.seedSources={
+            camera:quick?._camera?._indicator,
+            mic:quick?._volumeInput?._indicator,
+            recording:area?.screenRecording,
+            remote:quick?._remoteAccess?._indicator,
+            sharing:area?.screenSharing,
+            notices:area?.dateMenu?._indicator,
+        };
+        for(const [name,actor] of Object.entries(this.seedSources)){
+            if(!actor || typeof actor.connect!=='function' || typeof actor.visible!=='boolean'){
+                this.seedSources[name]=null;continue;
+            }
+            try{
+                this.signal(actor,'notify::visible',()=>this.refreshSeedSignals());
+                if(name==='notices')this.signal(actor,'notify::icon-name',()=>this.refreshSeedSignals());
+            }catch(_){this.seedSources[name]=null;}
+        }
+        if(typeof Main.sessionMode?.connect==='function')
+            this.signal(Main.sessionMode,'updated',()=>this.refreshSeedSignals());
+        this.refreshSeedSignals();
+    }
+    refreshSeedSignals() {
+        if(!this.seedSignalBadge || this.stopping)return;
+        const permitted=this.allowed();
+        const sources=this.seedSources||{};
+        const active=name=>permitted && sources[name]?.visible===true;
+        const labels=[];
+        if(active('camera'))labels.push('Câmera');
+        if(active('mic'))labels.push('Microfone');
+        if(active('recording'))labels.push('Gravação GNOME');
+        if(active('remote'))labels.push('Captura remota');
+        if(active('sharing'))labels.push('Compartilhamento');
+        const noticeIcon=sources.notices?.icon_name;
+        if(active('notices') && noticeIcon==='message-indicator-symbolic')labels.push('Avisos');
+        if(active('notices') && noticeIcon==='notifications-disabled-symbolic')labels.push('Não perturbe');
+        // Apenas rótulos agregados, nenhum título ou conteúdo de notificação.
+        this.seedSignalBadge.text=labels.length?'GNOME · '+labels.join(' · '):'';
+        this.seedSignalBadge.visible=permitted && labels.length>0;
+        if(this.seedSignalDetail)
+            this.seedSignalDetail.text=!permitted?'Sinais indisponíveis na sessão bloqueada':
+                labels.length?'Sinais GNOME: '+labels.join(' · '):'Sem sinal visível do GNOME; atividade desconhecida';
+        this.positionSeedSignalBadge();
+        if(this.seedSignalBadge.visible && this.seed)this.setSeedOpacity(255);
+        else if(this.seed)this.scheduleSeedSleep();
+    }
+    positionSeedSignalBadge() {
+        if(!this.seedSignalBadge || !this.area || !this.seedPoint)return;
+        const [x,y]=this.seedPoint;
+        const w=Math.min(240,Math.max(1,this.area.width-16));
+        this.seedSignalBadge.set_width(w);
+        this.seedSignalBadge.set_position(Math.round(limit(x-w/2,8,Math.max(8,this.area.width-w-8))),
+            Math.round(limit(y-124,8,Math.max(8,this.area.height-48))));
+    }
     refreshSeedInformation() {
         if(!this.allowed() || !this.seedInformation)return;
         const now=new Date();
         this.seedInformation.text=now.toLocaleDateString('pt-BR')+' · '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
         if(this.seedHistory)this.seedHistory.text=this.remembers()?'Histórico GNOME: permitido':'Histórico GNOME: pausado';
+        this.refreshSeedSignals();
     }
     openNativePanel(kind) {
         if(!this.allowed() || !['calendar','settings'].includes(kind))return false;
@@ -771,6 +831,9 @@ class TapeSession {
             else this.scheduleSeedSleep();
         });
         this.root.add_child(this.seed);
+        this.seedSignalBadge=new St.Label({text:'',style_class:'arandu-seed-signal',reactive:false,visible:false});
+        if(this.seedSignalBadge.clutter_text)this.seedSignalBadge.clutter_text.line_wrap=true;
+        this.root.add_child(this.seedSignalBadge);
         this.controlBox=new St.BoxLayout({vertical:true,style_class:'arandu-seed-controls',visible:false});
         this.accessibilityLabels={};
         const addTitle=text=>this.controlBox.add_child(new St.Label({
@@ -788,6 +851,9 @@ class TapeSession {
         this.controlBox.add_child(this.seedInformation);
         this.seedHistory=new St.Label({text:'Histórico GNOME: não consultado',style_class:'arandu-a11y-section'});
         this.controlBox.add_child(this.seedHistory);
+        this.seedSignalDetail=new St.Label({text:'Sinais GNOME: não consultados',style_class:'arandu-a11y-section'});
+        if(this.seedSignalDetail.clutter_text)this.seedSignalDetail.clutter_text.line_wrap=true;
+        this.controlBox.add_child(this.seedSignalDetail);
         addAction('Atualizar informações',()=>this.refreshSeedInformation());
         addAction('Avisos e calendário GNOME',()=>this.openNativePanel('calendar'));
         addAction('Controles do sistema GNOME',()=>this.openNativePanel('settings'));
@@ -961,6 +1027,7 @@ class TapeSession {
         const seedX=limit(w*.52+px*w*.20,95,w-95);
         const seedY=limit(h*.72+py*h*.18,100,h-100);
         this.seedPoint=[seedX,seedY];
+        this.positionSeedSignalBadge();
         this.seed.set_position(Math.round(seedX-75),Math.round(seedY-75));
         if(this.helpButton)this.positionHelp();
         if(this.controlScroll){
@@ -1035,11 +1102,11 @@ class TapeSession {
     scheduleSeedSleep() {
         this.cancelSeedSleep();
         this.scheduleHelpSleep();
-        if(!this.seed || this.seed.hover)return;
+        if(!this.seed || this.seed.hover || this.seedSignalBadge?.visible)return;
         // Apenas a Semente central repousa após 7 s, com os rios abertos ou fechados.
         this.seedSleepId=GLib.timeout_add(GLib.PRIORITY_DEFAULT,7000,()=>{
             this.seedSleepId=0;
-            if(!this.seed.hover && !this.drag) {
+            if(!this.seed.hover && !this.drag && !this.seedSignalBadge?.visible) {
                 this.seedAwake=false;
                 this.setSeedOpacity(31); // 12%: quase invisível, ainda clicável
             }
@@ -1174,7 +1241,7 @@ class TapeSession {
         this.stopScan();
         this.cancelNavigationTimeout();
         this.endDrag();
-        for(const [obj,id] of this.links)obj.disconnect(id);
+        for(const [obj,id] of this.links){try{obj.disconnect(id);}catch(_){/* ator nativo pode ter sido destruído */}}
         this.links=[];
         stopSource(this.later);stopSource(this.hoverId);stopSource(this.writeId);this.cancelSeedSleep();this.cancelHelpSleep();this.cancelMedallionSleep();
         if(this.writeId)this.save();
