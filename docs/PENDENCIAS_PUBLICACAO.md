@@ -35,3 +35,7 @@ A presença de palavras-chave não significa vazamento. A ausência de alertas n
 6. Aprovar explicitamente o SHA final e conferir o registro efetivamente depositado.
 
 Campos de autorização e identificação permanecem na [ficha de liberação](LIBERACAO_SNAPSHOT_ZENODO.md). Nenhuma publicação é realizada por este registro.
+
+## Atualização de titularidade declarada
+
+O responsável declarou que o projeto é pessoal, independente e seu. Ver registro na [ficha de liberação](LIBERACAO_SNAPSHOT_ZENODO.md). Não presumir vínculo institucional como projeto, nem concluir titularidade integral sobre materiais de terceiros. Confirmar os fatos de desenvolvimento e autorizações de licenciamento antes da release.
