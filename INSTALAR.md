@@ -75,7 +75,7 @@ gsettings --schemadir "$SCHEMA_DIR" set "$SCHEMA" floating false
 gsettings --schemadir "$SCHEMA_DIR" set "$SCHEMA" show-help-button true
 ```
 
-A Semente central entra em repouso após 7 segundos e o medalhão de ajuda após 6 segundos; os medalhões de aplicativos continuam visíveis com os rios abertos.
+A Semente central entra em repouso visual após 7 segundos e o medalhão de ajuda após 6 segundos. Separadamente, o temporizador de navegação da versão pública tem padrão de 10 segundos. Para manter os rios abertos por intenção, selecione **Rios: nunca recolher por tempo** no menu ARANDU TAPE; confira a configuração e o comportamento na sua sessão. A diretriz-alvo está no [Design Core](docs/DESIGN_CORE.md).
 
 ## Desativar e recuperar
 
