@@ -42,3 +42,19 @@ jobs:
           for script in ARANDU-DESKTOP/session/*.sh ARANDU-DESKTOP/session/login/*.sh; do
             bash -n "$script"
           done
+  gtk-virtual-display:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar GTK4 e display virtual descartável
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3-gi python3-cairo gir1.2-gtk-4.0 librsvg2-common xvfb xauth dbus-daemon
+      - name: Validar alternância da Semente com GTK real
+        env:
+          ARANDU_VIRTUAL_GTK_TEST: '1'
+          GDK_BACKEND: x11
+          GSK_RENDERER: cairo
+          GTK_A11Y: none
+        run: dbus-run-session -- xvfb-run -a -s '-screen 0 1440x1000x24' /usr/bin/python3 -B ARANDU-DESKTOP/tests/gtk_seed_smoke.py
