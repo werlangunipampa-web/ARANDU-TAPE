@@ -11,6 +11,8 @@ Este índice distingue manuais de uso, registros de desenvolvimento e documentos
 | Testar sessão aninhada Sway | [Laboratório](../ARANDU-DESKTOP/session/README.md) |
 | Diagnosticar e recuperar | [Comandos e diagnóstico](../ARANDU-SUITE/docs/COMANDOS-E-DIAGNOSTICO.md) |
 | Conferir versões e limites | [Estado e versões](ESTADO_E_VERSOES.md) |
+| Identidade visual e interação | [Design Core](DESIGN_CORE.md) |
+| Fundamentos pedagógicos | [Fundamentação pública](FUNDAMENTACAO_PUBLICA.md) |
 | Acessibilidade e arquitetura | [Arquitetura e acessibilidade](../ARANDU-SUITE/docs/ARQUITETURA-E-ACESSIBILIDADE.md) |
 | Próximos marcos | [Roteiro](../ARANDU-SUITE/docs/ROADMAP.md) |
 | Publicação GitHub | [Política A0](POLITICA_PUBLICACAO_GITHUB_A0.md) |
