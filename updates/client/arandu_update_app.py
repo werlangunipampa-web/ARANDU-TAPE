@@ -65,7 +65,11 @@ class UpdateWindow(Gtk.Window):
                    "\nA disponibilidade de uma atualização ainda NÃO foi confirmada. " +
                    "A versão local, a assinatura e a compatibilidade precisam ser verificadas.")
         elif state == "no_stable_release":
-            msg = "Nenhuma release final validável foi retornada. A versão beta não será oferecida."
+            msg = "Nenhuma versão final foi retornada. Versões beta não são oferecidas."
+        elif state == "no_stable_release_or_inaccessible":
+            msg = ("O GitHub não retornou uma versão final (HTTP 404). "
+                   "Isso pode significar que ainda não há uma release estável publicada "
+                   "ou que o repositório está inacessível. Nenhuma ação foi realizada.")
         else:
             msg = "Não foi possível consultar o GitHub agora. O ARANDU continuará funcionando normalmente."
         self.status.set_text(msg)
