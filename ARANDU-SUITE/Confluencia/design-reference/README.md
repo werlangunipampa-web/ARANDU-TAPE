@@ -39,3 +39,7 @@ Esta pasta não altera instaladores, schema, extensão ativa, cursor, nem sessã
 - Divergência local confirmada: `_dispatch(intent, win, deliberateClose=false)` chama `win.delete` diretamente quando `deliberateClose===true`, ao contrário do comentário no início do módulo. O contrato proposto não permite essa exceção; a instalação local permanece intacta.
 
 Antes da integração executável, recuperar os seis SVGs ausentes e revisar somente as interfaces necessárias da Foundation, sem exportar extension.js inteiro, memória, ECA ou dados pessoais. Manter fallback nativo para decorações e eliminar a dependência do subprocesso X11 no primeiro adaptador experimental. Comparar com o comportamento local em GNOME 46/X11.
+
+## Terceira etapa
+
+O [laboratório GNOME 46 por menu](../spaces-lab/README.md) conecta o contrato de autorização às operações nativas Meta, sem importar o subprocesso X11. Construção isolada e testes simulados; não é instalado automaticamente, nem substitui a Foundation. Arraste e controles contextuais reais continuam pendentes.
