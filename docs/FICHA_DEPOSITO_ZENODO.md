@@ -9,7 +9,7 @@
 - Idiomas da documentação: português e inglês.
 - Versão, data de publicação e SHA: preencher somente com o snapshot final aprovado.
 - ORCID, afiliação, financiamento e colaboradores: confirmar; não inferir.
-- Licença: pendente de autorização e verificação de compatibilidade. GPL-3.0 permanece proposta para a interface, não licença concedida. Conferir o campo obrigatório no Zenodo, inclusive qualquer valor padrão.
+- Licença: estrutura aprovada pelo responsável (GPL versão 3 para código gráfico próprio e CC BY 4.0 para documentação autoral autorizada; identidade e núcleos privados reservados). Aplicação por componente, variante GPL e compatibilidade ainda pendentes. Ver [política](POLITICA_LICENCIAMENTO_IDENTIDADE.md). Conferir o campo obrigatório no Zenodo, inclusive qualquer valor padrão.
 - DOI: ainda não atribuído.
 
 ## Descrição em português (proposta)
