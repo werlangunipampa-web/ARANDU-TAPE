@@ -12,6 +12,7 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 import {WindowIntentGate} from './window-intent-gate.mjs';
 import {halfArea,resizeArea} from './espacos-math.mjs';
+import {edgeAt,handlePosition,resizeFromEdge} from './edge-geometry.mjs';
 
 const UUID='arandu-spaces-lab@arandulab';
 const FOUNDATION='arandu-foundation@arandulab';
@@ -25,12 +26,21 @@ export default class SpacesLab extends Extension {
         this._targetSignals=[];
         this._previewTimeout=0;
         this._pending=null;
+        this._edgeEnabled=false;this._edgeTimer=0;this._edgeGrab=null;this._edge=null;
         this._enabled=true;
         this._gate=new WindowIntentGate(()=>this._context());
         this._indicator=new PanelMenu.Button(0,'Espaços Vivos · laboratório',false);
         this._indicator.add_child(this._icon('alca-viva.svg'));
         this._preview=new St.Widget({style_class:'arandu-lab-preview',reactive:false,visible:false});
         Main.layoutManager.addTopChrome(this._preview,{affectsStruts:false,affectsInputRegion:false,trackFullscreen:true});
+        this._edgeGlow=new St.Widget({style_class:'arandu-lab-edge-glow',reactive:false,visible:false});
+        Main.layoutManager.addTopChrome(this._edgeGlow,{affectsStruts:false,affectsInputRegion:false,trackFullscreen:true});
+        this._edgeHandle=new St.Button({style_class:'arandu-lab-edge-handle',reactive:true,can_focus:false,
+            visible:false,accessible_name:'Flecha Viva · redimensionar'});
+        this._edgeHandle.set_size(24,24);
+        Main.layoutManager.addTopChrome(this._edgeHandle,{affectsStruts:false,affectsInputRegion:true,trackFullscreen:true});
+        this._edgeHandle.connect('button-press-event',(_actor,event)=>this._edgePress(event));
+
         this._status=new PopupMenu.PopupMenuItem('Selecione uma janela normal.',{reactive:false,can_focus:false});
         this._indicator.menu.addMenuItem(this._status);
         this._actions={};
@@ -39,6 +49,9 @@ export default class SpacesLab extends Extension {
         this._action('esquerda','Confluência esquerda',()=>this._request('esquerda'));
         this._action('direita','Confluência direita',()=>this._request('direita'));
         this._indicator.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this._action('edges','Flechas Vivas · ativar nesta sessão',()=>{
+            this._cancel();this._edgeEnabled=!this._edgeEnabled;this._sync();
+        });
         this._action('resize','Prévia de redimensionamento',()=>this._startResize(),'flecha-amarela.svg');
         for(const [id,label,dx,dy] of [
             ['wplus','Largura + 48 px',48,0],['wminus','Largura − 48 px',-48,0],
@@ -61,8 +74,14 @@ export default class SpacesLab extends Extension {
             [Main.extensionManager,'extension-state-changed',()=>{this._cancel();this._sync();}]
         ];
         this._safeEvents=events.map(([obj,name,fn])=>this._watch(obj,name,fn)).every(Boolean);
-        this._watch(this._indicator.menu,'open-state-changed',(_menu,open)=>{if(open)this._sync();});
+        this._watch(this._indicator.menu,'open-state-changed',(_menu,open)=>{if(open){this._hideEdge();if(this._pending?.kind==='edge')this._cancel();}this._sync();});
         this._watch(global.stage,'captured-event',(_stage,event)=>{
+            if(this._pending?.kind==='edge'){
+                if(event.type()===Clutter.EventType.MOTION){this._edgeMotion(event);return Clutter.EVENT_STOP;}
+                if(event.type()===Clutter.EventType.BUTTON_RELEASE && event.get_button()===1){
+                    this._edgeRelease(event);return Clutter.EVENT_STOP;
+                }
+            }
             if(this._pending && event.type()===Clutter.EventType.KEY_PRESS &&
                 event.get_key_symbol()===Clutter.KEY_Escape){this._cancel();this._sync();}
             return Clutter.EVENT_PROPAGATE;
@@ -120,11 +139,90 @@ export default class SpacesLab extends Extension {
             this._actions[name].setSensitive(p?.kind==='resize');
         this._actions.confirm.setSensitive(p?.kind==='close');
         this._actions.cancel.setSensitive(!!p);
+        this._actions.edges.label.text='Flechas Vivas · '+(this._edgeEnabled?'desativar':'ativar')+' nesta sessão';
+        this._syncEdgeTimer(c);
     }
     _cancel(){
+        if(this._edgeGrab){const grab=this._edgeGrab;this._edgeGrab=null;try{grab.dismiss();}catch(_){}}
+        this._hideEdge();
         this._gate?.cancel();this._pending=null;
         if(this._previewTimeout){GLib.Source.remove(this._previewTimeout);this._previewTimeout=0;}
         this._preview?.hide();
+    }
+    _hideEdge(){
+        this._edge=null;this._edgeHandle?.hide();this._edgeGlow?.hide();
+    }
+    _syncEdgeTimer(c){
+        const ready=this._edgeEnabled&&c?.capabilities?.resize===true&&
+            !this._indicator?.menu?.isOpen;
+        if(!ready){
+            if(this._edgeTimer){GLib.Source.remove(this._edgeTimer);this._edgeTimer=0;}
+            this._hideEdge();return;
+        }
+        if(!this._edgeTimer)this._edgeTimer=GLib.timeout_add(GLib.PRIORITY_DEFAULT,90,()=>{
+            try{this._sampleEdge();}catch(_){this._cancel();}
+            return GLib.SOURCE_CONTINUE;
+        });
+    }
+    _sampleEdge(){
+        if(this._pending?.kind==='edge')return;
+        const c=this._context();
+        if(!this._edgeEnabled||!c.capabilities.resize||this._pending||this._indicator.menu.isOpen){
+            this._hideEdge();return;
+        }
+        if(!resizeFromEdge(c.frame,c.work,'se',0,0)){this._hideEdge();return;}
+        const [x,y,mods]=global.get_pointer();
+        const pressed=Clutter.ModifierType.BUTTON1_MASK|Clutter.ModifierType.BUTTON2_MASK|Clutter.ModifierType.BUTTON3_MASK;
+        if(mods&pressed){this._hideEdge();return;}
+        // Do not move a revealed button underneath the pointer.
+        const old=this._edge;
+        if(old&&old.target===c.focus&&same(old.frame,c.frame)&&
+            x>=old.pos.x-3&&x<=old.pos.x+27&&y>=old.pos.y-3&&y<=old.pos.y+27)return;
+        const direction=edgeAt(c.frame,x,y);
+        if(!direction){this._hideEdge();return;}
+        const pos=handlePosition(c.frame,direction,x,y);
+        if(!pos){this._hideEdge();return;}
+        if(!old||old.direction!==direction||!this._edgeHandle.get_child()){
+            const icon=this._icon('arco-'+direction+'.svg');icon.set_icon_size(18);this._edgeHandle.set_child(icon);
+        }
+        this._edge={direction,pos,target:c.focus,frame:c.frame};
+        this._edgeHandle.set_position(pos.x,pos.y);this._edgeHandle.show();
+        this._edgeGlow.set_position(c.frame.x,c.frame.y);
+        this._edgeGlow.set_size(c.frame.width,c.frame.height);this._edgeGlow.show();
+    }
+    _edgePress(event){
+        if(event.get_button()!==1||!this._edge||!this._edgeEnabled)return Clutter.EVENT_PROPAGATE;
+        const e=this._edge,c=this._context();
+        if(c.focus!==e.target||!same(c.frame,e.frame)||!c.capabilities.resize||
+            !this._gate.begin(c.focus,'resize',{explicit:true}))return Clutter.EVENT_PROPAGATE;
+        const [x,y]=event.get_coords();
+        try{
+            this._edgeGrab=global.stage.grab(this._edgeHandle);
+            if(!this._edgeGrab||(this._edgeGrab.get_seat_state()&Clutter.GrabState.POINTER)===0)throw Error('grab');
+            this._pending={kind:'edge',target:c.focus,frame:c.frame,work:c.work,direction:e.direction,x,y,moved:false};
+            this._edgeGlow.hide();this._expire();this._sync();
+        }catch(_){this._cancel();this._sync();}
+        return Clutter.EVENT_STOP;
+    }
+    _edgeMotion(event){
+        const p=this._pending;if(p?.kind!=='edge')return false;
+        try{
+            const c=this._context(),[x,y]=event.get_coords();
+            if(c.focus!==p.target||!same(c.frame,p.frame)||!same(c.work,p.work))throw Error('context');
+            if(Math.hypot(x-p.x,y-p.y)<4&&!p.moved)return true;
+            const shape=resizeFromEdge(p.frame,p.work,p.direction,x-p.x,y-p.y);
+            if(!shape||!this._gate.preview(shape))throw Error('preview');
+            p.moved=true;this._preview.set_position(shape.x,shape.y);
+            this._preview.set_size(shape.width,shape.height);this._preview.show();
+            return true;
+        }catch(_){this._cancel();this._sync();return false;}
+    }
+    _edgeRelease(event){
+        const p=this._pending;
+        if(p?.kind!=='edge')return;
+        if(!this._edgeMotion(event)||!p.moved){this._cancel();this._sync();return;}
+        const result=this._gate.release({explicit:true});
+        this._cancel();try{this._execute(result);}finally{this._sync();}
     }
     _expire(){
         if(this._previewTimeout)GLib.Source.remove(this._previewTimeout);
@@ -200,7 +298,10 @@ export default class SpacesLab extends Extension {
         return true;
     }
     disable(){
-        this._enabled=false;this._cancel();
+        this._enabled=false;this._edgeEnabled=false;this._cancel();
+        if(this._edgeTimer){GLib.Source.remove(this._edgeTimer);this._edgeTimer=0;}
+        for(const actor of [this._edgeHandle,this._edgeGlow])if(actor){Main.layoutManager.removeChrome(actor);actor.destroy();}
+        this._edgeHandle=null;this._edgeGlow=null;
         this._disconnect(this._targetSignals||[]);
         this._disconnect(this._signals||[]);
         if(this._preview){Main.layoutManager.removeChrome(this._preview);this._preview.destroy();}
