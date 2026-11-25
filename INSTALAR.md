@@ -1,6 +1,10 @@
-# Instalar ARANDU TAPE 2.8.3 (beta)
+# Instalar e testar ARANDU TAPE — Confluência 3.2.3-beta
 
 > **Antes de começar:** trata-se de um protótipo em desenvolvimento. A instalação modifica extensões do GNOME do usuário; faça backup dos seus dados e teste em uma sessão compatível. O instalador preserva a TOPBAR já existente e faz backup da Confluência.
+
+## Escolher o componente
+
+Este guia trata da suíte GNOME, não do aplicativo GTK4 ou do login Sway experimental. Para esses caminhos, consulte [ARANDU Desktop](ARANDU-DESKTOP/README.md). O identificador legado 2.8.2 do instalador não corresponde à versão atual da extensão.
 
 ## Requisitos
 
@@ -14,7 +18,7 @@
 
 O pacote inclui **Confluência (Semente e três rios)** e **ARANDU TOPBAR**. Não é necessário executar dois instaladores. O mesmo `instalar-tudo.sh` instala/atualiza a Confluência e instala a TOPBAR quando ela ainda não existe. Uma TOPBAR já instalada é **preservada**, sem sobrescrita.
 
-No **GNOME 46**, ambos os componentes são preparados e habilitados após o Shell reconhecer as extensões. Fora do GNOME 46, a TOPBAR histórica **não é habilitada automaticamente**; a compatibilidade gráfica ainda precisa ser desenvolvida e testada para outras versões.
+No **GNOME 46**, o instalador tenta habilitar os componentes após preparar os arquivos; confira o estado real depois de reiniciar a sessão. Nos GNOME 45 e 47–51, a variante moderna da TOPBAR pode ser instalada, mas sua habilitação exige a opção explícita `--experimental-topbar` e testes. Não sobrescreve TOPBAR já existente. GNOME 40–44 possui variante Confluência, sem TOPBAR moderna.
 
 Para consultar o estado dos dois componentes depois da instalação:
 
@@ -22,7 +26,7 @@ Para consultar o estado dos dois componentes depois da instalação:
 bash instalar-tudo.sh --status
 ```
 
-## Opção 1 — baixar pelo GitHub
+## Opção 1 — baixar o código pelo GitHub
 
 1. Acesse a [página do código](https://github.com/werlangunipampa-web/ARANDU-TAPE).
 2. Clique em **Code → Download ZIP**.
@@ -60,7 +64,7 @@ gnome-extensions info confluencia@arandulab
 gnome-extensions info arandu-topbar@local
 ```
 
-A Confluência deve exibir `ACTIVE`. No GNOME 46, a TOPBAR também deverá aparecer habilitada após reiniciar a sessão. Se o GNOME não a reconhecer imediatamente, reinicie a sessão e confira novamente.
+Confira se a Confluência foi ativada e se a TOPBAR está no estado desejado. Uma tentativa de habilitação pode falhar; não presuma sucesso apenas pela mensagem do instalador. Se o GNOME não a reconhecer imediatamente, reinicie a sessão e confira novamente.
 
 ## Ambiente limpo: janelas acima dos rios
 
@@ -91,4 +95,4 @@ A ponte D-Bus permite comandos assistivos experimentais, mas **reconhecimento de
 
 ## Download de versões
 
-Até que haja uma versão publicada em **Releases**, use **Code → Download ZIP** e os comandos desta página. O arquivo ZIP gerado pelo GitHub contém o código; não é um instalador de um clique.
+Enquanto não houver release aprovada, o clone Git é recomendado para desenvolvimento e auditoria de snapshot. O ZIP gerado pelo GitHub contém o código, não o histórico Git nem um instalador de um clique. A triagem científica exige um clone Git. Consulte [estado e versões](docs/ESTADO_E_VERSOES.md) e [publicação científica](docs/PUBLICACAO_CIENTIFICA_ZENODO.md).
