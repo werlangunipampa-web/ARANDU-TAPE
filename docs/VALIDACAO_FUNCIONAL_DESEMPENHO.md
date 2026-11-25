@@ -34,7 +34,7 @@ A verificação de dependências opcionais pode indicar itens pendentes fora do 
 | G04 | Ativar medalhão, clicar fora e retornar ao aplicativo | Foco correto; cliques e digitação não interceptados |
 | G05 | Alternar Rios, percorrer medalhões, confirmar/cancelar pelo teclado | Foco visível, sem ativações involuntárias |
 | G06 | Varredura experimental e intervalo configurável | Nenhuma abertura por timer; cancelamento funciona |
-| G07 | Arrastar Semente, usar múltiplos monitores e escalas | Sem atraso perceptível, obstrução ou perda do controle |
+| G07 | Arrastar Semente, cobrir/descobrir sua posição com janela, testar botão compacto, opt-out, múltiplos monitores e escalas | Âncora preservada, clique limitado ao botão, retorno explícito aos Rios, sem deslocamento sob o ponteiro durante cobertura, sem sobreposição evitável nem perda de controle; verificar tela cheia e bloqueio |
 | G08 | Abrir mapa GTK3, alternar temas e dimensões | Paisagem procedural legível e sem erro |
 | G09 | Desativar histórico e testar limpeza em perfil sem dados reais | Controles e limites correspondem à política de privacidade |
 | G10 | Abrir painel da Semente; conferir hora/histórico; abrir avisos e controles GNOME; Esc; testar sessão bloqueada e conflito de extensão | Acesso sob demanda, fallback honesto, nenhuma ocultação pela Confluência nem perda de indicadores essenciais; validar separadamente câmera, microfone e compartilhamento |
