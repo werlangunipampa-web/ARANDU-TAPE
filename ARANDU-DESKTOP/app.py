@@ -21,9 +21,7 @@ from window_gestures import HEADER_MIN_HEIGHT
 from bluetooth_devices import paired_devices, device_action, pairing_manager
 from ai_gateway import PROVIDERS, model_for, complete, GatewayError
 from adaptation import Adaptation, observe as observe_resources, propose as propose_adaptation
-from eca_experiments import workflow as eca_workflow
-from eca_bridge import read_export, EcaBridgeError
-from ontology_contract import decide as ontology_decide
+from action_contract import decide as action_decide
 from ai_gateway import ready as ai_ready
 from system_status import summary, clock_text, network_status, battery_status, bluetooth_status, volume_status
 
@@ -120,7 +118,7 @@ class Desktop(Gtk.Application):
         self.window.set_child(root)
         bar = add_style(Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16), "arandu-bar")
         bar.append(add_style(Gtk.Label(label="◈  ARANDU DESKTOP", xalign=0), "arandu-brand"))
-        bar.append(add_style(Gtk.Label(label="0.7.7 · ECA/TUPÃ", xalign=0), "arandu-muted"))
+        bar.append(add_style(Gtk.Label(label="0.7.7 · TUPÃ", xalign=0), "arandu-muted"))
         spacer = Gtk.Box(hexpand=True)
         bar.append(spacer)
         performance = Gtk.Button(label="Desempenho")
@@ -130,7 +128,7 @@ class Desktop(Gtk.Application):
         updates.connect("clicked", lambda *_: self.show_updates())
         bar.append(updates)
         tupa = Gtk.Button(label="Tupã · IA")
-        tupa.set_tooltip_text("ChatGPT e outras IAs; ECA isolada por segurança")
+        tupa.set_tooltip_text("Comunicação opcional com modelos de IA")
         tupa.connect("clicked", lambda *_: self.show_tupa())
         bar.append(tupa)
         roadmap = Gtk.Button(label="Evolução")
@@ -297,7 +295,7 @@ class Desktop(Gtk.Application):
 
     def capture_to_clipboard(self):
         """Captura só após clique; processo externo termina sozinho, sem histórico."""
-        decision = ontology_decide("clipboard_capture", user_intent=True)
+        decision = action_decide("clipboard_capture", user_intent=True)
         if not decision.allowed:
             return
         if os.environ.get("ARANDU_SESSION_LAB") != "1" or not os.environ.get("SWAYSOCK"):
@@ -358,8 +356,8 @@ class Desktop(Gtk.Application):
         self.detail_revealer.set_reveal_child(True)
         self.content.append(self.text("TUPÃ · COMUNICAÇÃO", "arandu-title"))
         self.content.append(self.text(
-            "Modelo selecionável, ChatGPT por padrão. A ECA permanece no ARANDU. "
-            "Nenhum conteúdo da máquina ou da ECA é enviado automaticamente."))
+            "Modelo selecionável, ChatGPT por padrão. Integrações de pesquisa não estão incluídas nesta edição. "
+            "Nenhum conteúdo da máquina é enviado automaticamente."))
         providers = list(PROVIDERS)
         select = Gtk.DropDown.new_from_strings(
             [PROVIDERS[k]["label"] for k in providers])
@@ -397,9 +395,7 @@ class Desktop(Gtk.Application):
             self.content.append(self.tupa_output)
         else:
             self.content.append(self.text("IA desligada. A Semente continua funcionando."))
-        eca = Gtk.Button(label="ECA · Experimentos de aprendizagem significativa")
-        eca.connect("clicked", lambda *_: self.show_eca())
-        self.content.append(eca)
+        self.content.append(self.text("Integrações experimentais de pesquisa: fora desta edição pública."))
 
     def select_tupa_provider(self, provider):
         if provider not in PROVIDERS:
@@ -417,7 +413,7 @@ class Desktop(Gtk.Application):
 
     def send_tupa(self, provider, model, question):
         """Envia somente o texto digitado; nenhuma ação gerada é executada."""
-        decision = ontology_decide("ask_generative_ai", user_intent=True,
+        decision = action_decide("ask_generative_ai", user_intent=True,
                                    confirmation=True)
         if not decision.allowed:
             return
@@ -447,50 +443,6 @@ class Desktop(Gtk.Application):
         if token is self._tupa_token and self.tupa_output is not None:
             self.tupa_output.set_label(response)
         return False
-
-    def show_eca(self):
-        """Sem escrita na ECA; explica o contrato de aprendizagem significativa."""
-        self.clear_content()
-        self.detail_revealer.set_reveal_child(True)
-        self.content.append(self.text("ECA · APRENDIZAGEM SIGNIFICATIVA", "arandu-title"))
-        self.content.append(self.text(
-            "Integração atual: avaliação de contratos e exportações experimentais "
-            "selecionadas manualmente; sem leitura do estado oficial, "
-            "autoprogramação ou alteração geracional."))
-        for phase in eca_workflow():
-            self.content.append(self.text(phase))
-        self.content.append(self.text(
-            "Opcional: selecione o caminho de uma exportação JSON experimental "
-            "com campos source e relations. A leitura é local e não será enviada ao Tupã."))
-        entry = Gtk.Entry()
-        entry.set_placeholder_text("Caminho completo de um JSON experimental da ECA")
-        self.content.append(entry)
-        load = Gtk.Button(label="Examinar exportação em modo leitura")
-        load.connect("clicked", lambda *_: self.preview_eca(entry.get_text().strip()))
-        self.content.append(load)
-
-    def preview_eca(self, filename):
-        if not filename or not Path(filename).is_file():
-            self.content.append(self.text("Selecione um arquivo JSON existente."))
-            return
-        try:
-            source, relations = read_export(Path(filename))
-            decision = ontology_decide("consult_eca_export", user_intent=True,
-                                       provenance=bool(source))
-            if not decision.allowed:
-                self.content.append(self.text("Consulta bloqueada: " + decision.why))
-                return
-            self.content.append(self.text(
-                f"Origem declarada: {source}; relações experimentais: {len(relations)}"))
-            for rel in relations[:8]:
-                self.content.append(self.text(
-                    f"{rel.subject} · {rel.predicate} · {rel.object} "
-                    f"(origem declarada: {rel.origin}; {rel.status})"))
-            self.content.append(self.text(
-                "Uma origem declarada não é evidência validada. "
-                "Nenhuma relação foi escrita na Semente oficial."))
-        except EcaBridgeError as error:
-            self.content.append(self.text(str(error)))
 
     def show_adaptation(self):
         """Situação da máquina lida sob clique, sem rastreamento contínuo."""
@@ -529,7 +481,7 @@ class Desktop(Gtk.Application):
         self.apply_seed_adaptation(proposal)
 
     def apply_seed_adaptation(self, proposal):
-        decision = ontology_decide("apply_adaptation", user_intent=True,
+        decision = action_decide("apply_adaptation", user_intent=True,
                                    confirmation=True)
         if not decision.allowed:
             return
@@ -614,7 +566,7 @@ class Desktop(Gtk.Application):
         """Só Connect/Disconnect de endereço pareado validado no adaptador."""
         action = {"connect": "bluetooth_connect",
                   "disconnect": "bluetooth_disconnect"}.get(operation, "")
-        decision = ontology_decide(action, user_intent=True, confirmation=True)
+        decision = action_decide(action, user_intent=True, confirmation=True)
         if not decision.allowed:
             self.content.append(self.text("Operação bloqueada: " + decision.why))
             return
@@ -1173,7 +1125,7 @@ class Desktop(Gtk.Application):
         self.detail_revealer.set_reveal_child(True)
 
     def launch_app(self, application):
-        decision = ontology_decide("launch_app", user_intent=True,
+        decision = action_decide("launch_app", user_intent=True,
                                    confirmation=True)
         if not decision.allowed:
             return
