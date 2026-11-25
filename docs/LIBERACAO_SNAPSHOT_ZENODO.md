@@ -18,7 +18,7 @@ Evidência de preparação: head e82a20a5b1c2da5d60a1ce5b26b306e1f3b82668; 173 a
 
 Não inferir titularidade pessoal ou institucional por profissão, nome no Git ou autoria da pesquisa. Os campos ficam pendentes até confirmação factual.
 
-## Opções de licença para decisão (não concedidas)
+## Estrutura de licença aprovada; aplicação por componente pendente
 
 | Grupo | Proposta | Condição |
 | --- | --- | --- |
@@ -58,4 +58,8 @@ O [procedimento de reprodutibilidade](REPRODUTIBILIDADE_RELEASE.md) produz manif
 
 ## Declaração do responsável — projeto independente
 
-O responsável, Rafhael Brum Werlang, informou que o ARANDU é projeto pessoal independente, de sua autoria. Registro de declaração em conversa durante a preparação científica, em 24–25/11/2026. Não atribuir o projeto à UNIPAMPA como titular ou financiadora por inferência. A declaração não equivale a parecer jurídico nem confirma, isoladamente, ausência de emprego de recursos institucionais, relação com atribuições funcionais ou direitos de terceiros. Esses fatos e a procedência dos componentes devem ser confirmados antes da concessão de licença. A decisão sobre licença, divulgação e release permanece pendente.
+O responsável, Rafhael Brum Werlang, informou que o ARANDU é projeto pessoal independente, de sua autoria. Registro de declaração em conversa durante a preparação científica, em 24–25/11/2026. Não atribuir o projeto à UNIPAMPA como titular ou financiadora por inferência. A declaração não equivale a parecer jurídico nem confirma, isoladamente, ausência de emprego de recursos institucionais, relação com atribuições funcionais ou direitos de terceiros. Esses fatos e a procedência dos componentes devem ser confirmados antes da concessão de licença. A estrutura de licenciamento foi aprovada posteriormente pelo responsável; aplicação por componente, divulgação e release permanecem pendentes.
+
+## Aprovação da estrutura de licenciamento
+
+O responsável aprovou GPL versão 3 para o ambiente gráfico próprio, CC BY 4.0 para a documentação autoral autorizada, manutenção dos núcleos/algoritmos experimentais privados e reserva de direitos sobre a identidade visual e marca. Ver [política de licenciamento e identidade](POLITICA_LICENCIAMENTO_IDENTIDADE.md). A variante GPL, a licença dos ativos funcionais, a procedência, a compatibilidade e os avisos continuam pendentes. Não confundir esta decisão com concessão de licença sobre todo o snapshot ou autorização de release.
