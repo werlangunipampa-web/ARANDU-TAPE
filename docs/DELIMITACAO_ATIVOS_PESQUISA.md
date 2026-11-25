@@ -32,3 +32,7 @@ python3 scripts/verificar-escopo-release.py --commit "$(git rev-parse HEAD)"
 A barreira usa a árvore do commit, não a pasta de trabalho. Atualmente é esperado que recuse o candidato enquanto os seis caminhos estiverem presentes. Este é um controle adicional à triagem de credenciais, não uma substituição da revisão humana. O empacotador local de revisão continua disponível para auditoria, sem autorização de distribuição. Não usar a ausência de alerta automático para liberar a release.
 
 Consultar [política aprovada de licenciamento](POLITICA_LICENCIAMENTO_IDENTIDADE.md) e [ficha de liberação](LIBERACAO_SNAPSHOT_ZENODO.md).
+
+## Separação implementada no candidato
+
+O Desktop GTK4 passou a importar `action_contract.py`, contrato público independente, com lista de operações permitidas, intenção humana, confirmação e procedência quando aplicável. A interface de consulta experimental de exportações foi retirada do candidato. Os seis caminhos retidos foram excluídos da árvore desta branch, não do histórico Git; nenhum repositório privado foi aberto, modificado ou publicado. A barreira permanece ativa para impedir reintrodução acidental. Testes de autorização e independência substituem os testes experimentais na árvore pública; validação real ainda pendente. A separação por caminhos não garante ausência de todo conteúdo reservado: revisar a árvore integral antes do depósito.
