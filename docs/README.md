@@ -1,0 +1,43 @@
+# Documentação do ARANDU
+
+Este índice distingue manuais de uso, registros de desenvolvimento e documentos de publicação científica.
+
+| Para | Consultar |
+| --- | --- |
+| Conhecer o projeto | [README principal](../README.md) |
+| Instalar a suíte GNOME | [Instalação](../INSTALAR.md) |
+| Utilizar Semente e Rios | [Manual Confluência](../ARANDU-SUITE/README.md) |
+| Testar o protótipo GTK4 | [ARANDU Desktop](../ARANDU-DESKTOP/README.md) |
+| Testar sessão aninhada Sway | [Laboratório](../ARANDU-DESKTOP/session/README.md) |
+| Diagnosticar e recuperar | [Comandos e diagnóstico](../ARANDU-SUITE/docs/COMANDOS-E-DIAGNOSTICO.md) |
+| Conferir versões e limites | [Estado e versões](ESTADO_E_VERSOES.md) |
+| Identidade visual e interação | [Design Core](DESIGN_CORE.md) |
+| Arquitetura e contribuições científicas | [Posicionamento científico](ARQUITETURA_CONTRIBUICOES_CIENTIFICAS.md) |
+| Pesquisa em interação | [Protocolo proposto](PROTOCOLO_PESQUISA_INTERACAO.md) |
+| Fundamentos pedagógicos | [Fundamentação pública](FUNDAMENTACAO_PUBLICA.md) |
+| Acessibilidade e arquitetura | [Arquitetura e acessibilidade](../ARANDU-SUITE/docs/ARQUITETURA-E-ACESSIBILIDADE.md) |
+| Guia de acessibilidade | [Acessibilidade](ACESSIBILIDADE.md) |
+| Dados e privacidade | [Privacidade](PRIVACIDADE.md) |
+| Vulnerabilidades | [Segurança](../SECURITY.md) |
+| Colaboração | [Contribuir](../CONTRIBUTING.md) |
+| Histórico consolidado | [CHANGELOG](../CHANGELOG.md) |
+| Apresentação em inglês | [README English](../README.en.md) |
+| Sinais da Semente | [Adaptador GNOME](SEMENTE_SINAIS_GNOME.md) |
+| Convergência gráfica ARAPI | [Referências recuperadas e limites](../ARANDU-SUITE/Confluencia/design-reference/README.md) |
+| Evolução dos Espaços Vivos | [Registro público e local](EVOLUCAO_ESPACOS_VIVOS.md) |
+| Ficha de depósito | [Metadados propostos para Zenodo](FICHA_DEPOSITO_ZENODO.md) |
+| Validação e desempenho | [Protocolo de aceite](VALIDACAO_FUNCIONAL_DESEMPENHO.md) |
+| Próximos marcos | [Roteiro](../ARANDU-SUITE/docs/ROADMAP.md) |
+| Publicação GitHub | [Política A0](POLITICA_PUBLICACAO_GITHUB_A0.md) |
+| Citação e DOI | [Política Zenodo](PUBLICACAO_CIENTIFICA_ZENODO.md) e [CITATION.cff](../CITATION.cff) |
+| Reprodutibilidade da release | [Manifesto e pacote local](REPRODUTIBILIDADE_RELEASE.md) |
+| Decisões pendentes | [Revisão de divulgação e autorização](PENDENCIAS_PUBLICACAO.md) |
+| Delimitação de ativos e pesquisa | [Inventário funcional e retenção](DELIMITACAO_ATIVOS_PESQUISA.md) |
+| Minuta de aplicação de licenças | [Escopos e avisos](MINUTA_APLICACAO_LICENCAS.md) |
+| Licenciamento e identidade | [Política aprovada e limites](POLITICA_LICENCIAMENTO_IDENTIDADE.md) |
+| Liberação do snapshot | [Ficha de aceite, direitos e licenças](LIBERACAO_SNAPSHOT_ZENODO.md) |
+| Procedência e direitos | [Auditoria preliminar](AUDITORIA_PRELIMINAR_DOI.md) e [inventário](INVENTARIO_PROCEDENCIA_LICENCIAMENTO.md) |
+
+Os documentos históricos preservam evidências e limitações da época. Para o estado de desenvolvimento, use a matriz de versões e o commit correspondente. Núcleos experimentais privados não fazem parte deste índice de distribuição. Contratos derivados já presentes no código público permanecem sujeitos a revisão de divulgação.
+
+Não confundir código publicado no GitHub, release aprovada e registro científico arquivado no Zenodo.

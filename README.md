@@ -1,52 +1,54 @@
-# ARANDU TAPE 🌿
+# ARANDU TAPE
 
-**Ambiente gráfico de navegação adaptativa para GNOME Linux.**
+[English](README.en.md)
 
-O ARANDU TAPE é um projeto experimental que organiza a navegação entre aplicativos e janelas em torno de uma **Semente central** e três **rios visuais**:
+**Navegação gráfica adaptativa para Linux, com foco em acessibilidade, autonomia e aprendizagem significativa.**
 
-- **Memória:** aplicativos e itens recentes
-- **Abertos:** janelas em execução
-- **Frequentes:** aplicativos usados com frequência
+O ARANDU TAPE é um projeto experimental que organiza a interação entre aplicativos e janelas por uma **Semente central** e três **Rios**: Memória (itens recentes), Abertos (janelas da sessão) e Frequentes (aplicativos usados com frequência). Os medalhões oferecem pontos de navegação por ponteiro e teclado. O projeto busca uma interface discreta, reversível e adaptável às necessidades humanas.
 
-Cada rio possui medalhões selecionáveis. O objetivo é desenvolver um ambiente visual limpo, com diferentes formas de controle para pessoas com variadas capacidades motoras e comunicativas.
+**Estado:** código de desenvolvimento público; não é uma distribuição estável, um compositor próprio ou uma tecnologia assistiva validada para uso autônomo. Não há release científica ou DOI confirmado neste momento.
 
-## 🚀 Instalação e downloads
+## Componentes e versões
 
-Veja as [instruções de instalação passo a passo](INSTALAR.md). O código da versão beta está disponível em **Code → Download ZIP**. Pacotes de distribuição na seção **Releases** serão disponibilizados separadamente; não confunda o código-fonte com um instalador assinado.
+| Componente | Identificação no código | Escopo |
+| --- | --- | --- |
+| ARANDU SUITE / Confluência | 3.2.3-beta | Extensão e aplicação GTK3 para GNOME Shell |
+| ARANDU TOPBAR | 6.6.1.2 (6612); variante experimental 6613 | Identidade visual do painel |
+| ARANDU Desktop | 0.7.7 | Protótipo GTK4; laboratório opcional com Sway |
+| Instalador Confluência | 2.8.2 (identificador legado) | Instalação no perfil de usuário |
 
-## Versão atual: ARANDU SUITE 2.8.3 (beta)
+As versões são independentes. A versão do instalador e os números antigos em notas históricas não identificam a versão atual de todos os componentes. Uma futura release científica identificará o snapshot completo pelo commit Git. Consulte a [matriz de versões e evidências](docs/ESTADO_E_VERSOES.md).
 
-- Semente expande/recolhe os rios por ação deliberada
-- Semente central entra em repouso visual após **7 segundos**
-- Medalhão de ajuda `?` entra em repouso após **6 segundos**
-- Rios e medalhões de aplicativos continuam visíveis enquanto expandidos
-- Seleção de rios e medalhões por teclado
-- Ponte local de comandos assistivos via D-Bus
-- Instalador Linux com pré-verificação, verificação e backups
-- TOPBAR histórica tratada como componente separado, preservada pelo instalador
+## Começar com segurança
 
-**Limitações:** voz contínua, rastreamento da cabeça/pescoço, gestos de mão e controle multimodal completo ainda não estão integrados nem validados para uso assistivo autônomo. A compatibilidade gráfica entre versões GNOME e entre X11/Wayland precisa de testes.
+- **GNOME / Linux Mint:** [guia de instalação e recuperação](INSTALAR.md) e [manual Confluência](ARANDU-SUITE/README.md).
+- **Protótipo GTK4:** [manual ARANDU Desktop](ARANDU-DESKTOP/README.md). A execução normal não substitui a sessão gráfica.
+- **Laboratório Sway:** [guia experimental](ARANDU-DESKTOP/session/README.md). Testar aninhado antes de considerar o login experimental.
 
-## Instalação de desenvolvimento
+Prefira um clone Git para testes completos e rastreabilidade. O ZIP de código-fonte não equivale a um instalador assinado. Use os comandos de pré-verificação e backup antes de instalar; não execute o instalador de usuário com sudo.
 
-Com o pacote-fonte ARANDU SUITE 2.8.3 disponível, entre na pasta `ARANDU-SUITE` e execute:
+## Documentação e pesquisa
 
-```bash
-bash instalar-tudo.sh --preflight
-bash instalar-tudo.sh --verificar
-bash instalar-tudo.sh
-```
+- [Índice de documentação](docs/README.md)
+- [Design Core e identidade visual](docs/DESIGN_CORE.md)
+- [Fundamentação filosófica e pedagógica pública](docs/FUNDAMENTACAO_PUBLICA.md)
+- [Arquitetura e acessibilidade](ARANDU-SUITE/docs/ARQUITETURA-E-ACESSIBILIDADE.md)
+- [Guia de acessibilidade](docs/ACESSIBILIDADE.md)
+- [Privacidade](docs/PRIVACIDADE.md) · [Segurança](SECURITY.md) · [Contribuição](CONTRIBUTING.md)
+- [Histórico de mudanças](CHANGELOG.md)
+- [Roteiro de evolução](ARANDU-SUITE/docs/ROADMAP.md)
+- [Política de publicação científica e Zenodo](docs/PUBLICACAO_CIENTIFICA_ZENODO.md)
 
-Não execute com `sudo`. Em GNOME X11, salve os trabalhos e reinicie o Shell com `Alt+F2`, `r`, Enter. No Wayland, reinicie a sessão.
+A interface gráfica pública deve funcionar sem depender dos núcleos de pesquisa privados. O desenvolvimento é orientado por acessibilidade, privacidade, adaptação reversível e aprendizagem significativa. Integrações experimentais não implicam validação científica do motor cognitivo.
 
-> O código e instalador serão sincronizados com este repositório. Até lá, este README é a apresentação inicial do projeto, não uma distribuição instalável pelo GitHub.
+## Citação, direitos e colaboração
 
-## Código aberto e direitos
+Metadados de citação: [CITATION.cff](CITATION.cff). Desenvolvimento identificado no projeto: Rafhael Brum Werlang; autoria, contribuições e titularidade permanecem sujeitos à revisão documental. Ao citar o código em desenvolvimento, identifique o commit consultado. Após a publicação científica, prefira o DOI da versão arquivada.
 
-Objetivo: distribuição pública de código-fonte. Antes de conceder uma licença abrangente ao pacote completo, devem ser verificadas a autoria e as licenças dos componentes gráficos e da TOPBAR incorporados.
+A disponibilidade pública do código não constitui concessão automática de licença. Licenciamento definitivo e direitos dos recursos incorporados estão em revisão. Não publique dados pessoais, credenciais, estado vivo ou conteúdo dos núcleos privados. Veja a [auditoria](docs/AUDITORIA_PRELIMINAR_DOI.md).
 
 ## Projeto relacionado
 
-[ARANDU WEB](https://github.com/werlangunipampa-web/ARANDU-WEB) — extensão acessível para Firefox.
+[ARANDU WEB](https://github.com/werlangunipampa-web/ARANDU-WEB) — projeto separado para Firefox.
 
 > Tecnologia que se adapta às possibilidades humanas.

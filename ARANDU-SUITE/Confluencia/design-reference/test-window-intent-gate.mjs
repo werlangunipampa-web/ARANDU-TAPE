@@ -1,0 +1,53 @@
+import assert from 'node:assert/strict';
+import {WindowIntentGate} from './window-intent-gate.mjs';
+const a={},b={};
+const work={x:-1200,y:30,width:1200,height:800};
+const caps={imersao:true,recolher:true,esquerda:true,direita:true,encerrar:true,resize:true};
+let context={focus:a,allowed:true,capabilities:caps,work};
+const gate=new WindowIntentGate(()=>context);
+assert.equal(gate.begin(a,'imersao'),false); // hover
+assert.equal(gate.release({explicit:true}),null);
+assert.equal(gate.begin(a,'imersao',{explicit:true}),true);
+assert.equal(gate.release({explicit:true}).intent,'imersao');
+assert.equal(gate.release({explicit:true}),null); // no replay
+assert.equal(gate.begin(a,'encerrar',{explicit:true}),true);
+assert.equal(gate.release({explicit:true}).kind,'confirmation-required');
+assert.equal(gate.confirmClose(a),null); // implicit confirmation rejected
+assert(gate.begin(a,'encerrar',{explicit:true}));
+gate.release({explicit:true});
+assert.equal(gate.confirmClose(b,{explicit:true}),null);
+assert(gate.begin(a,'encerrar',{explicit:true}));
+gate.release({explicit:true});
+assert.equal(gate.confirmClose(a,{explicit:true}).intent,'encerrar');
+assert.equal(gate.confirmClose(a,{explicit:true}),null);
+assert(gate.begin(a,'resize',{explicit:true}));
+assert.equal(gate.release({explicit:true}),null);
+assert(gate.begin(a,'resize',{explicit:true}));
+const shape={x:-1000,y:100,width:500,height:400};
+assert(gate.preview(shape));
+shape.width=20000;
+assert.equal(gate.release({explicit:true}).shape.width,500);
+assert(gate.begin(a,'resize',{explicit:true}));
+assert(gate.preview({...shape,width:500}));
+assert.equal(gate.preview(shape),false); // invalidates previous preview
+assert.equal(gate.release({explicit:true}),null);
+assert(gate.begin(a,'resize',{explicit:true}));
+assert(gate.preview({...shape,width:500}));
+context={...context,work:{...work,width:1000}};
+assert.equal(gate.release({explicit:true}),null);
+context={...context,work};
+assert(gate.begin(a,'encerrar',{explicit:true}));
+gate.release({explicit:true});
+context={...context,focus:b};
+assert.equal(gate.confirmClose(a,{explicit:true}),null);
+context={...context,focus:a};
+assert(gate.begin(a,'recolher',{explicit:true}));
+gate.cancel();
+assert.equal(gate.release({explicit:true}),null);
+context={...context,allowed:false};
+assert.equal(gate.begin(a,'imersao',{explicit:true}),false);
+context={...context,allowed:true,capabilities:{...caps,resize:false}};
+assert.equal(gate.begin(a,'resize',{explicit:true}),false);
+assert.equal(gate.begin(a,'destroy',{explicit:true}),false);
+assert.equal(new WindowIntentGate(()=>{throw Error('unavailable')}).begin(a,'encerrar',{explicit:true}),false);
+console.log('WindowIntentGate: all contract assertions passed.');

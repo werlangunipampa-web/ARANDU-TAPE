@@ -6,7 +6,7 @@ authors:
   - family-names: Werlang
     given-names: Rafhael Brum
 repository-code: "https://github.com/werlangunipampa-web/ARANDU-TAPE"
-abstract: "Experimental adaptive desktop environment for Linux, exploring meaningful learning, accessible human-computer interaction, adaptive navigation, and visual organization through a central Seed and Rivers."
+abstract: "Experimental Linux desktop environment exploring spatial organization, accessible human-computer interaction, and design heuristics inspired by meaningful learning. Its public components include Seed and River navigation, GNOME and GTK interfaces, and an optional window-operation laboratory. Automated contract and build tests do not establish real-world usability or learning outcomes."
 keywords:
   - Linux
   - GNOME
@@ -14,3 +14,4 @@ keywords:
   - accessibility
   - meaningful learning
   - adaptive interfaces
+  - spatial interaction

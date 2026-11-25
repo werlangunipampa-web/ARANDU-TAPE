@@ -3,10 +3,18 @@ on:
   push:
     paths:
       - 'ARANDU-DESKTOP/**'
+      - 'scripts/**'
+      - 'CITATION.cff'
+      - 'docs/**'
+      - 'ARANDU-SUITE/**'
       - '.github/workflows/arandu-desktop-tests.yml'
   pull_request:
     paths:
       - 'ARANDU-DESKTOP/**'
+      - 'scripts/**'
+      - 'CITATION.cff'
+      - 'docs/**'
+      - 'ARANDU-SUITE/**'
       - '.github/workflows/arandu-desktop-tests.yml'
 permissions:
   contents: read
@@ -19,6 +27,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Validar metadados de citação (CFF 1.2.0)
+        run: |
+          python -m pip install cffconvert==2.0.0
+          cffconvert --validate
       - name: Validar sintaxe Python sem usar GTK
         run: python -m compileall -q ARANDU-DESKTOP
       - name: Testes unitários e contratuais
@@ -30,3 +42,19 @@ jobs:
           for script in ARANDU-DESKTOP/session/*.sh ARANDU-DESKTOP/session/login/*.sh; do
             bash -n "$script"
           done
+  gtk-virtual-display:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar GTK4 e display virtual descartável
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3-gi python3-cairo gir1.2-gtk-4.0 librsvg2-common xvfb xauth dbus-daemon
+      - name: Validar alternância da Semente com GTK real
+        env:
+          ARANDU_VIRTUAL_GTK_TEST: '1'
+          GDK_BACKEND: x11
+          GSK_RENDERER: cairo
+          GTK_A11Y: none
+        run: dbus-run-session -- xvfb-run -a -s '-screen 0 1440x1000x24' /usr/bin/python3 -B ARANDU-DESKTOP/tests/gtk_seed_smoke.py

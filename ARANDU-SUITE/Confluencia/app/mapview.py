@@ -68,6 +68,46 @@ def paint(cr,s,x,y,w,h):
     cr.save();cr.translate(x,y);cr.scale(w/s.get_width(),h/s.get_height())
     cr.set_source_surface(s,0,0);cr.paint();cr.restore()
 
+def draw_landscape(cr, x, y, w, h):
+    """Vinheta vetorial procedural ARANDU; sem fotografia ou textura externa."""
+    cr.save()
+    cr.translate(x, y)
+    cr.scale(w, h)
+    sky = cairo.LinearGradient(0, 0, 0, 1)
+    sky.add_color_stop_rgb(0, .20, .32, .29)
+    sky.add_color_stop_rgb(.65, .67, .66, .47)
+    sky.add_color_stop_rgb(1, .87, .78, .55)
+    cr.set_source(sky)
+    cr.rectangle(0, 0, 1, 1)
+    cr.fill()
+    color(cr, "#e9d4a0", .75)
+    cr.arc(.74, .25, .09, 0, math.tau)
+    cr.fill()
+    for ink, start, points in (
+        ("#526b57", .50, ((.15,.36,.32,.37,.48,.55),(.70,.76,.84,.29,1,.46))),
+        ("#354e42", .68, ((.18,.44,.37,.61,.55,.69),(.75,.75,.83,.49,1,.56))),
+        ("#263f35", .82, ((.20,.68,.32,.67,.53,.80),(.71,.91,.85,.65,1,.73))),
+    ):
+        cr.move_to(0, start)
+        for curve in points:
+            cr.curve_to(*curve)
+        cr.line_to(1, 1)
+        cr.line_to(0, 1)
+        cr.close_path()
+        color(cr, ink)
+        cr.fill()
+    cr.move_to(.52, .66)
+    cr.curve_to(.45,.75,.78,.77,.66,.86)
+    cr.curve_to(.57,.92,.39,.95,.31,1)
+    cr.line_to(.53,1)
+    cr.curve_to(.60,.96,.82,.91,.81,.86)
+    cr.curve_to(.80,.77,.49,.74,.52,.66)
+    cr.close_path()
+    color(cr, "#b9b58a", .85)
+    cr.fill()
+    cr.restore()
+
+
 def icon_kind(item, group, n):
     if not item:return group
     motifs={
@@ -226,7 +266,7 @@ class MapView(Gtk.Overlay):
         sx=w/1200;sy=h/500;s=max(.70,min(1.35,sx,sy))
         large=self.host.large; type_scale=1.17 if large else 1.
         paper(cr,w,h,pal,self.host.theme)
-        # Vinheta da prancha original, com o título e o chamado de cada rio.
+        # Vinheta procedural, com o título e o chamado de cada rio.
         hx=max(24,40*s);top=max(23,38*s)
         text_at(cr,hx,top,"MAPA DOS RIOS",9.3*s*type_scale,gold,True,spacing=2*s)
         fs=min(42*s, max(24,w*.038))*type_scale
@@ -236,7 +276,7 @@ class MapView(Gtk.Overlay):
         if w>=880 and h>=310 and not large:
             px=.374*w;py=top-8*s;pw=min(164*s,w*.145);ph=pw*.58
             cr.save();rounded(cr,px,py,pw,ph,8*s);cr.clip()
-            paint(cr,art("paisagem.jpg",320,215),px,py-ph*.16,pw,ph*1.33);cr.restore()
+            draw_landscape(cr,px,py,pw,ph);cr.restore()
             rounded(cr,px,py,pw,ph,8*s);color(cr,line,.56);cr.set_line_width(.9);cr.stroke()
         offx=self.dx*w;offy=self.dy*h
         def point(x,y):return x*sx+offx,y*sy+offy

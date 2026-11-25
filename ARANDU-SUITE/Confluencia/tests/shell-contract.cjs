@@ -27,6 +27,7 @@ class Actor {
     set_height(h) {this.height=h;}
     contains(other) {while(other){if(other===this)return true;other=other.parent;}return false;}
     set_position(x,y) {this.pos=[x,y];}
+    get_position(){return this.pos||[0,0];}
     set_scale(x,y) {this.scale=[x,y];}
     set_style(s){this.style=s;}
     set_label(v){this.label=v;}
@@ -40,28 +41,34 @@ class Actor {
 class Panel extends Actor {
     constructor(){super();this.menu={addAction:(s,f)=>({label:{set_text(){}},click:f})};}
 }
-const prefs=new Map([['recent','[]'],['frequency','{}'],['medallion-scale',1],['high-contrast',false],['scan-interval-ms',3500],['panel-mode','visible'],['monitor-target','focused'],['fixed-monitor-index',0],['navigation-idle-ms',10000]]);
-const settings={get_string:k=>prefs.get(k),set_string:(k,v)=>prefs.set(k,v),
+const prefs=new Map([['recent','[]'],['frequency','{}'],['medallion-scale',1],['high-contrast',false],['scan-interval-ms',3500],['panel-mode','visible'],['monitor-target','focused'],['fixed-monitor-index',0],['navigation-idle-ms',0],['adaptive-seed-dock',true]]);
+const settings=Object.assign(new Actor(),{get_string:k=>prefs.get(k),set_string:(k,v)=>prefs.set(k,v),
     get_double:k=>prefs.get(k)||0,set_double:(k,v)=>prefs.set(k,v),
     get_boolean:k=>!!prefs.get(k),set_boolean:(k,v)=>prefs.set(k,v),
     get_int:k=>prefs.get(k)??3500,set_int:(k,v)=>prefs.set(k,v),
-    get_strv:k=>prefs.get(k)??['<Super><Alt>space'],set_strv:(k,v)=>prefs.set(k,v)};
+    get_strv:k=>prefs.get(k)??['<Super><Alt>space'],set_strv:(k,v)=>prefs.set(k,v)});
 let privacy=true;
 class Privacy extends Actor {get_boolean(){return privacy;}}
 let service=false, key=false, actions=[], windowList=[], focused=null;
-const tracked=new Set();const bg=new Actor();const chrome=new Actor();
+const tracked=new Set();const bg=new Actor();const chrome=new Actor();const topChrome=new Actor();const topOptions=new Map();
 const layout=Object.assign(new Actor(),{
     _backgroundGroup:bg,primaryMonitor:{index:0,x:0,y:0,width:1366,height:768},
     monitors:[{index:0,x:0,y:0,width:1366,height:768},{index:1,x:1366,y:0,width:1080,height:900},{index:2,x:2446,y:0,width:1200,height:900}],
     getWorkAreaForMonitor:i=>({x:layout.monitors[i].x,y:30,width:layout.monitors[i].width,height:layout.monitors[i].height-30}),
-    addChrome(actor){chrome.add_child(actor);},removeChrome(actor){chrome.remove_child(actor);},
+    addChrome(actor){chrome.add_child(actor);},addTopChrome(actor,options){topChrome.add_child(actor);topOptions.set(actor,options);},removeChrome(actor){actor.get_parent()?.remove_child(actor);topOptions.delete(actor);},
     trackChrome(actor){tracked.add(actor);},untrackChrome(actor){assert(tracked.delete(actor));}
 });
 const overview=new Actor();overview.visible=false;
 let pointer=[10,1], hideConflict=false;
 const stage=new Actor();stage.set_key_focus=actor=>stage.keyFocus=actor;stage.get_key_focus=()=>stage.keyFocus;
-const panelActor=Object.assign(new Actor(),{addToStatusArea(){}});
-const main={layoutManager:layout,overview,sessionMode:{isLocked:false},panel:panelActor,extensionManager:{lookup:()=>hideConflict?{state:1}:null},
+let nativeCalendarOpened=0,nativeSettingsOpened=0;
+const signalCamera=new Actor({visible:false}), signalMic=new Actor({visible:false}), signalRecording=new Actor({visible:false}), signalRemote=new Actor({visible:false}), signalSharing=new Actor({visible:false}), signalNotices=new Actor({visible:false,icon_name:'message-indicator-symbolic'});
+const panelActor=Object.assign(new Actor(),{addToStatusArea(){},statusArea:{
+    dateMenu:{_indicator:signalNotices,menu:{open(){nativeCalendarOpened++;}}},
+    quickSettings:{_camera:{_indicator:signalCamera},_volumeInput:{_indicator:signalMic},_remoteAccess:{_indicator:signalRemote},menu:{open(){nativeSettingsOpened++;}}},
+    screenRecording:signalRecording,screenSharing:signalSharing
+}});
+const main={layoutManager:layout,overview,sessionMode:new Actor({isLocked:false}),panel:panelActor,extensionManager:{lookup:()=>hideConflict?{state:1}:null},
     wm:{addKeybinding(){key=true;},removeKeybinding(){key=false;}},
     activateWindow(w){focused=w;},notify(){}};
 const apps=new Map();
@@ -92,9 +99,106 @@ const s=new Session('/teste',settings);s.start();
 assert(service && key);assert.equal(s.root.get_parent(),bg);
 assert(s.helpButton && s.helpBox);
 assert(s.controlScroll && s.controlBox);
+assert.equal(s.seedSignalBadge.visible,false);
+assert.match(s.seedSignalDetail.text,/atividade desconhecida/);
+signalCamera.visible=true;signalCamera.emit('notify::visible');
+assert.equal(s.seedSignalBadge.visible,true);
+assert.match(s.seedSignalBadge.text,/Câmera/);
+assert.equal(s.seedSignalBadge.reactive,false);
+assert.equal(s.seedSignalBadge.get_parent(),topChrome);
+assert.equal(topOptions.get(s.seedSignalBadge).affectsInputRegion,false);
+assert.equal(topOptions.get(s.seedSignalBadge).affectsStruts,false);
+assert.equal(topOptions.get(s.seedSignalBadge).trackFullscreen,false);
+assert.equal(tracked.has(s.seedSignalBadge),false);
+// A janela cobre a posição preferida, mas não o canto superior esquerdo.
+a.get_frame_rect=()=>({x:350,y:150,width:1016,height:618});
+s.positionSeedSignalBadge();assert.equal(s.seedSignalBadge.pos[0],8);
+assert(s.seedSignalBadge.pos[1]>=38);
+// Sem espaço livre, manter a etiqueta dentro da área útil, sem mover a janela.
+a.get_frame_rect=()=>({x:0,y:30,width:1366,height:738});
+s.positionSeedSignalBadge();assert(s.seedSignalBadge.pos[0]>=8 && s.seedSignalBadge.pos[0]+240<=1366-8);
+delete a.get_frame_rect;
+overview.emit('showing');assert.equal(s.seedSignalBadge.visible,false);
+overview.emit('hidden');assert.equal(s.seedSignalBadge.visible,true);
+signalMic.visible=true;signalMic.emit('notify::visible');
+assert.match(s.seedSignalBadge.text,/Microfone/);
+signalRecording.visible=true;signalRecording.emit('notify::visible');
+assert.match(s.seedSignalBadge.text,/Gravação GNOME/);
+signalRemote.visible=true;signalRemote.emit('notify::visible');
+assert.match(s.seedSignalBadge.text,/Captura remota/);
+signalSharing.visible=true;signalSharing.emit('notify::visible');
+assert.match(s.seedSignalBadge.text,/Compartilhamento/);
+signalNotices.visible=true;signalNotices.emit('notify::visible');
+assert.match(s.seedSignalBadge.text,/Avisos/);
+signalNotices.icon_name='notifications-disabled-symbolic';signalNotices.emit('notify::icon-name');
+assert.match(s.seedSignalBadge.text,/Não perturbe/);
+assert(!s.seedSignalBadge.text.includes('Avisos'));
+s.scheduleSeedSleep();assert.equal(s.seedSleepId,0);
+s.setExpanded(false);assert.equal(s.seedSignalBadge.visible,true);
+main.sessionMode.isLocked=true;main.sessionMode.emit('updated');assert.equal(s.seedSignalBadge.visible,false);
+main.sessionMode.isLocked=false;main.sessionMode.emit('updated');assert.equal(s.seedSignalBadge.visible,true);
+for(const actor of [signalCamera,signalMic,signalRecording,signalRemote,signalSharing,signalNotices]){
+    actor.visible=false;actor.emit('notify::visible');
+}
+assert.equal(s.seedSignalBadge.visible,false);
+assert.match(s.seedSignalDetail.text,/atividade desconhecida/);
+assert(s.seedSleepId && pending.has(s.seedSleepId));
+
+// Semente compacta: cobertura da posição manual, sem mover âncora ou os Rios.
+const originalPoint=[...s.seedPoint];
+const originalAnchor=[settings.get_double('anchor-x'),settings.get_double('anchor-y')];
+assert(s.seedDock && s.seedDock.get_parent()===topChrome);
+assert.equal(s.seedDock.visible,false);
+assert.equal(topOptions.get(s.seedDock).affectsInputRegion,true);
+assert.equal(topOptions.get(s.seedDock).affectsStruts,false);
+assert.equal(topOptions.get(s.seedDock).trackFullscreen,true);
+a.get_frame_rect=()=>({x:350,y:150,width:1016,height:618});
+s.updateSeedDock();
+assert.equal(s.seedDock.visible,true);assert.equal(s.seed.visible,false);
+assert.equal(s.seedDock.pos[0],8);
+assert.deepEqual([...s.seedPoint],originalPoint);
+assert.deepEqual([settings.get_double('anchor-x'),settings.get_double('anchor-y')],originalAnchor);
+// Não deslocar o botão enquanto a pessoa aponta para ele.
+const compactPosition=[...s.seedDock.pos];s.seedDock.hover=true;
+a.get_frame_rect=()=>({x:0,y:30,width:1100,height:738});
+s.updateSeedDock();assert.deepEqual([...s.seedDock.pos],compactPosition);
+s.seedDock.hover=false;s.updateSeedDock();assert.equal(s.seedDock.pos[0],1310);
+signalCamera.visible=true;signalCamera.emit('notify::visible');
+const [dx,dy]=s.seedDock.pos,[bx,by]=s.seedSignalBadge.pos;
+assert(dx+48<=bx || bx+240<=dx || dy+48<=by || by+64<=dy);
+signalCamera.visible=false;signalCamera.emit('notify::visible');
+assert.equal(s.openSeedDock(),true);
+assert.equal(s.expanded,true);assert.equal(s.navigationOverlay,true);
+assert.equal(s.seedDock.visible,false);assert.equal(s.seed.visible,true);
+s.cancelSelection();assert.equal(s.seedDock.visible,true);
+settings.set_boolean('adaptive-seed-dock',false);s.updateSeedDock();
+assert.equal(s.seedDock.visible,false);assert.equal(s.seed.visible,true);
+settings.set_boolean('adaptive-seed-dock',true);s.updateSeedDock();
+assert.equal(s.seedDock.visible,true);
+main.sessionMode.isLocked=true;main.sessionMode.emit('updated');
+assert.equal(s.seedDock.visible,false);assert.equal(s.openSeedDock(),false);
+main.sessionMode.isLocked=false;main.sessionMode.emit('updated');
+assert.equal(s.seedDock.visible,true);
+overview.emit('showing');assert.equal(s.seedDock.visible,false);
+overview.emit('hidden');assert.equal(s.seedDock.visible,true);
+a.is_fullscreen=()=>true;s.updateSeedDock();assert.equal(s.seedDock.visible,false);
+delete a.is_fullscreen;delete a.get_frame_rect;s.updateSeedDock();
+assert.equal(s.seedDock.visible,false);assert.equal(s.seed.visible,true);
+
 assert.equal(s.controlScroll.visible,false);
 s.toggleAccessibility();assert.equal(s.controlScroll.visible,true);
+assert.notEqual(s.seedInformation.text,'Data e hora sob demanda');
+assert.equal(s.seedHistory.text,'Histórico GNOME: permitido');
+privacy=false;s.refreshSeedInformation();assert.equal(s.seedHistory.text,'Histórico GNOME: pausado');privacy=true;
+assert.equal(s.openNativePanel('calendar'),true);assert.equal(nativeCalendarOpened,1);assert.equal(s.controlScroll.visible,false);
+assert.equal(s.openNativePanel('settings'),true);assert.equal(nativeSettingsOpened,1);
+main.sessionMode.isLocked=true;
+assert.equal(s.openNativePanel('calendar'),false);assert.equal(nativeCalendarOpened,1);
 s.toggleAccessibility();assert.equal(s.controlScroll.visible,false);
+main.sessionMode.isLocked=false;
+s.toggleAccessibility();assert.equal(s.controlScroll.visible,true);
+assert.equal(s.helpGlobalEvent({type:()=>3,get_key_symbol:()=>65307}),true);
+assert.equal(s.controlScroll.visible,false);
 assert.equal(s.setMedallionScale(1.2),true);
 assert.equal(settings.get_double('medallion-scale'),1.2);
 assert.equal(s.setMedallionScale(1.3),false);
@@ -145,18 +249,22 @@ assert(s.helpBox.pos[0]>=0 && s.helpBox.pos[1]>=0);
 assert(s.helpBox.pos[0]+s.helpBox.width<=s.area.width);
 assert(s.helpBox.pos[1]+s.helpBox.height<=s.area.height);
 
-s.setBarMode('hidden');assert.equal(panelActor.visible,false);
-s.setBarMode('visible');assert.equal(panelActor.visible,true);
-// Sem mouse: visible -> auto -> hidden -> visible.
-s.cycleBarMode();assert.equal(settings.get_string('panel-mode'),'auto');
-s.cycleBarMode();assert.equal(settings.get_string('panel-mode'),'hidden');
+// Até validar indicadores equivalentes na Semente, ocultação não é aplicada.
+assert.equal(s.setBarMode('hidden'),false);assert.equal(panelActor.visible,true);
+assert.equal(s.setBarMode('auto'),false);assert.equal(panelActor.visible,true);
+assert.equal(settings.get_string('panel-mode'),'visible');
+// Preferência antiga preservada, mas não aplicada.
+prefs.set('panel-mode','hidden');s.updateBar();assert.equal(panelActor.visible,true);
+assert.equal(settings.get_string('panel-mode'),'hidden');
 s.cycleBarMode();assert.equal(settings.get_string('panel-mode'),'visible');
-
-s.setBarMode('auto');s.barLastNear=Date.now()-4000;s.updateBar();assert.equal(panelActor.visible,true);
-pointer=[150,240];s.barLastNear=Date.now()-9000;s.updateBar();assert.equal(panelActor.visible,false);
-hideConflict=true;s.updateBar();assert.equal(panelActor.visible,true);
-s.setBarMode('hidden');assert.equal(settings.get_string('panel-mode'),'auto');
-hideConflict=false;s.setBarMode('hidden');assert.equal(panelActor.visible,false);
+assert.equal(s.barTimer,undefined);
+hideConflict=true;panelActor.hide();s.updateBar();assert.equal(panelActor.visible,false);
+assert.equal(s.openNativePanel('calendar'),false);assert.equal(nativeCalendarOpened,1);
+hideConflict=false;s.updateBar();assert.equal(panelActor.visible,true);
+// Fallback sem API de menu: manter acesso ao painel nativo, sem afirmar abertura.
+const dateMenu=panelActor.statusArea.dateMenu;delete panelActor.statusArea.dateMenu;
+assert.equal(s.openNativePanel('calendar'),false);assert.equal(panelActor.visible,true);
+panelActor.statusArea.dateMenu=dateMenu;
 assert.equal(JSON.parse(s.Snapshot()).windows.length,3);
 s.record();focused=b;s.record();focused=c;s.record();focused=a;s.record();
 let snap=JSON.parse(s.Snapshot());
@@ -184,7 +292,15 @@ assert.equal(s.navigationMonitorIndex,1);
 assert.equal(s.root.get_parent(),chrome);
 assert.equal(s.root.pos[0],1366);
 assert.equal(s.navigationOverlay,true);
-assert.equal(settings.get_int('navigation-idle-ms'),10000);
+// A espera, por si só, não recolhe rios na configuração padrão.
+assert.equal(settings.get_int('navigation-idle-ms'),0);
+assert.equal(JSON.parse(s.AssistiveStatus()).idleTimeoutMs,0);
+assert.equal(s.navigationIdleTimer,0);
+assert.equal(s.expanded,true);
+s.navigationOutsideEvent({type:()=>4,get_source:()=>s.buttons.open[0].button});
+assert.equal(s.navigationIdleTimer,0);
+// O temporizador continua disponível mediante escolha explícita.
+assert.equal(s.setNavigationIdle(10000),true);
 assert.equal(JSON.parse(s.AssistiveStatus()).idleTimeoutMs,10000);
 assert(s.navigationIdleTimer && pending.has(s.navigationIdleTimer));
 const previousTimer=s.navigationIdleTimer;
@@ -376,7 +492,8 @@ privacy=false;assert.equal(JSON.parse(s.Snapshot()).recent.length,0);
 main.sessionMode.isLocked=true;assert.equal(JSON.parse(s.Snapshot()).windows.length,0);assert.equal(s.Activate('12'),false);
 assert.equal(JSON.parse(s.AssistiveStatus()).available,false);
 main.sessionMode.isLocked=false;privacy=true;s.Clear();assert.equal(JSON.parse(s.Snapshot()).recent.length,0);
-const oldRoot=s.root;s.stop();assert.equal(panelActor.visible,true);assert(!key && !service && oldRoot.destroyed);assert.equal(pending.size,0);
+const oldRoot=s.root, oldBadge=s.seedSignalBadge, oldDock=s.seedDock;s.stop();assert.equal(oldBadge.destroyed,true);assert.equal(oldDock.destroyed,true);assert.equal(topChrome.children.length,0);assert.equal(topOptions.size,0);assert.equal(panelActor.visible,true);assert(!key && !service && oldRoot.destroyed);assert.equal(pending.size,0);
+for(const actor of [signalCamera,signalMic,signalRecording,signalRemote,signalSharing,signalNotices])assert.equal(actor.handlers.size,0);
 console.log('Contrato do Shell validado com objetos de teste: janelas, foco, contagens, privacidade, camadas e 60 ciclos de expansão.');
 
 assert.equal(s.AssistiveCommand('river:open'),true);

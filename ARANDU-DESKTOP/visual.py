@@ -31,6 +31,7 @@ class RiversCanvas(Gtk.ScrolledWindow):
         self.background = Gtk.Picture.new_for_filename(str(ASSETS / "rios.svg"))
         self.background.set_content_fit(Gtk.ContentFit.FILL)
         self.background.set_can_shrink(True)
+        self.background.set_can_target(False)
         self.canvas.set_child(self.background)
         self.fixed = Gtk.Fixed()
         self.fixed.set_halign(Gtk.Align.FILL)
@@ -146,7 +147,8 @@ class RiversCanvas(Gtk.ScrolledWindow):
         self.mode = "compact"
         self.marker_apps.clear()
         self.marker_windows.clear()
-        self.background.set_visible(False)
+        # Keep the main overlay child allocated; only hide its paint.
+        self.background.set_opacity(0.0)
         self.seed.set_visible(True)
         self.seed.set_tooltip_text("Abrir a Confluência: Memória, Abertos e Frequentes")
         for marker, _, _, _ in self.markers:
@@ -157,8 +159,9 @@ class RiversCanvas(Gtk.ScrolledWindow):
         self._layout(self.scale)
 
     def show_rivers(self):
-        self.background.set_visible(True)
+        self.background.set_opacity(1.0)
         self.mode = "rivers"
+        self.seed.set_tooltip_text("Recolher a Confluência")
         self.marker_windows.clear()
         for marker, river, _, _ in self.markers:
             self.marker_apps.pop(marker, None)
@@ -177,7 +180,7 @@ class RiversCanvas(Gtk.ScrolledWindow):
     def show_apps(self, apps):
         """Distribui até 15 aplicativos instalados reais, sem ler janelas."""
         self.apps = choose_app_slots(apps)
-        self.background.set_visible(True)
+        self.background.set_opacity(1.0)
         self.mode = "apps"
         self.marker_windows.clear()
         for i, (marker, river, _, _) in enumerate(self.markers):
@@ -212,7 +215,7 @@ class RiversCanvas(Gtk.ScrolledWindow):
 
     def show_windows(self, windows):
         """Medalhões representam somente janelas Sway verificadas, sem coleta periódica."""
-        self.background.set_visible(True)
+        self.background.set_opacity(1.0)
         self.mode = "windows"
         self.marker_apps.clear()
         self.marker_windows.clear()

@@ -70,6 +70,14 @@ class Pacote(unittest.TestCase):
         self.assertIn('this.transformPoint(this.transforms[r],p)',code)
         self.assertIn('this.makeTransform',code)
 
+    def test_recolhimento_por_tempo_desligado_por_padrao(self):
+        import xml.etree.ElementTree as ET
+        schema=ET.parse(BASE/'shell/org.gnome.shell.extensions.arandu-confluencia.gschema.xml')
+        key=schema.find(".//key[@name='navigation-idle-ms']")
+        self.assertIsNotNone(key)
+        self.assertEqual(key.findtext('default'),'0')
+        self.assertEqual(key.find('range').attrib,{'min':'0','max':'60000'})
+
     def test_variantes_de_shell_e_schema(self):
         import xml.etree.ElementTree as ET
         with tempfile.TemporaryDirectory() as tmp:

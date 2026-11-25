@@ -1,4 +1,4 @@
-# ARANDU TAPE — Confluência | ARANDU SUITE 3.1 (prévia experimental)
+# ARANDU TAPE — Confluência 3.2.3-beta (prévia experimental)
 
 **Um ambiente gráfico de navegação que se adapta às possibilidades humanas.**
 
@@ -16,13 +16,13 @@ O **ARANDU TAPE** é um projeto experimental de interface gráfica para o **GNOM
 
 ### Repouso visual — Semente 7s / ajuda 6s
 
-Após **6 segundos** sem interação, o medalhão de ajuda `?` perde visibilidade; após **7 segundos**, a Semente central reduz sua opacidade a cerca de **12%**. **Os rios e os medalhões dos aplicativos permanecem visíveis** até o recolhimento explícito dos rios. A ajuda pode ser solicitada pelo menu ARANDU da barra superior. A intenção é manter os controles disponíveis sem poluir a área de trabalho.
+Após **6 segundos** sem interação, o medalhão de ajuda `?` perde visibilidade; após **7 segundos**, a Semente central reduz sua opacidade a cerca de **12%**. O repouso visual não deve ser confundido com o temporizador de navegação: no candidato, `navigation-idle-ms` tem padrão de 0 s, e o menu oferece 0/10/30/60 s (0 = nunca recolher por tempo). Preferências explícitas já salvas permanecem. A saída do modo de navegação ao retornar ao aplicativo continua preservada. A correção do padrão segue o [Design Core](../docs/DESIGN_CORE.md) e requer validação real. A varredura assistiva suspende esse temporizador. A ajuda pode ser solicitada pelo menu ARANDU da barra superior. A intenção é manter os controles disponíveis sem poluir a área de trabalho.
 
 As janelas de trabalho devem ficar à frente dos rios com `floating=false`; validar o posicionamento na versão de GNOME usada. A TOPBAR histórica é um componente ornamental distinto, preservado pelo instalador. A suíte possui uma variante TOPBAR experimental para outros GNOMEs modernos, sem substituir a versão 46 em uso.
 
 ## Instalação
 
-Baixe o pacote da versão, extraia-o e execute a partir da pasta `ARANDU-SUITE`:
+A partir de um clone Git ou ZIP do código-fonte, entre na pasta `ARANDU-SUITE`. Ainda não há release científica confirmada. O instalador exibe um identificador legado 2.8.2; a extensão usa 3.2.3-beta.
 
 ```bash
 bash instalar-tudo.sh --preflight
@@ -32,9 +32,9 @@ bash instalar-tudo.sh
 
 Não executar com `sudo`. O instalador faz backup da Confluência instalada e não substitui a TOPBAR histórica. Na sessão GNOME X11 pode ser necessário salvar o trabalho e reiniciar o GNOME Shell com `Alt+F2`, `r`, Enter; no Wayland, normalmente é necessário encerrar a sessão e entrar novamente. Veja [instalação](docs/INSTALACAO.md).
 
-## Painel de acessibilidade na Semente (3.1 beta)
+## Painel de acessibilidade na Semente (introduzido na 3.1 beta)
 
-Clique com o botão direito na **Semente** ou abra **ARANDU TAPE → Acessibilidade · configurar na Semente**. Ajuste velocidade da varredura (2 / 3,5 / 5 s), tamanho dos medalhões (85% / 100% / 120%), alto contraste, acionador (Super+Alt+Espaço ou Super+Alt+S) e visibilidade da TOPBAR. Existe uma ação para restaurar os padrões seguros.
+Clique com o botão direito na **Semente** ou abra **ARANDU TAPE → Acessibilidade · configurar na Semente**. Ajuste velocidade da varredura (2 / 3,5 / 5 s), tamanho dos medalhões (85% / 100% / 120%), alto contraste, acionador (Super+Alt+Espaço ou Super+Alt+S) e recuperação da barra GNOME. Existe uma ação para restaurar os padrões seguros. No candidato, o painel também mostra data/hora e a preferência GNOME de histórico sob demanda, e abre os menus nativos de avisos/calendário e controles do sistema quando disponíveis. A ocultação pela Confluência está suspensa até validar indicadores equivalentes na Semente; outras extensões podem controlar a barra de modo independente.
 
 Este painel é uma **prévia experimental**, ainda não validada visualmente na máquina de referência. Veja [manual de acessibilidade](docs/PAINEL-ACESSIBILIDADE.md).
 
@@ -88,3 +88,6 @@ Um retorno `(true,)` confirma aceitação do comando pela extensão, **não comp
 ## Autoria e colaboração
 
 Projeto em desenvolvimento no ecossistema ARANDU. Antes de aceitar contribuições externas, definir licença, diretrizes de contribuição e política de privacidade. **Não presumir licença de código aberto apenas por hospedar o código no GitHub.**
+
+
+Para distinguir versões, evidências e marcos futuros, consulte [estado dos componentes](../docs/ESTADO_E_VERSOES.md). Para citar e distribuir, siga a [política científica](../docs/PUBLICACAO_CIENTIFICA_ZENODO.md).

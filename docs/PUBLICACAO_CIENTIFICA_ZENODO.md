@@ -39,3 +39,25 @@ Referências: https://help.zenodo.org/docs/github/enable-repository/ ; https://h
 
 ## Estado inicial
 Nenhuma release foi encontrada no repositório durante a preparação. DOI ainda não confirmado. Autoria, titularidade, licenças e validação gráfica permanecem pendentes. A seção Sobre exibe essa condição; os links são abertos somente sob ação do usuário.
+
+## Triagem automatizada e publicação controlada
+
+Executar no clone completo, sem credenciais adicionais:
+
+```bash
+python3 scripts/auditar-snapshot.py --ref HEAD
+```
+
+O scanner lê a árvore Git do commit, não arquivos não rastreados nem repositórios privados. Detecta padrões comuns de credenciais, caminhos restritos, binários, links simbólicos/submódulos, ponteiros LFS e arquivos grandes. Referências de pesquisa são listadas para revisão humana; não são automaticamente consideradas vazamentos. A triagem também roda em teste de contrato da CI Desktop. Não é garantia de ausência de segredos (especialmente no histórico), nem autorização jurídica ou de publicação. Nenhum valor de credencial é impresso.
+
+O script legado `scripts/publicar-releases.sh` foi desativado integralmente porque publicava os dois projetos em sequência sem um portão de revisão. Não altera o repositório ARANDU-WEB; a publicação desse projeto passa a depender de procedimento próprio. Não existe automação com autoridade para publicar uma release ainda não aprovada.
+
+Antes da publicação, preencher e aprovar o checklist de titularidade, direitos, revisão de pesquisa e teste real associado ao SHA candidato. Selecionar a tag/commit validado, nunca a ponta móvel de main. Só então publicar a release pelo GitHub. A integração Zenodo é posterior e automática se habilitada; nenhum token deve ser armazenado no código.
+
+## Atualização de preparação — Espaços Vivos
+
+Consultar a [ficha de depósito bilíngue](FICHA_DEPOSITO_ZENODO.md) e o [registro de evolução](EVOLUCAO_ESPACOS_VIVOS.md). Manter CITATION.cff como fonte única de metadados até necessidade justificada de .zenodo.json; se ambos existirem, Zenodo ignora o CFF na importação. A ficha não deve ser depositada como descrição definitiva sem confirmar os componentes do snapshot. Em 24/11/2026, PR #3 ainda em rascunho, CI do snapshot c8e16cd aprovada, nenhuma release encontrada. Cinco patches locais testados offline não integram automaticamente o candidato público. Titularidade, licença, divulgação e testes gráficos reais continuam sendo portões obrigatórios.
+
+## Ficha de liberação
+
+A [ficha de liberação do snapshot](LIBERACAO_SNAPSHOT_ZENODO.md) consolida as decisões de titularidade, licenciamento por grupo, evidências e aprovação final. Preencher antes de publicar; nenhum campo pendente autoriza distribuição. Conferir a licença efetiva no Zenodo, que exige esse campo e apresenta CC BY 4.0 como padrão no depósito manual.
