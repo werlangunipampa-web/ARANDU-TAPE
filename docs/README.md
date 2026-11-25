@@ -21,6 +21,7 @@ Este índice distingue manuais de uso, registros de desenvolvimento e documentos
 | Histórico consolidado | [CHANGELOG](../CHANGELOG.md) |
 | Apresentação em inglês | [README English](../README.en.md) |
 | Sinais da Semente | [Adaptador GNOME](SEMENTE_SINAIS_GNOME.md) |
+| Convergência gráfica ARAPI | [Referências recuperadas e limites](../ARANDU-SUITE/Confluencia/design-reference/README.md) |
 | Validação e desempenho | [Protocolo de aceite](VALIDACAO_FUNCIONAL_DESEMPENHO.md) |
 | Próximos marcos | [Roteiro](../ARANDU-SUITE/docs/ROADMAP.md) |
 | Publicação GitHub | [Política A0](POLITICA_PUBLICACAO_GITHUB_A0.md) |
