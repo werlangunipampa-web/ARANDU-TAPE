@@ -77,3 +77,22 @@ Referências: [Design Core](DESIGN_CORE.md), [Acessibilidade](ACESSIBILIDADE.md)
 ## Complemento: Cabeçalho Vivo e gestos
 
 Confirmar a reserva superior de 52 px lógicos em Desktop, mapa e Opy, sem sobreposição do conteúdo ou dos controles existentes; testar dimensões menores, escala e teclado. Fechar a Opy deve fechar somente sua interface. O classificador Python de gestos ainda não está ligado a janelas reais. Registrar Alça Viva, flechas gráficas e Folha Digital como não executados até localizar/sincronizar a implementação autorizada. Não substituir as decorações nativas por gestos não validados. Testar prévia, cancelamento, liberação explícita, identidade do alvo, confirmação de encerramento e reserva inferior em revisão posterior.
+
+## Complemento: aceite específico do laboratório Espaços Vivos
+
+Executar somente em GNOME 46 de teste, sem Foundation ativa e com janelas descartáveis. Habilitar as Flechas Vivas voluntariamente; verificar o retorno ao modo desligado ao reiniciar a extensão.
+
+| ID | Ensaio | Critério de aceite |
+| --- | --- | --- |
+| F01 | Aproximar e afastar de cada um dos oito lados/cantos | Somente controle pertinente; nenhuma ação automática, nenhum clique capturado fora do controle |
+| F02 | Permanecer na zona da flecha e depois sair | Crescimento localizado, retorno ao repouso, símbolo nítido na escala testada; sem cintilação ou temporizador residual |
+| F03 | Arrastar em oito direções, inclusive para dentro, e soltar | Borda oposta ancorada; prévia coincide com geometria solicitada, respeitadas restrições da janela; interior transparente e contorno de 1 px |
+| F04 | Aproximar-se da Flecha Mestre, clicar e repetir junto ao canto NE | Maximização por clique explícito; distinção inequívoca de redimensionamento; nenhum disparo por aproximação |
+| F05 | Esc, troca de foco, grab nativo, bloqueio, desativação, mudança de monitor durante gesto | Intenção cancelada, prévia e controles ocultos, captura de ponteiro liberada |
+| F06 | Redimensionar em escalas e monitores distintos; testar janelas inelegíveis | Sem controle fora da área útil ou sobre janela indevida; caminhos nativos disponíveis |
+| F07 | Usar o menu por teclado e testar redução de movimento/contraste | Alternativas compreensíveis e foco visível; se redução de animação ainda não respeitada, registrar pendência |
+| F08 | Comparar repouso desativado, repouso habilitado e arraste | Registrar medições em condições equivalentes; sem meta numérica inventada nem afirmação de melhoria sem dados |
+
+Status inicial de F01–F08: **não executados no ambiente gráfico real**. Testes simulados cobrem parte dos contratos, mas não contam como aprovação desses ensaios. Registrar separadamente candidato público e instalação local. Não publicar capturas que contenham documentos, títulos de janelas ou informações pessoais.
+
+O estudo comparativo com participantes é tratado separadamente em [PROTOCOLO_PESQUISA_INTERACAO.md](PROTOCOLO_PESQUISA_INTERACAO.md).
