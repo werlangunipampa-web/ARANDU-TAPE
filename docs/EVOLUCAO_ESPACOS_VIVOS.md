@@ -38,3 +38,7 @@ Foram executados novamente os cinco comandos --test, totalizando 20 testes offli
 6. Se as melhorias locais não forem integradas ao commit aprovado, excluir suas alegações funcionais do resumo Zenodo e das notas da release.
 
 Este documento registra a evolução de design e os limites da evidência; não concede licença, não autoriza depósito e não constitui nova release.
+
+## Convergência posterior do laboratório público
+
+Commits 712defb, 1a057ec e 2f249f7 incorporaram o contorno transparente de 1 px, crescimento contextual com tamanho final do SVG e deduplicação da prévia. A implementação é própria do laboratório e não uma cópia da Foundation. O registro anterior refere-se ao snapshot c8e16cd e continua válido como histórico. A convergência visual não inclui toda a lógica de movimento da Foundation nem comprova desempenho ou nitidez. A integração completa e os testes reais continuam pendentes. O DOI deve corresponder ao commit final efetivamente aprovado.
