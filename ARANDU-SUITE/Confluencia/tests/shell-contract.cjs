@@ -40,7 +40,7 @@ class Actor {
 class Panel extends Actor {
     constructor(){super();this.menu={addAction:(s,f)=>({label:{set_text(){}},click:f})};}
 }
-const prefs=new Map([['recent','[]'],['frequency','{}'],['medallion-scale',1],['high-contrast',false],['scan-interval-ms',3500],['panel-mode','visible'],['monitor-target','focused'],['fixed-monitor-index',0],['navigation-idle-ms',10000]]);
+const prefs=new Map([['recent','[]'],['frequency','{}'],['medallion-scale',1],['high-contrast',false],['scan-interval-ms',3500],['panel-mode','visible'],['monitor-target','focused'],['fixed-monitor-index',0],['navigation-idle-ms',0]]);
 const settings={get_string:k=>prefs.get(k),set_string:(k,v)=>prefs.set(k,v),
     get_double:k=>prefs.get(k)||0,set_double:(k,v)=>prefs.set(k,v),
     get_boolean:k=>!!prefs.get(k),set_boolean:(k,v)=>prefs.set(k,v),
@@ -184,7 +184,15 @@ assert.equal(s.navigationMonitorIndex,1);
 assert.equal(s.root.get_parent(),chrome);
 assert.equal(s.root.pos[0],1366);
 assert.equal(s.navigationOverlay,true);
-assert.equal(settings.get_int('navigation-idle-ms'),10000);
+// A espera, por si só, não recolhe rios na configuração padrão.
+assert.equal(settings.get_int('navigation-idle-ms'),0);
+assert.equal(JSON.parse(s.AssistiveStatus()).idleTimeoutMs,0);
+assert.equal(s.navigationIdleTimer,0);
+assert.equal(s.expanded,true);
+s.navigationOutsideEvent({type:()=>4,get_source:()=>s.buttons.open[0].button});
+assert.equal(s.navigationIdleTimer,0);
+// O temporizador continua disponível mediante escolha explícita.
+assert.equal(s.setNavigationIdle(10000),true);
 assert.equal(JSON.parse(s.AssistiveStatus()).idleTimeoutMs,10000);
 assert(s.navigationIdleTimer && pending.has(s.navigationIdleTimer));
 const previousTimer=s.navigationIdleTimer;
