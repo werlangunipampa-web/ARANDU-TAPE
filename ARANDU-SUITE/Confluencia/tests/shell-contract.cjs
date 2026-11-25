@@ -41,11 +41,11 @@ class Panel extends Actor {
     constructor(){super();this.menu={addAction:(s,f)=>({label:{set_text(){}},click:f})};}
 }
 const prefs=new Map([['recent','[]'],['frequency','{}'],['medallion-scale',1],['high-contrast',false],['scan-interval-ms',3500],['panel-mode','visible'],['monitor-target','focused'],['fixed-monitor-index',0],['navigation-idle-ms',0]]);
-const settings={get_string:k=>prefs.get(k),set_string:(k,v)=>prefs.set(k,v),
+const settings=Object.assign(new Actor(),{get_string:k=>prefs.get(k),set_string:(k,v)=>prefs.set(k,v),
     get_double:k=>prefs.get(k)||0,set_double:(k,v)=>prefs.set(k,v),
     get_boolean:k=>!!prefs.get(k),set_boolean:(k,v)=>prefs.set(k,v),
     get_int:k=>prefs.get(k)??3500,set_int:(k,v)=>prefs.set(k,v),
-    get_strv:k=>prefs.get(k)??['<Super><Alt>space'],set_strv:(k,v)=>prefs.set(k,v)};
+    get_strv:k=>prefs.get(k)??['<Super><Alt>space'],set_strv:(k,v)=>prefs.set(k,v)});
 let privacy=true;
 class Privacy extends Actor {get_boolean(){return privacy;}}
 let service=false, key=false, actions=[], windowList=[], focused=null;
@@ -60,7 +60,8 @@ const layout=Object.assign(new Actor(),{
 const overview=new Actor();overview.visible=false;
 let pointer=[10,1], hideConflict=false;
 const stage=new Actor();stage.set_key_focus=actor=>stage.keyFocus=actor;stage.get_key_focus=()=>stage.keyFocus;
-const panelActor=Object.assign(new Actor(),{addToStatusArea(){}});
+let nativeCalendarOpened=0,nativeSettingsOpened=0;
+const panelActor=Object.assign(new Actor(),{addToStatusArea(){},statusArea:{dateMenu:{menu:{open(){nativeCalendarOpened++;}}},quickSettings:{menu:{open(){nativeSettingsOpened++;}}}}});
 const main={layoutManager:layout,overview,sessionMode:{isLocked:false},panel:panelActor,extensionManager:{lookup:()=>hideConflict?{state:1}:null},
     wm:{addKeybinding(){key=true;},removeKeybinding(){key=false;}},
     activateWindow(w){focused=w;},notify(){}};
@@ -94,7 +95,18 @@ assert(s.helpButton && s.helpBox);
 assert(s.controlScroll && s.controlBox);
 assert.equal(s.controlScroll.visible,false);
 s.toggleAccessibility();assert.equal(s.controlScroll.visible,true);
+assert.notEqual(s.seedInformation.text,'Data e hora sob demanda');
+assert.equal(s.seedHistory.text,'Histórico GNOME: permitido');
+privacy=false;s.refreshSeedInformation();assert.equal(s.seedHistory.text,'Histórico GNOME: pausado');privacy=true;
+assert.equal(s.openNativePanel('calendar'),true);assert.equal(nativeCalendarOpened,1);assert.equal(s.controlScroll.visible,false);
+assert.equal(s.openNativePanel('settings'),true);assert.equal(nativeSettingsOpened,1);
+main.sessionMode.isLocked=true;
+assert.equal(s.openNativePanel('calendar'),false);assert.equal(nativeCalendarOpened,1);
 s.toggleAccessibility();assert.equal(s.controlScroll.visible,false);
+main.sessionMode.isLocked=false;
+s.toggleAccessibility();assert.equal(s.controlScroll.visible,true);
+assert.equal(s.helpGlobalEvent({type:()=>3,get_key_symbol:()=>65307}),true);
+assert.equal(s.controlScroll.visible,false);
 assert.equal(s.setMedallionScale(1.2),true);
 assert.equal(settings.get_double('medallion-scale'),1.2);
 assert.equal(s.setMedallionScale(1.3),false);
@@ -145,18 +157,22 @@ assert(s.helpBox.pos[0]>=0 && s.helpBox.pos[1]>=0);
 assert(s.helpBox.pos[0]+s.helpBox.width<=s.area.width);
 assert(s.helpBox.pos[1]+s.helpBox.height<=s.area.height);
 
-s.setBarMode('hidden');assert.equal(panelActor.visible,false);
-s.setBarMode('visible');assert.equal(panelActor.visible,true);
-// Sem mouse: visible -> auto -> hidden -> visible.
-s.cycleBarMode();assert.equal(settings.get_string('panel-mode'),'auto');
-s.cycleBarMode();assert.equal(settings.get_string('panel-mode'),'hidden');
+// Até validar indicadores equivalentes na Semente, ocultação não é aplicada.
+assert.equal(s.setBarMode('hidden'),false);assert.equal(panelActor.visible,true);
+assert.equal(s.setBarMode('auto'),false);assert.equal(panelActor.visible,true);
+assert.equal(settings.get_string('panel-mode'),'visible');
+// Preferência antiga preservada, mas não aplicada.
+prefs.set('panel-mode','hidden');s.updateBar();assert.equal(panelActor.visible,true);
+assert.equal(settings.get_string('panel-mode'),'hidden');
 s.cycleBarMode();assert.equal(settings.get_string('panel-mode'),'visible');
-
-s.setBarMode('auto');s.barLastNear=Date.now()-4000;s.updateBar();assert.equal(panelActor.visible,true);
-pointer=[150,240];s.barLastNear=Date.now()-9000;s.updateBar();assert.equal(panelActor.visible,false);
-hideConflict=true;s.updateBar();assert.equal(panelActor.visible,true);
-s.setBarMode('hidden');assert.equal(settings.get_string('panel-mode'),'auto');
-hideConflict=false;s.setBarMode('hidden');assert.equal(panelActor.visible,false);
+assert.equal(s.barTimer,undefined);
+hideConflict=true;panelActor.hide();s.updateBar();assert.equal(panelActor.visible,false);
+assert.equal(s.openNativePanel('calendar'),false);assert.equal(nativeCalendarOpened,1);
+hideConflict=false;s.updateBar();assert.equal(panelActor.visible,true);
+// Fallback sem API de menu: manter acesso ao painel nativo, sem afirmar abertura.
+const dateMenu=panelActor.statusArea.dateMenu;delete panelActor.statusArea.dateMenu;
+assert.equal(s.openNativePanel('calendar'),false);assert.equal(panelActor.visible,true);
+panelActor.statusArea.dateMenu=dateMenu;
 assert.equal(JSON.parse(s.Snapshot()).windows.length,3);
 s.record();focused=b;s.record();focused=c;s.record();focused=a;s.record();
 let snap=JSON.parse(s.Snapshot());
