@@ -39,3 +39,17 @@ Referências: https://help.zenodo.org/docs/github/enable-repository/ ; https://h
 
 ## Estado inicial
 Nenhuma release foi encontrada no repositório durante a preparação. DOI ainda não confirmado. Autoria, titularidade, licenças e validação gráfica permanecem pendentes. A seção Sobre exibe essa condição; os links são abertos somente sob ação do usuário.
+
+## Triagem automatizada e publicação controlada
+
+Executar no clone completo, sem credenciais adicionais:
+
+```bash
+python3 scripts/auditar-snapshot.py --ref HEAD
+```
+
+O scanner lê a árvore Git do commit, não arquivos não rastreados nem repositórios privados. Detecta padrões comuns de credenciais, caminhos restritos, binários, links simbólicos/submódulos, ponteiros LFS e arquivos grandes. Referências de pesquisa são listadas para revisão humana; não são automaticamente consideradas vazamentos. A triagem também roda em teste de contrato da CI Desktop. Não é garantia de ausência de segredos (especialmente no histórico), nem autorização jurídica ou de publicação. Nenhum valor de credencial é impresso.
+
+O script legado `scripts/publicar-releases.sh` foi desativado integralmente porque publicava os dois projetos em sequência sem um portão de revisão. Não altera o repositório ARANDU-WEB; a publicação desse projeto passa a depender de procedimento próprio. Não existe automação com autoridade para publicar uma release ainda não aprovada.
+
+Antes da publicação, preencher e aprovar o checklist de titularidade, direitos, revisão de pesquisa e teste real associado ao SHA candidato. Selecionar a tag/commit validado, nunca a ponta móvel de main. Só então publicar a release pelo GitHub. A integração Zenodo é posterior e automática se habilitada; nenhum token deve ser armazenado no código.
