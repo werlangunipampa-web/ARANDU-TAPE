@@ -108,6 +108,7 @@ class TapeSession {
         this.signal(this.settings,'changed::panel-mode',()=>this.updateBar());
         this.buildDesktop();
         this.bindSeedSignals();
+        this.watchSeedWindow();
         this.signal(global.stage,'captured-event',(_stage,event)=>this.helpGlobalEvent(event));
         this.signal(global.stage,'captured-event',(_stage,event)=>this.navigationKeyEvent(event));
         this.signal(global.stage,'captured-event',(_stage,event)=>this.navigationOutsideEvent(event));
@@ -116,13 +117,14 @@ class TapeSession {
         this.signal(global.stage,'notify::key-focus',()=>this.onKeyFocusChanged());
         this.signal(global.display,'notify::focus-window',()=>{
             this.onFocusWindowChanged();
+            this.watchSeedWindow();
             this.record();this.schedule();
         });
         this.signal(global.display,'window-created',()=>this.schedule());
         this.signal(global.window_manager,'destroy',()=>this.schedule());
         this.signal(Main.layoutManager,'monitors-changed',()=>this.position());
-        this.signal(Main.overview,'showing',()=>{if(this.layer==='floating')this.root.hide();});
-        this.signal(Main.overview,'hidden',()=>this.schedule());
+        this.signal(Main.overview,'showing',()=>{this.seedOverview=true;if(this.layer==='floating')this.root.hide();this.refreshSeedSignals();});
+        this.signal(Main.overview,'hidden',()=>{this.seedOverview=false;this.refreshSeedSignals();this.schedule();});
         this.signal(this.privacy,'changed::remember-recent-files',()=>{this.lastFocus='';this.schedule();});
         this.record(); this.refresh();
     }
@@ -667,7 +669,7 @@ class TapeSession {
     }
     refreshSeedSignals() {
         if(!this.seedSignalBadge || this.stopping)return;
-        const permitted=this.allowed();
+        const permitted=this.allowed() && !this.seedOverview && !Main.overview.visible;
         const sources=this.seedSources||{};
         const active=name=>permitted && sources[name]?.visible===true;
         const labels=[];
@@ -683,19 +685,56 @@ class TapeSession {
         this.seedSignalBadge.text=labels.length?'GNOME · '+labels.join(' · '):'';
         this.seedSignalBadge.visible=permitted && labels.length>0;
         if(this.seedSignalDetail)
-            this.seedSignalDetail.text=!permitted?'Sinais indisponíveis na sessão bloqueada':
+            this.seedSignalDetail.text=!permitted?'Sinais indisponíveis nesta superfície da sessão':
                 labels.length?'Sinais GNOME: '+labels.join(' · '):'Sem sinal visível do GNOME; atividade desconhecida';
         this.positionSeedSignalBadge();
         if(this.seedSignalBadge.visible && this.seed)this.setSeedOpacity(255);
         else if(this.seed)this.scheduleSeedSleep();
     }
+    disconnectSeedWindow() {
+        for(const [win,id] of this.seedWindowLinks||[]){try{win.disconnect(id);}catch(_){}}
+        this.seedWindowLinks=[];
+    }
+    watchSeedWindow() {
+        this.disconnectSeedWindow();
+        const win=global.display.focus_window;
+        if(win && typeof win.connect==='function'){
+            for(const name of ['position-changed','size-changed']){
+                try{this.seedWindowLinks.push([win,win.connect(name,()=>this.positionSeedSignalBadge())]);}catch(_){}
+            }
+        }
+        this.positionSeedSignalBadge();
+    }
     positionSeedSignalBadge() {
-        if(!this.seedSignalBadge || !this.area || !this.seedPoint)return;
+        const badge=this.seedSignalBadge;
+        if(!badge || !this.area || !this.seedPoint || !badge.visible)return;
         const [x,y]=this.seedPoint;
-        const w=Math.min(240,Math.max(1,this.area.width-16));
-        this.seedSignalBadge.set_width(w);
-        this.seedSignalBadge.set_position(Math.round(limit(x-w/2,8,Math.max(8,this.area.width-w-8))),
-            Math.round(limit(y-124,8,Math.max(8,this.area.height-48))));
+        const margin=8;
+        const area=this.area;
+        const w=Math.min(240,Math.max(1,area.width-2*margin));
+        badge.set_width(w);
+        const natural=badge.get_preferred_height?.(w)?.[1];
+        const h=Math.min(Math.max(1,area.height-2*margin),Math.max(48,Number.isFinite(natural)?natural:64));
+        if(!this.seedSignalIndependent){
+            badge.set_position(Math.round(limit(x-w/2,margin,Math.max(margin,area.width-w-margin))),
+                Math.round(limit(y-124,margin,Math.max(margin,area.height-h-margin))));
+            return;
+        }
+        // Coordenadas globais; posição preferida junto à Semente e quatro cantos.
+        const left=area.x+margin, top=area.y+margin;
+        const right=Math.max(left,area.x+area.width-w-margin);
+        const bottom=Math.max(top,area.y+area.height-h-margin);
+        const preferred=[limit(area.x+x-w/2,left,right),limit(area.y+y-124,top,bottom)];
+        const candidates=[preferred,[left,top],[right,top],[left,bottom],[right,bottom]];
+        let frame=null;
+        try{frame=global.display.focus_window?.get_frame_rect?.();}catch(_){}
+        const overlap=([bx,by])=>frame?
+            Math.max(0,Math.min(bx+w,frame.x+frame.width)-Math.max(bx,frame.x))*
+            Math.max(0,Math.min(by+h,frame.y+frame.height)-Math.max(by,frame.y)):0;
+        const distance=([bx,by])=>Math.hypot(bx-preferred[0],by-preferred[1]);
+        candidates.sort((a,b)=>overlap(a)-overlap(b)||distance(a)-distance(b));
+        const [bx,by]=candidates[0];
+        badge.set_position(Math.round(bx),Math.round(by));
     }
     refreshSeedInformation() {
         if(!this.allowed() || !this.seedInformation)return;
@@ -833,7 +872,13 @@ class TapeSession {
         this.root.add_child(this.seed);
         this.seedSignalBadge=new St.Label({text:'',style_class:'arandu-seed-signal',reactive:false,visible:false});
         if(this.seedSignalBadge.clutter_text)this.seedSignalBadge.clutter_text.line_wrap=true;
-        this.root.add_child(this.seedSignalBadge);
+        // A etiqueta não reserva espaço nem participa da região de entrada.
+        this.seedSignalIndependent=false;
+        const layout=Main.layoutManager;
+        if(typeof layout.addTopChrome==='function' && typeof Main.sessionMode?.connect==='function'){
+            layout.addTopChrome(this.seedSignalBadge,{affectsStruts:false,affectsInputRegion:false,trackFullscreen:false});
+            this.seedSignalIndependent=true;
+        }else this.root.add_child(this.seedSignalBadge);
         this.controlBox=new St.BoxLayout({vertical:true,style_class:'arandu-seed-controls',visible:false});
         this.accessibilityLabels={};
         const addTitle=text=>this.controlBox.add_child(new St.Label({
@@ -1241,6 +1286,7 @@ class TapeSession {
         this.stopScan();
         this.cancelNavigationTimeout();
         this.endDrag();
+        this.disconnectSeedWindow();
         for(const [obj,id] of this.links){try{obj.disconnect(id);}catch(_){/* ator nativo pode ter sido destruído */}}
         this.links=[];
         stopSource(this.later);stopSource(this.hoverId);stopSource(this.writeId);this.cancelSeedSleep();this.cancelHelpSleep();this.cancelMedallionSleep();
@@ -1253,6 +1299,11 @@ class TapeSession {
         if(this.keyBound)Main.wm.removeKeybinding('arandu-tape-mapa');
         if(this.service)this.service.unexport();
         this.detachLayer();
+        if(this.seedSignalIndependent && this.seedSignalBadge){
+            Main.layoutManager.removeChrome(this.seedSignalBadge);
+            this.seedSignalBadge.destroy();
+        }
+        this.seedSignalBadge=null;
         if(this.root)this.root.destroy();
         if(this.panel)this.panel.destroy();
         this.root=null;this.panel=null;this.service=null;
