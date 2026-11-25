@@ -20,6 +20,7 @@ Este índice distingue manuais de uso, registros de desenvolvimento e documentos
 | Colaboração | [Contribuir](../CONTRIBUTING.md) |
 | Histórico consolidado | [CHANGELOG](../CHANGELOG.md) |
 | Apresentação em inglês | [README English](../README.en.md) |
+| Validação e desempenho | [Protocolo de aceite](VALIDACAO_FUNCIONAL_DESEMPENHO.md) |
 | Próximos marcos | [Roteiro](../ARANDU-SUITE/docs/ROADMAP.md) |
 | Publicação GitHub | [Política A0](POLITICA_PUBLICACAO_GITHUB_A0.md) |
 | Citação e DOI | [Política Zenodo](PUBLICACAO_CIENTIFICA_ZENODO.md) e [CITATION.cff](../CITATION.cff) |
