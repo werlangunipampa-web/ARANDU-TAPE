@@ -16,6 +16,7 @@ Identificadores abaixo são marcos de componentes no código e documentação, n
 - Espelhamento passivo de sinais nativos na Semente, sem captura de dispositivos nem armazenamento de notificações. Ausência de sinal não comprova inatividade. Validação real e visibilidade independente ainda pendentes.
 - Etiqueta passiva de sinais em camada própria quando suportada, com posicionamento por menor sobreposição à janela ativa e fallback; sem alteração da posição persistida da Semente. Validação gráfica pendente.
 - Representação compacta e reversível da Semente em cantos de menor sobreposição, sem alterar a âncora manual dos Rios. Ação explícita reabre navegação; validação gráfica pendente.
+- Contrato puro de gestos Alça Viva e Flechas, com testes de intenção; reserva superior nativa em Desktop GTK4, mapa GTK3 e Opy. Não constitui integração de gestos com GNOME ou Sway; validação visual e sincronização com a implementação local pendentes.
 - Pendências: revisão de divulgação, direitos e licença, validação real e aprovação do snapshot.
 
 ## Confluência / Suíte GNOME
