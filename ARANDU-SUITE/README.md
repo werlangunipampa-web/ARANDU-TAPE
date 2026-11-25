@@ -16,7 +16,7 @@ O **ARANDU TAPE** é um projeto experimental de interface gráfica para o **GNOM
 
 ### Repouso visual — Semente 7s / ajuda 6s
 
-Após **6 segundos** sem interação, o medalhão de ajuda `?` perde visibilidade; após **7 segundos**, a Semente central reduz sua opacidade a cerca de **12%**. **Os rios e os medalhões dos aplicativos permanecem visíveis** até o recolhimento explícito dos rios. A ajuda pode ser solicitada pelo menu ARANDU da barra superior. A intenção é manter os controles disponíveis sem poluir a área de trabalho.
+Após **6 segundos** sem interação, o medalhão de ajuda `?` perde visibilidade; após **7 segundos**, a Semente central reduz sua opacidade a cerca de **12%**. O repouso visual não deve ser confundido com o temporizador de navegação: no código atual, `navigation-idle-ms` tem padrão de 10 s, e o menu oferece 0/10/30/60 s (0 = nunca recolher por tempo). A diretriz do [Design Core](../docs/DESIGN_CORE.md) é recolhimento deliberado por padrão; a divergência ainda precisa de correção e validação. A varredura assistiva suspende esse temporizador. A ajuda pode ser solicitada pelo menu ARANDU da barra superior. A intenção é manter os controles disponíveis sem poluir a área de trabalho.
 
 As janelas de trabalho devem ficar à frente dos rios com `floating=false`; validar o posicionamento na versão de GNOME usada. A TOPBAR histórica é um componente ornamental distinto, preservado pelo instalador. A suíte possui uma variante TOPBAR experimental para outros GNOMEs modernos, sem substituir a versão 46 em uso.
 
