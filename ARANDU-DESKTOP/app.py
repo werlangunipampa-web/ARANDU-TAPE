@@ -17,6 +17,7 @@ from core import Session, NAMES, RIVERS
 from performance import collect
 from updates import snapshot_updates, official_updater
 from seed_presentation import SeedPresentation
+from window_gestures import HEADER_MIN_HEIGHT
 from bluetooth_devices import paired_devices, device_action, pairing_manager
 from ai_gateway import PROVIDERS, model_for, complete, GatewayError
 from adaptation import Adaptation, observe as observe_resources, propose as propose_adaptation
@@ -41,6 +42,7 @@ from session.windows import list_windows, focus_window, list_outputs, move_arand
 VERSION = "0.7.7"
 CSS = """
 window.arandu { background:#14221d; color:#e9eee7; }
+.arandu-live-header {background:#1a2e26;color:#e9eee7;}
 .arandu-bar {background:#1a2e26; padding:12px 18px;}
 .arandu-brand {color:#c7e5cd;font-weight:800;font-size:17px;letter-spacing:2px;}
 .arandu-muted {color:#adc0b3;font-size:12px;}
@@ -103,6 +105,13 @@ class Desktop(Gtk.Application):
         self.window.set_title("ARANDU Desktop · Laboratório 0.7.7")
         self.window.set_default_size(1120, 780)
         self.window.add_css_class("arandu")
+        # Cabeçalho Vivo: reserva real de layout, sem sobrepor controles do conteúdo.
+        # Manter os botões nativos até validar os adaptadores de gestos.
+        header = Gtk.HeaderBar()
+        header.add_css_class("arandu-live-header")
+        header.set_size_request(-1, HEADER_MIN_HEIGHT)
+        header.set_show_title_buttons(True)
+        self.window.set_titlebar(header)
         provider = Gtk.CssProvider()
         provider.load_from_data(CSS.encode("utf-8"))
         Gtk.StyleContext.add_provider_for_display(
