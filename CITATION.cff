@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use ARANDU TAPE in your research, please cite the archived software version."
+title: "ARANDU TAPE: Adaptive Desktop Environment"
+type: software
+authors:
+  - family-names: Werlang
+    given-names: Rafhael Brum
+repository-code: "https://github.com/werlangunipampa-web/ARANDU-TAPE"
+abstract: "Experimental adaptive desktop environment for Linux, exploring meaningful learning, accessible human-computer interaction, adaptive navigation, and visual organization through a central Seed and Rivers."
+keywords:
+  - Linux
+  - GNOME
+  - human-computer interaction
+  - accessibility
+  - meaningful learning
+  - adaptive interfaces
