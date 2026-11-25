@@ -15,6 +15,7 @@ Identificadores abaixo são marcos de componentes no código e documentação, n
 - Painel da Semente com informações sob demanda e acesso aos avisos/calendário e controles nativos. Ocultação própria da barra suspensa até equivalência dos indicadores; removida sondagem de 300 ms. Testes reais pendentes.
 - Espelhamento passivo de sinais nativos na Semente, sem captura de dispositivos nem armazenamento de notificações. Ausência de sinal não comprova inatividade. Validação real e visibilidade independente ainda pendentes.
 - Etiqueta passiva de sinais em camada própria quando suportada, com posicionamento por menor sobreposição à janela ativa e fallback; sem alteração da posição persistida da Semente. Validação gráfica pendente.
+- Representação compacta e reversível da Semente em cantos de menor sobreposição, sem alterar a âncora manual dos Rios. Ação explícita reabre navegação; validação gráfica pendente.
 - Pendências: revisão de divulgação, direitos e licença, validação real e aprovação do snapshot.
 
 ## Confluência / Suíte GNOME
