@@ -36,3 +36,7 @@ Referência complementar: https://gjs.guide/extensions/upgrading/gnome-shell-46.
 As propriedades são internas e não constituem contrato estável entre versões. O código do ARANDU apenas observa valores e não reproduz a implementação do GNOME.
 
 - GNOME Shell 46.0, API de camadas: https://github.com/GNOME/gnome-shell/blob/46.0/js/ui/layout.js
+
+## Semente recolhida adaptativa
+
+A representação compacta de 48 px lógicos aparece quando a janela ativa cobre a posição da Semente recolhida. Usa um ator separado e restrito à área do botão, não uma região de entrada que cubra a tela. Seleciona entre quatro cantos pelo menor cruzamento com a janela e pela proximidade da posição original. O aviso passivo procura evitar também o botão compacto. A representação original retorna ao expandir os Rios, ao desativar a preferência ou quando deixa de haver sobreposição. Não move janelas nem grava a posição automática como âncora do usuário. Não reposiciona durante arraste e não desloca o botão compacto sob o ponteiro ou foco enquanto persistir a condição de recolhimento. Não aparece no bloqueio, na Visão Geral nem em tela cheia exclusiva; atalhos existentes permanecem. A opção Semente adaptativa no painel permite desativar a função. O comportamento depende das APIs GNOME e requer validação em sessão real; não substitui os indicadores nativos.
