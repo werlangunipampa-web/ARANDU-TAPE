@@ -53,3 +53,7 @@ O scanner lê a árvore Git do commit, não arquivos não rastreados nem reposit
 O script legado `scripts/publicar-releases.sh` foi desativado integralmente porque publicava os dois projetos em sequência sem um portão de revisão. Não altera o repositório ARANDU-WEB; a publicação desse projeto passa a depender de procedimento próprio. Não existe automação com autoridade para publicar uma release ainda não aprovada.
 
 Antes da publicação, preencher e aprovar o checklist de titularidade, direitos, revisão de pesquisa e teste real associado ao SHA candidato. Selecionar a tag/commit validado, nunca a ponta móvel de main. Só então publicar a release pelo GitHub. A integração Zenodo é posterior e automática se habilitada; nenhum token deve ser armazenado no código.
+
+## Atualização de preparação — Espaços Vivos
+
+Consultar a [ficha de depósito bilíngue](FICHA_DEPOSITO_ZENODO.md) e o [registro de evolução](EVOLUCAO_ESPACOS_VIVOS.md). Manter CITATION.cff como fonte única de metadados até necessidade justificada de .zenodo.json; se ambos existirem, Zenodo ignora o CFF na importação. A ficha não deve ser depositada como descrição definitiva sem confirmar os componentes do snapshot. Em 24/11/2026, PR #3 ainda em rascunho, CI do snapshot c8e16cd aprovada, nenhuma release encontrada. Cinco patches locais testados offline não integram automaticamente o candidato público. Titularidade, licença, divulgação e testes gráficos reais continuam sendo portões obrigatórios.
