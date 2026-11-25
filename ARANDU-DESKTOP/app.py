@@ -143,8 +143,14 @@ class Desktop(Gtk.Application):
         main.set_hexpand(True)
         main.set_vexpand(True)
         root.append(main)
-        main.append(add_style(Gtk.Label(
-            label="A Semente organiza o encontro entre os Rios.", xalign=0), "arandu-title"))
+        heading = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        heading.append(add_style(Gtk.Label(
+            label="A Semente organiza o encontro entre os Rios.", xalign=0, hexpand=True, wrap=True), "arandu-title"))
+        self.seed_toggle = Gtk.Button(label="Expandir Semente")
+        self.seed_toggle.set_tooltip_text("Alternar a Semente e os Rios deste protótipo")
+        self.seed_toggle.connect("clicked", lambda *_: self.toggle_seed())
+        heading.append(self.seed_toggle)
+        main.append(heading)
         main.append(add_style(Gtk.Label(
             label="Interface independente do GNOME Shell · protótipo seguro sobre Linux Mint",
             xalign=0), "arandu-muted"))
@@ -239,7 +245,6 @@ class Desktop(Gtk.Application):
         controller.connect("key-pressed", self.on_key)
         self.window.add_controller(controller)
         self.tools_revealer.set_reveal_child(False)
-        self.visual.show_compact()
         self.show_intro()
         self.window.present()
 
@@ -886,6 +891,7 @@ class Desktop(Gtk.Application):
     def expand_seed(self):
         """Apenas intenção local, sem sensores ou motor cognitivo."""
         self.seed_state.expand()
+        self.seed_toggle.set_label("Recolher Semente")
         self.tools_revealer.set_reveal_child(True)
         self.clock_button.set_label(clock_text())
         self.visual.show_rivers()
@@ -900,6 +906,7 @@ class Desktop(Gtk.Application):
     def retract(self):
         self.session.retract()
         self.seed_state.collapse(force=True)
+        self.seed_toggle.set_label("Expandir Semente")
         self.tools_revealer.set_reveal_child(False)
         self.visual.highlight(None)
         self.selected_app = None
