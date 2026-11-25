@@ -23,6 +23,9 @@ jobs:
           node ARANDU-SUITE/Confluencia/tests/shell-contract.cjs
           node ARANDU-SUITE/Confluencia/design-reference/test-math.mjs
           node ARANDU-SUITE/Confluencia/design-reference/test-window-intent-gate.mjs
+          node ARANDU-SUITE/Confluencia/spaces-lab/test-adapter.mjs
+          python3 ARANDU-SUITE/Confluencia/spaces-lab/build.py /tmp/arandu-spaces-lab
+          node --input-type=module --check < /tmp/arandu-spaces-lab/extension.js
       - name: Construção e sintaxe Confluência (GNOME 46 e 47)
         run: |
           python3 ARANDU-SUITE/Confluencia/shell/build.py 46 /tmp/arandu-46
