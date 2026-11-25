@@ -1,7 +1,6 @@
-.arandu-lab-preview { border: 2px solid #E6BA59; background-color: rgba(230,186,89,0.025); border-radius: 5px; box-shadow: 0 0 8px rgba(230,186,89,0.30); }
-.arandu-lab-edge-glow { border: 1px solid rgba(215,187,124,0.64); border-radius: 4px; box-shadow: 0 0 5px rgba(230,186,89,0.23); }
-.arandu-lab-edge-handle { padding: 0; border: 1px solid rgba(215,187,124,0.45); border-radius: 12px; background-color: rgba(20,34,29,0.84); }
+.arandu-lab-preview { border: 1px solid #E6BA59; background-color: transparent; background-image: none; border-radius: 4px; box-shadow: none; }
+.arandu-lab-edge-glow { border: 1px solid rgba(215,187,124,0.55); background-color: transparent; background-image: none; border-radius: 4px; box-shadow: none; }
+.arandu-lab-edge-handle { padding: 0; border: 1px solid rgba(215,187,124,0.45); border-radius: 30px; background-color: rgba(20,34,29,0.84); }
 .arandu-lab-edge-handle:hover { border-color: #E6BA59; background-color: #253A30; }
-
-.arandu-lab-master-handle { padding: 0; border: 1px solid rgba(121,185,213,0.55); border-radius: 13px; background-color: rgba(20,34,29,0.88); }
-.arandu-lab-master-handle:hover, .arandu-lab-master-handle:focus { border-color: #79D5F3; background-color: #203B42; box-shadow: 0 0 5px rgba(121,213,243,0.30); }
+.arandu-lab-master-handle { padding: 0; border: 1px solid rgba(121,185,213,0.55); border-radius: 30px; background-color: rgba(20,34,29,0.88); }
+.arandu-lab-master-handle:hover, .arandu-lab-master-handle:focus { border-color: #79D5F3; background-color: #203B42; }
