@@ -37,7 +37,7 @@ A verificação de dependências opcionais pode indicar itens pendentes fora do 
 | G07 | Arrastar Semente, usar múltiplos monitores e escalas | Sem atraso perceptível, obstrução ou perda do controle |
 | G08 | Abrir mapa GTK3, alternar temas e dimensões | Paisagem procedural legível e sem erro |
 | G09 | Desativar histórico e testar limpeza em perfil sem dados reais | Controles e limites correspondem à política de privacidade |
-| G10 | Exercitar barra superior, indicadores do sistema e restauração | Nenhuma perda de indicadores essenciais |
+| G10 | Abrir painel da Semente; conferir hora/histórico; abrir avisos e controles GNOME; Esc; testar sessão bloqueada e conflito de extensão | Acesso sob demanda, fallback honesto, nenhuma ocultação pela Confluência nem perda de indicadores essenciais; validar separadamente câmera, microfone e compartilhamento |
 | G11 | Desativar extensão e recuperar desktop habitual | Sessão permanece utilizável |
 
 Verificar Alça Viva, flechas de Imersão/redimensionamento, Folha Digital, Opy e Cabeçalho Vivo somente quando a implementação correspondente estiver presente e identificada no candidato; ausência é pendência, não aprovação. A aproximação nunca deve executar ação. Não ocultar permanentemente indicadores originais de privacidade sem substituição comprovada.
