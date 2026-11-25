@@ -59,7 +59,7 @@ Ausubel (2000) investiga a formação de novos significados na interação entre
 
 A manipulação direta descrita por Shneiderman (1982, 1983) é antecedente relevante para ações sobre objetos visíveis, retorno rápido e alterações incrementais e reversíveis. O contorno e a prévia dos Espaços Vivos são decisões de projeto relacionadas a essa tradição. O referencial ISO 9241-11:2018 permite organizar a avaliação de usabilidade em torno de efetividade, eficiência e satisfação no contexto definido. Usar esse referencial não significa certificar conformidade com a norma.
 
-Distinguir três níveis: (a) aprendizagem humana, que requer evidência de significados e retenção; (b) aprendizagem do uso da interface, investigada por tarefas, retomada e transferência; (c) adaptação computacional, investigada por mecanismos e métricas próprios. O depósito gráfico não valida automaticamente nenhum dos três.
+Distinguir três níveis: (a) aprendizagem humana, que requer evidência de significados e retenção; (b) aprendizagem do uso da interface, investigada por tarefas, retomada e transferência; (c) adaptação computacional, investigada por mecanismos e métricas próprios. O depósito gráfico não valida automaticamente nenhum dos três. O contrato público de ações (`ARANDU-DESKTOP/action_contract.py`) é uma camada independente de autorização por intenção humana, não uma implementação da ontologia de pesquisa.
 
 ## 5. Avaliação e rastreabilidade
 
