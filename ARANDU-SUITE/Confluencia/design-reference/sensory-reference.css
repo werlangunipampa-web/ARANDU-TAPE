@@ -1,0 +1,38 @@
+/* Seleção de regras locais A209I: referência, não carregada pelo instalador.
+ * Cores dos controles e prévia; preserva os seletores originais.
+ * Não inclui paleta, zonas ou regras globais da folha Foundation.
+ */
+.arapi-v2-claro.arandu-a97-handle { background-color: #E0E7DD; border-color: #52694F; color: #375544; }
+.arapi-v2-claro.arandu-a97-handle:hover,
+.arapi-v2-claro.arandu-a97-handle:focus { background-color: #CED9CC; border-color: #375544; color: #24352B; }
+.arapi-v2-claro.arandu-a97-blue { background-color: #102019; border-color: #79B9D5; color: #79B9D5; }
+.arapi-v2-claro.arandu-a97-yellow { background-color: #102019; border-color: #E6BA59; color: #E6BA59; }
+.arapi-v2-claro.arandu-a981-resize-preview { border-color: #E6BA59; }
+
+.arapi-v2-contraste.arandu-a97-handle { background-color: #141414; border-color: #FFFFFF; color: #FFDF00; }
+.arapi-v2-contraste.arandu-a97-handle:hover,
+.arapi-v2-contraste.arandu-a97-handle:focus { background-color: #333333; border-color: #FFDF00; color: #FFFFFF; }
+.arapi-v2-contraste.arandu-a97-blue { background-color: #000000; border-color: #A6E4FF; color: #A6E4FF; }
+.arapi-v2-contraste.arandu-a97-yellow { background-color: #000000; border-color: #FFDF00; color: #FFDF00; }
+.arapi-v2-contraste.arandu-a981-resize-preview { border-color: #FFDF00; }
+
+.arapi-v2-luz-reduzida.arandu-a97-handle { background-color: #181F19; border-color: #91A18E; color: #B8A37B; }
+.arapi-v2-luz-reduzida.arandu-a97-handle:hover,
+.arapi-v2-luz-reduzida.arandu-a97-handle:focus { background-color: #354139; border-color: #B8A37B; color: #C8C9B7; }
+.arapi-v2-luz-reduzida.arandu-a97-blue { background-color: #102019; border-color: #79B9D5; color: #79B9D5; }
+.arapi-v2-luz-reduzida.arandu-a97-yellow { background-color: #102019; border-color: #E6BA59; color: #E6BA59; }
+.arapi-v2-luz-reduzida.arandu-a981-resize-preview { border-color: #E6BA59; }
+
+.arapi-v2-original.arandu-a97-handle { background-color: #182C22; border-color: #A8C58B; color: #D7BB7C; }
+.arapi-v2-original.arandu-a97-handle:hover,
+.arapi-v2-original.arandu-a97-handle:focus { background-color: #395842; border-color: #D7BB7C; color: #F0EDDF; }
+.arapi-v2-original.arandu-a97-blue { background-color: #102019; border-color: #79B9D5; color: #79B9D5; }
+.arapi-v2-original.arandu-a97-yellow { background-color: #102019; border-color: #E6BA59; color: #E6BA59; }
+.arapi-v2-original.arandu-a981-resize-preview { border-color: #E6BA59; }
+
+.arapi-v2-sereno.arandu-a97-handle { background-color: #202B25; border-color: #A0AF9D; color: #C4B590; }
+.arapi-v2-sereno.arandu-a97-handle:hover,
+.arapi-v2-sereno.arandu-a97-handle:focus { background-color: #405146; border-color: #C4B590; color: #E1E1D5; }
+.arapi-v2-sereno.arandu-a97-blue { background-color: #102019; border-color: #79B9D5; color: #79B9D5; }
+.arapi-v2-sereno.arandu-a97-yellow { background-color: #102019; border-color: #E6BA59; color: #E6BA59; }
+.arapi-v2-sereno.arandu-a981-resize-preview { border-color: #E6BA59; }
