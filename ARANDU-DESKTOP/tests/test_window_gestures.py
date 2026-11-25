@@ -45,6 +45,9 @@ class WindowGestures(unittest.TestCase):
         self.assertIn("head.set_size_request(-1, 52)", gnome)
         self.assertIn("set_show_title_buttons(True)", desktop)
         self.assertIn("set_show_close_button(True)", gnome)
+        opy = (ROOT / "opy.py").read_text()
+        self.assertIn("header.set_size_request(-1, HEADER_MIN_HEIGHT)", opy)
+        self.assertIn('header.set_decoration_layout(":close")', opy)
 
 
 if __name__ == "__main__":
