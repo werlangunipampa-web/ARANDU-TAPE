@@ -55,3 +55,7 @@ Não executar scripts de publicação enquanto houver pendências. A aprovação
 ## Composição verificável
 
 O [procedimento de reprodutibilidade](REPRODUTIBILIDADE_RELEASE.md) produz manifesto SHA-256 e TAR local de revisão a partir de SHA integral. Identificador global proposto: v0.1.0-scientific; ainda não aprovado nem criado. Arquivo de revisão não é release e não substitui a revisão do arquivo efetivamente arquivado pelo Zenodo.
+
+## Declaração do responsável — projeto independente
+
+O responsável, Rafhael Brum Werlang, informou que o ARANDU é projeto pessoal independente, de sua autoria. Registro de declaração em conversa durante a preparação científica, em 24–25/11/2026. Não atribuir o projeto à UNIPAMPA como titular ou financiadora por inferência. A declaração não equivale a parecer jurídico nem confirma, isoladamente, ausência de emprego de recursos institucionais, relação com atribuições funcionais ou direitos de terceiros. Esses fatos e a procedência dos componentes devem ser confirmados antes da concessão de licença. A decisão sobre licença, divulgação e release permanece pendente.
