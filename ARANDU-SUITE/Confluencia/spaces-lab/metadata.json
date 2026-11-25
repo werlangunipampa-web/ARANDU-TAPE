@@ -1,0 +1,9 @@
+{
+  "uuid": "arandu-spaces-lab@arandulab",
+  "name": "ARANDU Espaços Vivos — Laboratório",
+  "description": "Adaptador opt-in de ações espaciais por menu, sem alterar decorações. GNOME 46.",
+  "shell-version": [
+    "46"
+  ],
+  "version": 1
+}
