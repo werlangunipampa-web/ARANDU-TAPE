@@ -30,3 +30,7 @@ O histórico da Confluência é local, mas pode conter informações pessoais, t
 Confirmar comportamento em sessão bloqueada, limpeza em todos os adaptadores, permissões de diretórios existentes, dados de backups, indicação de microfone e compartilhamento, dependências externas e ausência de tráfego não solicitado. Uma preferência dedicada de histórico, independente da configuração GNOME, e retenção configurável são propostas a avaliar. A substituição dos indicadores do sistema pela Semente só será permitida com equivalência comprovada.
 
 Fontes no código: [model.py](../ARANDU-SUITE/Confluencia/app/model.py), [desktop.py](../ARANDU-SUITE/Confluencia/app/desktop.py), [voice.py](../ARANDU-SUITE/Confluencia/app/voice.py), [Shell](../ARANDU-SUITE/Confluencia/shell/implementation.js.in), [gateway](../ARANDU-DESKTOP/ai_gateway.py), [captura](../ARANDU-DESKTOP/session/capture-screen.sh). Consulte [segurança](../SECURITY.md).
+
+## Etapa de transição dos indicadores
+
+A Semente no candidato consulta data/hora e a preferência GNOME de histórico ao abrir ou atualizar seu painel. Abre, por ação explícita, os menus nativos de calendário/avisos e configurações rápidas quando disponíveis, sem copiar textos de notificações. Não fornece estado próprio de câmera, microfone ou compartilhamento. A ocultação pela Confluência está suspensa; não altera Hide Top Bar nem garante o estado de extensões externas. O acesso é bloqueado quando a sessão não está autorizada. Testar indicadores reais antes de substituir a barra.
