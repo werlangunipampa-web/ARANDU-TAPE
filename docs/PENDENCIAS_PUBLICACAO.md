@@ -29,7 +29,7 @@ A presença de palavras-chave não significa vazamento. A ausência de alertas n
 
 1. Confirmar autoria, colaboradores, titularidade e eventual necessidade de manifestação institucional. Descrever os fatos sobre vínculo e recursos sem inferência.
 2. Aprovar a divulgação dos componentes e contratos públicos, ou indicar quais devem ser separados.
-3. Escolher a licença após revisão de direitos e compatibilidade: GPL-3.0-only ou GPL-3.0-or-later é proposta para código gráfico; CC BY 4.0 é proposta para documentação. Definir ativos gráficos e preservar licenças de terceiros.
+3. Aplicar a estrutura de licença aprovada após revisão de direitos e compatibilidade: definir GPL-3.0-only ou GPL-3.0-or-later para código gráfico próprio, CC BY 4.0 para documentação autoral autorizada, delimitar identidade reservada e licenciar ativos funcionais. Preservar licenças de terceiros.
 4. Aprovar ou substituir o identificador global proposto v0.1.0-scientific.
 5. Executar os ensaios reais do candidato e confirmar independência de núcleos/credenciais privadas.
 6. Aprovar explicitamente o SHA final e conferir o registro efetivamente depositado.
@@ -39,3 +39,7 @@ Campos de autorização e identificação permanecem na [ficha de liberação](L
 ## Atualização de titularidade declarada
 
 O responsável declarou que o projeto é pessoal, independente e seu. Ver registro na [ficha de liberação](LIBERACAO_SNAPSHOT_ZENODO.md). Não presumir vínculo institucional como projeto, nem concluir titularidade integral sobre materiais de terceiros. Confirmar os fatos de desenvolvimento e autorizações de licenciamento antes da release.
+
+## Atualização de licenciamento
+
+Estrutura aprovada pelo responsável: [política de licenciamento e identidade](POLITICA_LICENCIAMENTO_IDENTIDADE.md). A decisão de família de licença está registrada; a aplicação definitiva e a aprovação do snapshot não foram concluídas.
