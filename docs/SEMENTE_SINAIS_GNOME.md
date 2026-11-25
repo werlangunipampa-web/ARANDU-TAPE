@@ -4,7 +4,7 @@ Revisão experimental, 24/11/2026. Este adaptador não é uma autoridade de priv
 
 ## Implementação
 
-A Semente observa, por sinais de mudança de propriedade, os atores de indicação disponíveis na barra do GNOME. Não abre dispositivos, captura mídia, lê texto de notificações, altera permissões ou cria um processo residente. A etiqueta não é interativa e permanece visível na superfície da Semente enquanto houver sinal reconhecido; impede o repouso visual da Semente. A sessão bloqueada não apresenta a etiqueta. A visibilidade efetiva depende da camada, do monitor e da sessão gráfica; ela pode ficar atrás de janelas ou em área fora de vista. Por isso, a barra nativa continua indispensável.
+A Semente observa, por sinais de mudança de propriedade, os atores de indicação disponíveis na barra do GNOME. Não abre dispositivos, captura mídia, lê texto de notificações, altera permissões ou cria um processo residente. A etiqueta não é interativa e permanece visível na superfície da Semente enquanto houver sinal reconhecido; impede o repouso visual da Semente. A sessão bloqueada não apresenta a etiqueta. O candidato posterior usa addTopChrome quando a API e o sinal de sessão estão disponíveis, sem região de entrada ou reserva de espaço. A etiqueta fica independente dos Rios, inclusive em tela cheia, em condições normais de sessão; é ocultada na Visão Geral e no bloqueio. Se a API faltar, permanece na camada anterior. A visibilidade efetiva ainda depende de validação real, portanto a barra nativa continua indispensável.
 
 | Sinal | Fonte interna verificada em GNOME 46.0 | Interpretação |
 | --- | --- | --- |
@@ -21,7 +21,7 @@ Não inferir que um dispositivo está desligado a partir de ausência de indicad
 
 Verificar no GNOME 46 real: ativar/desativar cada fonte por aplicativos de teste consentidos; comparar simultaneamente a indicação nativa com a da Semente; distinguir Não perturbe de avisos; verificar sessão bloqueada, recolhimento, mudança de monitor, sobreposição por janelas e desativação da extensão. Testar ausência de fonte e fallback. Nenhuma captura ou dado real precisa ser compartilhado.
 
-A próxima etapa requer um indicador acessível e independente da camada das janelas, integração real do estado do sistema e avaliação de compatibilidade. Não ocultar a barra nativa com base nesta revisão.
+A etiqueta escolhe a posição preferida ou o canto com menor sobreposição à janela focada, com desempate por distância da Semente. Se a janela cobre a área inteira, a etiqueta continua compacta dentro da área útil; não modifica o tamanho ou foco da janela. Reposicionamento por eventos de foco, movimento, tamanho e monitor; sem polling. O arraste e a posição persistida da Semente principal permanecem intactos. A próxima etapa requer validar a camada no Mint, acesso por teclado à Semente e a cobertura dos sinais. Não ocultar a barra nativa com base nesta revisão.
 
 ## Referências técnicas
 
@@ -34,3 +34,5 @@ A próxima etapa requer um indicador acessível e independente da camada das jan
 Referência complementar: https://gjs.guide/extensions/upgrading/gnome-shell-46.html .
 
 As propriedades são internas e não constituem contrato estável entre versões. O código do ARANDU apenas observa valores e não reproduz a implementação do GNOME.
+
+- GNOME Shell 46.0, API de camadas: https://github.com/GNOME/gnome-shell/blob/46.0/js/ui/layout.js
