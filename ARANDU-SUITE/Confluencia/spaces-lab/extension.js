@@ -40,6 +40,12 @@ export default class SpacesLab extends Extension {
         this._edgeHandle.set_size(24,24);
         Main.layoutManager.addTopChrome(this._edgeHandle,{affectsStruts:false,affectsInputRegion:true,trackFullscreen:true});
         this._edgeHandle.connect('button-press-event',(_actor,event)=>this._edgePress(event));
+        this._masterHandle=new St.Button({style_class:'arandu-lab-master-handle',reactive:true,can_focus:true,
+            visible:false,accessible_name:'Flecha Mestre · maximizar janela'});
+        this._masterHandle.set_size(26,26);
+        const masterIcon=this._icon('arco-mestre.svg');masterIcon.set_icon_size(20);this._masterHandle.set_child(masterIcon);
+        Main.layoutManager.addTopChrome(this._masterHandle,{affectsStruts:false,affectsInputRegion:true,trackFullscreen:true});
+        this._masterHandle.connect('clicked',()=>this._activateMaster());
 
         this._status=new PopupMenu.PopupMenuItem('Selecione uma janela normal.',{reactive:false,can_focus:false});
         this._indicator.menu.addMenuItem(this._status);
@@ -150,10 +156,10 @@ export default class SpacesLab extends Extension {
         this._preview?.hide();
     }
     _hideEdge(){
-        this._edge=null;this._edgeHandle?.hide();this._edgeGlow?.hide();
+        this._edge=null;this._edgeHandle?.hide();this._edgeGlow?.hide();this._masterTarget=null;this._masterHandle?.hide();
     }
     _syncEdgeTimer(c){
-        const ready=this._edgeEnabled&&c?.capabilities?.resize===true&&
+        const ready=this._edgeEnabled&&(c?.capabilities?.resize===true||c?.capabilities?.imersao===true)&&
             !this._indicator?.menu?.isOpen;
         if(!ready){
             if(this._edgeTimer){GLib.Source.remove(this._edgeTimer);this._edgeTimer=0;}
@@ -167,13 +173,28 @@ export default class SpacesLab extends Extension {
     _sampleEdge(){
         if(this._pending?.kind==='edge')return;
         const c=this._context();
-        if(!this._edgeEnabled||!c.capabilities.resize||this._pending||this._indicator.menu.isOpen){
+        if(!this._edgeEnabled||(!c.capabilities.resize&&!c.capabilities.imersao)||this._pending||this._indicator.menu.isOpen){
             this._hideEdge();return;
         }
-        if(!resizeFromEdge(c.frame,c.work,'se',0,0)){this._hideEdge();return;}
         const [x,y,mods]=global.get_pointer();
         const pressed=Clutter.ModifierType.BUTTON1_MASK|Clutter.ModifierType.BUTTON2_MASK|Clutter.ModifierType.BUTTON3_MASK;
-        if(mods&pressed){this._hideEdge();return;}
+        if(mods&pressed){
+            const m=this._masterTarget;
+            if(m&&c.focus===m.target&&same(c.frame,m.frame)&&this._masterHandle.visible)return;
+            this._hideEdge();return;
+        }
+        // Independent master zone, below the NE corner. Never overlap the yellow corner.
+        const f=c.frame;
+        const mx=f.x+f.width-28,my=f.y+44;
+        const masterNear=c.capabilities.imersao===true && f.width>=100 && f.height>=110 &&
+            mx>=c.work.x && my>=c.work.y && mx+26<=c.work.x+c.work.width && my+26<=c.work.y+c.work.height &&
+            x>=mx-8&&x<=mx+34&&y>=my-8&&y<=my+34;
+        if(masterNear){
+            this._hideEdge();this._masterTarget={target:c.focus,frame:c.frame};
+            this._masterHandle.set_position(mx,my);this._masterHandle.show();return;
+        }
+        this._masterTarget=null;this._masterHandle.hide();
+        if(!c.capabilities.resize||!resizeFromEdge(c.frame,c.work,'se',0,0)){this._hideEdge();return;}
         // Do not move a revealed button underneath the pointer.
         const old=this._edge;
         if(old&&old.target===c.focus&&same(old.frame,c.frame)&&
@@ -189,6 +210,15 @@ export default class SpacesLab extends Extension {
         this._edgeHandle.set_position(pos.x,pos.y);this._edgeHandle.show();
         this._edgeGlow.set_position(c.frame.x,c.frame.y);
         this._edgeGlow.set_size(c.frame.width,c.frame.height);this._edgeGlow.show();
+    }
+    _activateMaster(){
+        const m=this._masterTarget;
+        if(!m||!this._edgeEnabled||this._pending)return;
+        try{
+            const c=this._context();
+            if(c.focus!==m.target||!same(c.frame,m.frame)||c.capabilities.imersao!==true)return;
+            this._request('imersao');
+        }finally{this._hideEdge();this._sync();}
     }
     _edgePress(event){
         if(event.get_button()!==1||!this._edge||!this._edgeEnabled)return Clutter.EVENT_PROPAGATE;
@@ -300,8 +330,8 @@ export default class SpacesLab extends Extension {
     disable(){
         this._enabled=false;this._edgeEnabled=false;this._cancel();
         if(this._edgeTimer){GLib.Source.remove(this._edgeTimer);this._edgeTimer=0;}
-        for(const actor of [this._edgeHandle,this._edgeGlow])if(actor){Main.layoutManager.removeChrome(actor);actor.destroy();}
-        this._edgeHandle=null;this._edgeGlow=null;
+        for(const actor of [this._edgeHandle,this._edgeGlow,this._masterHandle])if(actor){Main.layoutManager.removeChrome(actor);actor.destroy();}
+        this._edgeHandle=null;this._edgeGlow=null;this._masterHandle=null;
         this._disconnect(this._targetSignals||[]);
         this._disconnect(this._signals||[]);
         if(this._preview){Main.layoutManager.removeChrome(this._preview);this._preview.destroy();}
