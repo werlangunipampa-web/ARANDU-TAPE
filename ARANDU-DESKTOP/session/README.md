@@ -1,10 +1,10 @@
-# ARANDU Desktop 0.4 — ensaio de sessão aninhada
+# ARANDU Desktop — laboratório Sway aninhado
 
 ## Escopo real
 
-Este ensaio executa um **compositor Wayland Sway aninhado em uma janela X11** do desktop Linux Mint existente. Uma aplicação GTK4 ARANDU executa como cliente **dentro** desse compositor. A sessão GNOME/Cinnamon do usuário, o gerenciador de login, a TOPBAR e a Confluência permanecem intactos.
+Este ensaio executa um **compositor Wayland Sway aninhado em uma janela X11** do desktop Linux Mint existente. Uma aplicação GTK4 ARANDU executa como cliente **dentro** desse compositor. O script de sessão aninhada não registra login nem altera a configuração da TOPBAR ou Confluência; ações explícitas realizadas pelo usuário dentro do laboratório podem afetar seus aplicativos e dados.
 
-**O ARANDU ainda NÃO é o compositor nem substitui uma sessão gráfica completa.** O protótipo GTK4 dentro do Sway continua sendo a interface 0.3, por enquanto. O objetivo desta fase é provar a infraestrutura de execução independente do GNOME Shell e criar base para janelas reais e integração futura com elementos de desktop/overlay.
+**O ARANDU ainda NÃO é o compositor nem substitui uma sessão gráfica completa.** O aplicativo iniciado é o código GTK4 presente no clone (0.7.7 no candidato documentado). Os números 0.3 e 0.4 nos registros históricos e nas mensagens legadas do script não são a versão atual do aplicativo. O objetivo desta fase é provar a infraestrutura de execução independente do GNOME Shell e criar base para janelas reais e integração futura com elementos de desktop/overlay.
 
 ## Pré-requisitos (Linux Mint X11)
 
@@ -29,12 +29,14 @@ Pode encerrar a sessão experimental com **Ctrl+Alt+Shift+Q**, com o foco na jan
 - A presença do Sway no sistema é necessária, mas não o torna desktop oficial.
 - ECA/Seed G4 permanecem desconectadas, sem migrações.
 - O compositor não executa como root, não cria arquivos em `/usr/share/wayland-sessions` e não altera o display manager.
-- A interface 0.3 ainda não usa camada Wayland layer-shell; isso é uma investigação futura, e não deve ser anunciado como implementado.
-- A leitura das janelas Sway por IPC será tratada em módulo isolado e somente sob pedido.
+- Não anunciar suporte layer-shell ou compositor próprio sem implementação e evidência específicas.
+- O código atual possui adaptador IPC local para janelas Sway, com validação e ação explícita; testar na sessão real.
 - Os comandos não executam `sudo`, `apt`, `pkill`, `systemctl`, nem alteram `~/.config/sway`.
 - A interface e o protocolo de testes serão avaliados no VAIO antes de declarar esse marco validado.
 
-## Validação real no VAIO — 22/11/2026
+## Histórico: validação real no VAIO — 22/11/2026
+
+Os registros abaixo descrevem marcos anteriores, não a validação da versão candidata atual.
 
 A captura mostrou o compositor `wlroots - X11-1` aberto **como janela dentro do GNOME**, com o cliente ARANDU GTK4 0.3 executando na tela aninhada. A saída do terminal mostrou **19 testes Python aprovados**. Confirmada a primeira execução gráfica aninhada no VAIO; **não** significa que a sessão ARANDU esteja pronta para login nem que gerencie janelas pela própria interface.
 
@@ -49,3 +51,6 @@ O VAIO confirmou por captura a presença simultânea de **ARANDU e Foot dentro d
 Teste de aceitação: iniciar laboratório novamente, usar o botão **Abrir Foot no Sway**, alternar para ARANDU e selecionar **Janelas da sessão Sway**. O Foot deve ser listado. Selecionar medalhão e clicar **Focar esta janela** deve trazer a aba Foot ao primeiro plano. Não alterar layout do GNOME nem arquivos de configuração permanentes.
 
 **Status:** correção publicada, ainda não confirmada na máquina. A captura anterior comprova duas janelas reais, não a troca por medalhão.
+
+
+Consulte [estado e versões](../../docs/ESTADO_E_VERSOES.md) e [manual Desktop](../README.md) antes de qualquer ensaio. O login nativo é um procedimento separado e não faz parte deste comando.
