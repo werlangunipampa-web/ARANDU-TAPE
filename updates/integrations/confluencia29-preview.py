@@ -48,7 +48,15 @@ def prepare(source):
     anchor = "this.root.add_child(this.controlBox);"
     if source.count(anchor) != 1: raise ValueError('ambiguous control box anchor')
     if not re.search(r'class TapeSession\s*\{', source): raise ValueError('unexpected extension')
-    return source.replace(anchor, anchor+"\n"+INSERT, 1)
+    output = source.replace(anchor, anchor+"\n"+INSERT, 1)
+    # Four controls can exceed the original 140px allowance. Use the
+    # natural panel height to keep it inside the visible work area.
+    original = "Math.round(limit(seedY-100,4,Math.max(4,h-140)))"
+    if source.count(original) != 1:
+        raise ValueError('unexpected position() implementation; refusing patch')
+    revised = ("Math.round(limit(seedY-100,4,"
+               "Math.max(4,h-Math.ceil(this.controlBox.get_preferred_height(-1)[1])-4)))")
+    return output.replace(original, revised, 1)
 
 def main():
     parser=argparse.ArgumentParser(description='Prepare a separate integration copy; never changes active extension')
