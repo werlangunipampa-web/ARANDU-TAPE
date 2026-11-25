@@ -30,6 +30,7 @@ Este índice distingue manuais de uso, registros de desenvolvimento e documentos
 | Próximos marcos | [Roteiro](../ARANDU-SUITE/docs/ROADMAP.md) |
 | Publicação GitHub | [Política A0](POLITICA_PUBLICACAO_GITHUB_A0.md) |
 | Citação e DOI | [Política Zenodo](PUBLICACAO_CIENTIFICA_ZENODO.md) e [CITATION.cff](../CITATION.cff) |
+| Reprodutibilidade da release | [Manifesto e pacote local](REPRODUTIBILIDADE_RELEASE.md) |
 | Liberação do snapshot | [Ficha de aceite, direitos e licenças](LIBERACAO_SNAPSHOT_ZENODO.md) |
 | Procedência e direitos | [Auditoria preliminar](AUDITORIA_PRELIMINAR_DOI.md) e [inventário](INVENTARIO_PROCEDENCIA_LICENCIAMENTO.md) |
 
