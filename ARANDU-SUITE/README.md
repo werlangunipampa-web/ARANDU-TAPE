@@ -1,4 +1,4 @@
-# ARANDU TAPE — Confluência | ARANDU SUITE 3.1 (prévia experimental)
+# ARANDU TAPE — Confluência 3.2.3-beta (prévia experimental)
 
 **Um ambiente gráfico de navegação que se adapta às possibilidades humanas.**
 
@@ -22,7 +22,7 @@ As janelas de trabalho devem ficar à frente dos rios com `floating=false`; vali
 
 ## Instalação
 
-Baixe o pacote da versão, extraia-o e execute a partir da pasta `ARANDU-SUITE`:
+A partir de um clone Git ou ZIP do código-fonte, entre na pasta `ARANDU-SUITE`. Ainda não há release científica confirmada. O instalador exibe um identificador legado 2.8.2; a extensão usa 3.2.3-beta.
 
 ```bash
 bash instalar-tudo.sh --preflight
@@ -32,7 +32,7 @@ bash instalar-tudo.sh
 
 Não executar com `sudo`. O instalador faz backup da Confluência instalada e não substitui a TOPBAR histórica. Na sessão GNOME X11 pode ser necessário salvar o trabalho e reiniciar o GNOME Shell com `Alt+F2`, `r`, Enter; no Wayland, normalmente é necessário encerrar a sessão e entrar novamente. Veja [instalação](docs/INSTALACAO.md).
 
-## Painel de acessibilidade na Semente (3.1 beta)
+## Painel de acessibilidade na Semente (introduzido na 3.1 beta)
 
 Clique com o botão direito na **Semente** ou abra **ARANDU TAPE → Acessibilidade · configurar na Semente**. Ajuste velocidade da varredura (2 / 3,5 / 5 s), tamanho dos medalhões (85% / 100% / 120%), alto contraste, acionador (Super+Alt+Espaço ou Super+Alt+S) e visibilidade da TOPBAR. Existe uma ação para restaurar os padrões seguros.
 
@@ -88,3 +88,6 @@ Um retorno `(true,)` confirma aceitação do comando pela extensão, **não comp
 ## Autoria e colaboração
 
 Projeto em desenvolvimento no ecossistema ARANDU. Antes de aceitar contribuições externas, definir licença, diretrizes de contribuição e política de privacidade. **Não presumir licença de código aberto apenas por hospedar o código no GitHub.**
+
+
+Para distinguir versões, evidências e marcos futuros, consulte [estado dos componentes](../docs/ESTADO_E_VERSOES.md). Para citar e distribuir, siga a [política científica](../docs/PUBLICACAO_CIENTIFICA_ZENODO.md).
