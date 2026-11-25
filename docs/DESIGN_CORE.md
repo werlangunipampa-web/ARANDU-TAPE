@@ -30,7 +30,7 @@ Fontes atuais: [app.py](../ARANDU-DESKTOP/app.py), [style.css](../ARANDU-SUITE/C
 
 | Elemento | Função e regra | Estado |
 | --- | --- | --- |
-| Semente Adaptativa | Ponto de orientação, navegação e avisos; pequena em repouso; expansão por intenção | Semente pública existente; avisos e privacidade unificados ainda a verificar |
+| Semente Adaptativa | Ponto de orientação, navegação e avisos; pequena em repouso; expansão por intenção | Semente pública existente; acesso sob demanda aos menus nativos no candidato; indicadores próprios ainda pendentes |
 | Rios | Memória, Abertos e Frequentes; trajetórias e medalhões estáveis; alternar seleção sem fechar os demais rios | Implementação pública existente; padrão de inatividade corrigido no candidato, validação real pendente |
 | Medalhões | Identificar e selecionar item real; foco perceptível; não ativar somente pela aproximação | Implementado parcialmente, varia por adaptador |
 | Opy | Encontro de janelas, seleção e retorno ao trabalho | Protótipo GTK4/Sway; validar |
@@ -48,7 +48,7 @@ Fontes atuais: [app.py](../ARANDU-DESKTOP/app.py), [style.css](../ARANDU-SUITE/C
 - Cabeçalho Vivo em janelas reais: reservar ao menos 52 px lógicos como diretriz inicial, ampliar se necessário, sem cobrir conteúdo nem controles próprios; reservar região inferior para redimensionamento. Aplicável a interfaces abertas pela Semente, nativas e integradas, respeitando limites técnicos de cada compositor.
 - Painéis transitórios (Opy, Confluência, menus e agenda): linguagem equivalente para recolher/fechar o painel, sem encerrar a aplicação de origem. Escape e teclado disponíveis; não duplicar controles.
 - A Semente deve evitar obstrução da janela ativa; reposicionamento deve respeitar área útil e monitores. Não interceptar cliques em outras aplicações.
-- Privacidade: indicação persistente e acessível de câmera, microfone, gravação e compartilhamento quando efetivamente ativos. Não retirar os indicadores originais do sistema enquanto a substituição não for comprovadamente equivalente. Não inventar estado de sensores.
+- Privacidade: indicação persistente e acessível de câmera, microfone, gravação e compartilhamento quando efetivamente ativos. Não retirar os indicadores originais do sistema enquanto a substituição não for comprovadamente equivalente. No candidato, a Confluência suspende sua própria ocultação da barra e elimina a sondagem de 300 ms destinada a esse controle. Extensões externas não são alteradas; não garantir visibilidade se houver conflito. Não inventar estado de sensores.
 
 ## 4. Acessibilidade e variantes sensoriais
 
