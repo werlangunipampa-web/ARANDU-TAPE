@@ -1,0 +1,13 @@
+[Unit]
+Description=ARANDU Update metadata check (read-only; no installation)
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/.local/share/arandu/update/arandu_update_check.py
+TimeoutStartSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=graphical-session.target
