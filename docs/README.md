@@ -12,6 +12,8 @@ Este índice distingue manuais de uso, registros de desenvolvimento e documentos
 | Diagnosticar e recuperar | [Comandos e diagnóstico](../ARANDU-SUITE/docs/COMANDOS-E-DIAGNOSTICO.md) |
 | Conferir versões e limites | [Estado e versões](ESTADO_E_VERSOES.md) |
 | Identidade visual e interação | [Design Core](DESIGN_CORE.md) |
+| Arquitetura e contribuições científicas | [Posicionamento científico](ARQUITETURA_CONTRIBUICOES_CIENTIFICAS.md) |
+| Pesquisa em interação | [Protocolo proposto](PROTOCOLO_PESQUISA_INTERACAO.md) |
 | Fundamentos pedagógicos | [Fundamentação pública](FUNDAMENTACAO_PUBLICA.md) |
 | Acessibilidade e arquitetura | [Arquitetura e acessibilidade](../ARANDU-SUITE/docs/ARQUITETURA-E-ACESSIBILIDADE.md) |
 | Guia de acessibilidade | [Acessibilidade](ACESSIBILIDADE.md) |
