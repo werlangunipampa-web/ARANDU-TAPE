@@ -69,9 +69,9 @@ class TapeSession {
         this.panel.menu.addAction('Varredura: normal · 3,5 segundos',()=>this.setScanInterval(3500));
         this.panel.menu.addAction('Varredura: rápida · 2 segundos',()=>this.setScanInterval(2000));
         this.panel.menu.addAction('Mostrar/ocultar botão de ajuda',()=>this.toggleHelpButton());
-        this.panel.menu.addAction('Barra: sempre visível',()=>this.setBarMode('visible'));
-        this.panel.menu.addAction('Barra: sempre oculta',()=>this.setBarMode('hidden'));
-        this.panel.menu.addAction('Barra: automática',()=>this.setBarMode('auto'));
+        this.panel.menu.addAction('Semente · informações e controles',()=>this.toggleAccessibility());
+        this.panel.menu.addAction('Avisos e calendário GNOME',()=>this.openNativePanel('calendar'));
+        this.panel.menu.addAction('Controles do sistema GNOME',()=>this.openNativePanel('settings'));
         this.panel.menu.addAction('Recuperar barra superior',()=>this.setBarMode('visible'));
         this.panel.menu.addAction('Alternar barra (Super+Alt+H)',()=>this.cycleBarMode());
         this.panel.menu.addAction('Rios: recolher após 10 segundos',()=>this.setNavigationIdle(10000));
@@ -103,10 +103,9 @@ class TapeSession {
                 Shell.ActionMode.NORMAL|Shell.ActionMode.OVERVIEW,callback);
             this.navBindings.push(name);
         }
-        // Não toma posse do painel em uma sessão com Hide Top Bar ativa.
-        this.barTimer=GLib.timeout_add(GLib.PRIORITY_DEFAULT,300,()=>{
-            this.updateBar();return GLib.SOURCE_CONTINUE;
-        });
+        // Sem sondagem permanente da barra: manter a proteção nativa nesta etapa.
+        this.updateBar();
+        this.signal(this.settings,'changed::panel-mode',()=>this.updateBar());
         this.buildDesktop();
         this.signal(global.stage,'captured-event',(_stage,event)=>this.helpGlobalEvent(event));
         this.signal(global.stage,'captured-event',(_stage,event)=>this.navigationKeyEvent(event));
@@ -214,9 +213,9 @@ class TapeSession {
         this.updateAccessibilityLabels();
     }
     toggleAccessibility() {
-        if(!this.controlScroll)return;
+        if(!this.controlScroll || !this.allowed())return;
         this.controlScroll.visible=!this.controlScroll.visible;
-        if(this.controlScroll.visible){this.wakeSeed();this.updateAccessibilityLabels();this.position();}
+        if(this.controlScroll.visible){this.wakeSeed();this.updateAccessibilityLabels();this.refreshSeedInformation();this.position();}
     }
     updateAccessibilityLabels() {
         if(!this.accessibilityLabels)return;
@@ -229,7 +228,7 @@ class TapeSession {
         this.accessibilityLabels.size.set_label('Medalhões: '+Math.round(scale*100)+'%');
         this.accessibilityLabels.contrast.set_label('Alto contraste: '+(contrast?'ligado':'desligado'));
         this.accessibilityLabels.switch.set_label('Acionador: '+switchName);
-        this.accessibilityLabels.bar.set_label('Barra: '+this.settings.get_string('panel-mode'));
+        this.accessibilityLabels.bar.set_label('Recuperar barra GNOME');
     }
     // Varredura opcional: nunca abre um programa automaticamente.
     // Uma tecla ou acionador inicia a varredura e confirma o item destacado.
@@ -507,6 +506,9 @@ class TapeSession {
         else this.scheduleHelpSleep();
     }
     helpGlobalEvent(event) {
+        if(this.controlScroll?.visible && event.type()===Clutter.EventType.KEY_PRESS && event.get_key_symbol()===Clutter.KEY_Escape){
+            this.controlScroll.hide();return Clutter.EVENT_STOP;
+        }
         if(!this.helpBox || !this.helpBox.visible)return Clutter.EVENT_PROPAGATE;
         if(event.type()===Clutter.EventType.KEY_PRESS && event.get_key_symbol()===Clutter.KEY_Escape) {
             this.helpBox.hide();this.scheduleHelpSleep();return Clutter.EVENT_STOP;
@@ -614,57 +616,52 @@ class TapeSession {
             return !!ext && ext.state===1; // GNOME ExtensionState.ENABLED
         } catch (_) {return false;}
     }
-    // Alternar visibilidade sem mouse: sempre é possível restaurar com Super+Alt+B.
-    cycleBarMode() {
-        const mode=this.settings.get_string('panel-mode');
-        this.setBarMode(mode==='visible'?'auto':mode==='auto'?'hidden':'visible');
-    }
+    // Etapa de transição: a Semente ainda não substitui os indicadores nativos.
+    cycleBarMode() {this.setBarMode('visible');}
     setBarMode(mode) {
-        if(!['visible','hidden','auto'].includes(mode))return;
-        if(mode!=='visible' && this.hideTopBarConflict()) {
-            Main.notify('ARANDU TAPE','Desativa primeiro a extensão Hide Top Bar para evitar conflito de controle.');
-            return;
+        if(!['visible','hidden','auto'].includes(mode))return false;
+        if(mode!=='visible'){
+            this.updateBar();
+            Main.notify('ARANDU TAPE','Ocultação suspensa neste candidato: os indicadores de privacidade do GNOME ainda são necessários.');
+            return false;
         }
-        this.settings.set_string('panel-mode',mode);
+        this.settings.set_string('panel-mode','visible');
         this.updateAccessibilityLabels();
-        this.barLastNear=Date.now();
         this.updateBar();
-        Main.notify('ARANDU TAPE',`Barra superior: ${mode==='visible'?'visível':mode==='hidden'?'oculta':'automática'}. Recuperar: Super + Alt + B`);
+        return true;
     }
     restorePanel() {
-        // Nunca altera nem desativa arandu-topbar@local: só a visibilidade do painel GNOME.
         if(Main.panel && Main.panel.show)Main.panel.show();
     }
     updateBar() {
-        if(!Main.panel || !Main.panel.hide || !Main.panel.show)return;
-        const mode=this.settings.get_string('panel-mode');
-        if(this.hideTopBarConflict() || !this.allowed() || Main.overview.visible) {
-            this.restorePanel();return;
+        // Não disputar a propriedade do painel com outra extensão.
+        // A preferência antiga é preservada; não é aplicada nesta revisão.
+        if(!this.hideTopBarConflict())this.restorePanel();
+    }
+    refreshSeedInformation() {
+        if(!this.allowed() || !this.seedInformation)return;
+        const now=new Date();
+        this.seedInformation.text=now.toLocaleDateString('pt-BR')+' · '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+        if(this.seedHistory)this.seedHistory.text=this.remembers()?'Histórico GNOME: permitido':'Histórico GNOME: pausado';
+    }
+    openNativePanel(kind) {
+        if(!this.allowed() || !['calendar','settings'].includes(kind))return false;
+        if(this.controlScroll)this.controlScroll.hide();
+        if(this.hideTopBarConflict()){
+            Main.notify('ARANDU TAPE','Há outra extensão controlando a barra. Desative-a manualmente se precisar recuperar os indicadores GNOME.');
+            return false;
         }
-        if(mode==='hidden'){Main.panel.hide();return;}
-        if(mode!=='auto'){this.restorePanel();return;}
-        // Nunca ocultar o painel enquanto um menu está aberto ou um controle
-        // do próprio painel está focado pelo teclado assistivo.
-        const menu=Main.panel.menuManager?.activeMenu;
-        const focusedActor=global.stage?.get_key_focus?.();
-        const focusOnPanel=focusedActor &&
-            (focusedActor===Main.panel || Main.panel.contains?.(focusedActor));
-        if(menu || focusOnPanel || this.panel?.menu?.isOpen){
-            this.barLastNear=Date.now();
-            this.restorePanel();
-            return;
-        }
-        const [x,y]=global.get_pointer();
-        const mon=Main.layoutManager.primaryMonitor;
-        if(!mon){this.restorePanel();return;}
-        // Área de aproximação inclui toda a altura da barra, e não só 14 pixels.
-        // Uma pessoa com mobilidade reduzida precisa de tempo para encontrar o comando.
-        const panelHeight=Math.max(44,Main.panel.height||0);
-        const onPanel=x>=mon.x && x<=mon.x+mon.width &&
-            y>=mon.y && y<=mon.y+panelHeight+14;
-        if(onPanel)this.barLastNear=Date.now();
-        const nearby=Date.now()-(this.barLastNear||0)<8000;
-        if(nearby)this.restorePanel();else Main.panel.hide();
+        this.restorePanel();
+        try {
+            const area=Main.panel?.statusArea;
+            const item=kind==='calendar'?area?.dateMenu:(area?.quickSettings || area?.aggregateMenu);
+            if(item?.menu && typeof item.menu.open==='function'){
+                item.menu.open();
+                return true;
+            }
+        } catch (_) {}
+        Main.notify('ARANDU TAPE','Use a barra superior GNOME para acessar este controle.');
+        return false;
     }
     allowed() {return !Main.sessionMode.isLocked && !Main.sessionMode.isGreeter;}
     remembers() {return this.allowed() && this.privacy.get_boolean('remember-recent-files');}
@@ -786,6 +783,15 @@ class TapeSession {
             this.controlBox.add_child(button);
             return button;
         };
+        addTitle('SEMENTE · INFORMAÇÕES');
+        this.seedInformation=new St.Label({text:'Data e hora sob demanda',style_class:'arandu-a11y-section'});
+        this.controlBox.add_child(this.seedInformation);
+        this.seedHistory=new St.Label({text:'Histórico GNOME: não consultado',style_class:'arandu-a11y-section'});
+        this.controlBox.add_child(this.seedHistory);
+        addAction('Atualizar informações',()=>this.refreshSeedInformation());
+        addAction('Avisos e calendário GNOME',()=>this.openNativePanel('calendar'));
+        addAction('Controles do sistema GNOME',()=>this.openNativePanel('settings'));
+        addTitle('Privacidade: indicadores GNOME');
         addTitle('ACESSIBILIDADE · ARANDU');
         addTitle('Varredura');
         this.accessibilityLabels.speed=addAction('Varredura: 3,5 s',()=>{
@@ -805,8 +811,8 @@ class TapeSession {
             const selected=this.settings.get_strv('arandu-varredura-acionar');
             this.setSwitchShortcut(selected.includes('<Super><Alt>s')?'space':'s');
         });
-        addTitle('TOPBAR');
-        this.accessibilityLabels.bar=addAction('Barra: visible',()=>this.cycleBarMode());
+        addTitle('PROTEÇÃO DO SISTEMA');
+        this.accessibilityLabels.bar=addAction('Recuperar barra GNOME',()=>this.setBarMode('visible'));
         addAction('Restaurar padrões seguros',()=>this.resetAccessibility());
         addAction('Fechar configurações',()=>this.controlScroll.hide());
         // Rolar em telas menores e manter ações alcançáveis por teclado.
@@ -1173,7 +1179,7 @@ class TapeSession {
         stopSource(this.later);stopSource(this.hoverId);stopSource(this.writeId);this.cancelSeedSleep();this.cancelHelpSleep();this.cancelMedallionSleep();
         if(this.writeId)this.save();
         this.restorePanel();
-        stopSource(this.barTimer);this.barTimer=0;
+        // Não há temporizador residente de controle da barra.
         for(const name of this.navBindings)Main.wm.removeKeybinding(name);
         this.navBindings=[];
         if(this.rescueKeyBound)Main.wm.removeKeybinding('arandu-restaurar-barra');
