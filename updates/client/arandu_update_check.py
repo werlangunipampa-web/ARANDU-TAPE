@@ -28,6 +28,13 @@ def check(timeout=5):
             data = response.read(MAX_BYTES + 1)
             if len(data) > MAX_BYTES:
                 return {"status": "unavailable", "reason": "oversize"}
+    except urllib.error.HTTPError as error:
+        if error.code == 404:
+            # latest may be absent or repository access may have failed.
+            return {"status": "no_stable_release_or_inaccessible", "reason": "http_404"}
+        if error.code in (403, 429):
+            return {"status": "unavailable", "reason": "rate_limited_or_forbidden", "http_status": error.code}
+        return {"status": "unavailable", "reason": "http_error", "http_status": error.code}
     except (urllib.error.URLError, TimeoutError, ValueError, OSError):
         return {"status": "unavailable", "reason": "network"}
     try:
