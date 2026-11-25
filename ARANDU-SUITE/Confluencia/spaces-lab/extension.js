@@ -50,13 +50,17 @@ export default class SpacesLab extends Extension {
         this._action('encerrar','Solicitar encerramento',()=>this._request('encerrar'));
         this._action('confirm','Confirmar encerramento',()=>this._confirmClose());
         this._action('cancel','Cancelar intenção / prévia',()=>{this._cancel();this._sync();});
-        this._watch(global.display,'notify::focus-window',()=>{this._cancel();this._watchTarget();this._sync();});
-        this._watch(global.display,'grab-op-begin',()=>{this._cancel();this._sync();});
-        this._watch(Main.sessionMode,'updated',()=>{this._cancel();this._sync();});
-        this._watch(Main.layoutManager,'monitors-changed',()=>{this._cancel();this._sync();});
-        this._watch(Main.overview,'showing',()=>{this._cancel();this._sync();});
-        this._watch(Main.overview,'hidden',()=>this._sync());
-        this._watch(Main.extensionManager,'extension-state-changed',()=>{this._cancel();this._sync();});
+        // Critical cancellation subscriptions must succeed; otherwise fail closed.
+        const events=[
+            [global.display,'notify::focus-window',()=>{this._cancel();this._watchTarget();this._sync();}],
+            [global.display,'grab-op-begin',()=>{this._cancel();this._sync();}],
+            [Main.sessionMode,'updated',()=>{this._cancel();this._sync();}],
+            [Main.layoutManager,'monitors-changed',()=>{this._cancel();this._sync();}],
+            [Main.overview,'showing',()=>{this._cancel();this._sync();}],
+            [Main.overview,'hidden',()=>this._sync()],
+            [Main.extensionManager,'extension-state-changed',()=>{this._cancel();this._sync();}]
+        ];
+        this._safeEvents=events.map(([obj,name,fn])=>this._watch(obj,name,fn)).every(Boolean);
         this._watch(this._indicator.menu,'open-state-changed',(_menu,open)=>{if(open)this._sync();});
         this._watch(global.stage,'captured-event',(_stage,event)=>{
             if(this._pending && event.type()===Clutter.EventType.KEY_PRESS &&
@@ -77,7 +81,7 @@ export default class SpacesLab extends Extension {
         this._indicator.menu.addMenuItem(item);this._actions[id]=item;
     }
     _watch(obj,signal,fn,bag=this._signals) {
-        try{bag.push([obj,obj.connect(signal,fn)]);}catch(_){}
+        try{bag.push([obj,obj.connect(signal,fn)]);return true;}catch(_){return false;}
     }
     _disconnect(bag){for(const [obj,id] of bag){try{obj.disconnect(id);}catch(_){}}bag.length=0;}
     _watchTarget(){
@@ -90,7 +94,7 @@ export default class SpacesLab extends Extension {
         const foundation=Main.extensionManager.lookup(FOUNDATION);
         const w=global.display.focus_window;
         // ExtensionState.ENABLED is 1 in GNOME 46. Do not compete with Foundation.
-        const sessionOK=this._enabled && foundation?.state!==1 && !Main.sessionMode.isLocked &&
+        const sessionOK=this._enabled && this._safeEvents===true && foundation?.state!==1 && !Main.sessionMode.isLocked &&
             !Main.sessionMode.isGreeter && !Main.overview.visible;
         const normal=!!(sessionOK && w && w.get_window_type()===Meta.WindowType.NORMAL &&
             !w.skip_taskbar && !w.minimized && !w.is_fullscreen() && !w.get_transient_for());
@@ -106,7 +110,8 @@ export default class SpacesLab extends Extension {
         if(!this._indicator)return;
         let c;try{c=this._context();}catch(_){c={allowed:false,capabilities:{}};}
         const p=this._pending;
-        this._status.label.text=p?.kind==='close'?'Confirmação de encerramento pendente':
+        const targetName=p?.kind==='close'?(p.target.get_title?.()||'Janela ativa').replace(/[\r\n\t]/g,' ').slice(0,60):'';
+        this._status.label.text=p?.kind==='close'?'Encerrar: '+targetName+'? (20 s)':
             p?.kind==='resize'?'Prévia ativa · ajuste ou confirme (20 s)':
             c.allowed?'Janela ativa · escolha uma ação':'Indisponível: sessão, janela ou Foundation ativa';
         for(const name of ['imersao','recolher','esquerda','direita','resize','encerrar'])
