@@ -14,6 +14,12 @@ Este índice distingue manuais de uso, registros de desenvolvimento e documentos
 | Identidade visual e interação | [Design Core](DESIGN_CORE.md) |
 | Fundamentos pedagógicos | [Fundamentação pública](FUNDAMENTACAO_PUBLICA.md) |
 | Acessibilidade e arquitetura | [Arquitetura e acessibilidade](../ARANDU-SUITE/docs/ARQUITETURA-E-ACESSIBILIDADE.md) |
+| Guia de acessibilidade | [Acessibilidade](ACESSIBILIDADE.md) |
+| Dados e privacidade | [Privacidade](PRIVACIDADE.md) |
+| Vulnerabilidades | [Segurança](../SECURITY.md) |
+| Colaboração | [Contribuir](../CONTRIBUTING.md) |
+| Histórico consolidado | [CHANGELOG](../CHANGELOG.md) |
+| Apresentação em inglês | [README English](../README.en.md) |
 | Próximos marcos | [Roteiro](../ARANDU-SUITE/docs/ROADMAP.md) |
 | Publicação GitHub | [Política A0](POLITICA_PUBLICACAO_GITHUB_A0.md) |
 | Citação e DOI | [Política Zenodo](PUBLICACAO_CIENTIFICA_ZENODO.md) e [CITATION.cff](../CITATION.cff) |
