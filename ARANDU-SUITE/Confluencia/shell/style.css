@@ -59,3 +59,7 @@
 
 /* Sinais nativos agregados, sem interação ou captura. */
 .arandu-seed-signal { color:#fff2d5; background-color:#253a30; border:2px solid #e1b85c; border-radius:12px; padding:5px 8px; font-size:12px; font-weight:bold; }
+
+/* Semente compacta: somente o medalhão recebe entrada. */
+.arandu-seed-dock { padding:0; border-radius:24px; border:1px solid #b9ad84; background-color:#14221d; }
+.arandu-seed-dock:hover, .arandu-seed-dock:focus { border:2px solid #ffe1a0; background-color:#315342; }
