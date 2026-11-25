@@ -34,7 +34,7 @@ Não executar com `sudo`. O instalador faz backup da Confluência instalada e n�
 
 ## Painel de acessibilidade na Semente (introduzido na 3.1 beta)
 
-Clique com o botão direito na **Semente** ou abra **ARANDU TAPE → Acessibilidade · configurar na Semente**. Ajuste velocidade da varredura (2 / 3,5 / 5 s), tamanho dos medalhões (85% / 100% / 120%), alto contraste, acionador (Super+Alt+Espaço ou Super+Alt+S) e visibilidade da TOPBAR. Existe uma ação para restaurar os padrões seguros.
+Clique com o botão direito na **Semente** ou abra **ARANDU TAPE → Acessibilidade · configurar na Semente**. Ajuste velocidade da varredura (2 / 3,5 / 5 s), tamanho dos medalhões (85% / 100% / 120%), alto contraste, acionador (Super+Alt+Espaço ou Super+Alt+S) e recuperação da barra GNOME. Existe uma ação para restaurar os padrões seguros. No candidato, o painel também mostra data/hora e a preferência GNOME de histórico sob demanda, e abre os menus nativos de avisos/calendário e controles do sistema quando disponíveis. A ocultação pela Confluência está suspensa até validar indicadores equivalentes na Semente; outras extensões podem controlar a barra de modo independente.
 
 Este painel é uma **prévia experimental**, ainda não validada visualmente na máquina de referência. Veja [manual de acessibilidade](docs/PAINEL-ACESSIBILIDADE.md).
 
