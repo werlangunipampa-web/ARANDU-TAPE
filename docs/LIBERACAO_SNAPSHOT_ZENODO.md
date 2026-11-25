@@ -67,3 +67,7 @@ O responsável aprovou GPL versão 3 para o ambiente gráfico próprio, CC BY 4.
 ## Barreira adicional de escopo
 
 Executar scripts/verificar-escopo-release.py com o SHA integral do candidato. A [delimitação de ativos e pesquisa](DELIMITACAO_ATIVOS_PESQUISA.md) registra seis caminhos em retenção conservadora para o primeiro depósito e classifica 22 SVGs rastreados. Enquanto houver retenção, não liberar a release, mesmo com CI e triagem de credenciais aprovadas. A barreira é somente leitura e não remove conteúdo.
+
+## Separação técnica implementada
+
+O candidato substitui a dependência experimental por um contrato público de ações e retira a interface de importação experimental. Os seis caminhos em retenção foram excluídos da árvore candidata; verificar o SHA final e repetir a revisão humana. O histórico público anterior não foi apagado. A autorização de licenciamento e a validação em ambiente real continuam necessárias.
