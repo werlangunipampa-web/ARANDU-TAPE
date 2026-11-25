@@ -55,3 +55,7 @@ AUSUBEL, David P. *The Acquisition and Retention of Knowledge: A Cognitive View*
 Documentos do projeto: [Design Core](DESIGN_CORE.md), [Arquitetura e acessibilidade](../ARANDU-SUITE/docs/ARQUITETURA-E-ACESSIBILIDADE.md), [Estado e versões](ESTADO_E_VERSOES.md) e [Política de publicação científica](PUBLICACAO_CIENTIFICA_ZENODO.md).
 
 O texto não substitui o exame das fontes teóricas, não reivindica filiação cultural institucional e permanece sujeito a revisão autoral e de divulgação.
+
+## Complemento interdisciplinar
+
+A [arquitetura e contribuições científicas](ARQUITETURA_CONTRIBUICOES_CIENTIFICAS.md) distingue a inspiração ausubeliana dos antecedentes de manipulação direta e das medidas de usabilidade. O [protocolo de pesquisa](PROTOCOLO_PESQUISA_INTERACAO.md) propõe hipóteses testáveis, tarefas, medidas e limites éticos. É um plano, não uma avaliação realizada.
