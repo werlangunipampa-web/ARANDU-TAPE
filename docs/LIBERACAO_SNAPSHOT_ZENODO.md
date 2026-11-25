@@ -51,3 +51,7 @@ O Zenodo exige informação de licença e sua interface de depósito tem CC BY 4
 Versão/tag: pendente. SHA definitivo: pendente. Titulares/autorização: pendente. Licenças e escopos: pendentes. Evidências reais: pendentes. Aprovação: não concedida. DOI: não atribuído/confirmado.
 
 Não executar scripts de publicação enquanto houver pendências. A aprovação da documentação e da CI não concede automaticamente autorização de depósito.
+
+## Composição verificável
+
+O [procedimento de reprodutibilidade](REPRODUTIBILIDADE_RELEASE.md) produz manifesto SHA-256 e TAR local de revisão a partir de SHA integral. Identificador global proposto: v0.1.0-scientific; ainda não aprovado nem criado. Arquivo de revisão não é release e não substitui a revisão do arquivo efetivamente arquivado pelo Zenodo.
