@@ -10,6 +10,10 @@ scope=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(scope)
 
 class ReleaseScope(unittest.TestCase):
+    def test_candidate_checkout_has_no_held_paths(self):
+        sha=scope.subprocess.check_output(['git','rev-parse','HEAD']).decode().strip()
+        self.assertEqual(scope.check(sha),[])
+
     def test_held_paths(self):
         self.assertEqual(scope.blocked_paths(scope.HOLD),sorted(scope.HOLD))
 
