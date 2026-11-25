@@ -39,9 +39,14 @@ def verify(app, expanded):
     require(canvas.background.get_opacity()==float(expanded),"background paint mismatch")
     require(all(b.get_visible()==expanded for b in canvas.river_buttons.values()),"river labels mismatch")
     require(all(b.get_visible()==expanded for b,*_ in canvas.markers),"marker visibility mismatch")
-    # GTK picking uses the actual allocation and stacking order.
-    picked=canvas.seed.pick(canvas.seed.get_width()/2,canvas.seed.get_height()/2,Gtk.PickFlags.DEFAULT)
-    require(picked is not None,"seed center is not targetable")
+    # Check actual allocation and hit testing in the common overlay, including siblings.
+    ok,bounds=canvas.seed.compute_bounds(canvas.canvas)
+    require(ok,"seed bounds unavailable")
+    picked=canvas.canvas.pick(bounds.get_x()+bounds.get_width()/2,
+                              bounds.get_y()+bounds.get_height()/2,Gtk.PickFlags.DEFAULT)
+    while picked is not None and picked is not canvas.seed:
+        picked=picked.get_parent()
+    require(picked is canvas.seed,"seed center intercepted by another widget")
     return (canvas.seed.get_width(),canvas.seed.get_height())
 
 def main():
