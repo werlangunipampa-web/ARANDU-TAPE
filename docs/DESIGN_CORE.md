@@ -31,7 +31,7 @@ Fontes atuais: [app.py](../ARANDU-DESKTOP/app.py), [style.css](../ARANDU-SUITE/C
 | Elemento | Função e regra | Estado |
 | --- | --- | --- |
 | Semente Adaptativa | Ponto de orientação, navegação e avisos; pequena em repouso; expansão por intenção | Semente pública existente; avisos e privacidade unificados ainda a verificar |
-| Rios | Memória, Abertos e Frequentes; trajetórias e medalhões estáveis; alternar seleção sem fechar os demais rios | Implementação pública existente; recolhimento por tempo precisa de alinhamento |
+| Rios | Memória, Abertos e Frequentes; trajetórias e medalhões estáveis; alternar seleção sem fechar os demais rios | Implementação pública existente; padrão de inatividade corrigido no candidato, validação real pendente |
 | Medalhões | Identificar e selecionar item real; foco perceptível; não ativar somente pela aproximação | Implementado parcialmente, varia por adaptador |
 | Opy | Encontro de janelas, seleção e retorno ao trabalho | Protótipo GTK4/Sway; validar |
 | Alça Viva | Gestos de janela e recuperação da orientação | Diretriz autoral; verificar integração com o snapshot público |
@@ -42,7 +42,7 @@ Fontes atuais: [app.py](../ARANDU-DESKTOP/app.py), [style.css](../ARANDU-SUITE/C
 ### Contrato de comportamento
 
 - Aproximar o ponteiro revela controles; nunca executa, fecha ou redimensiona por si só.
-- Rios não se recolhem automaticamente por padrão na experiência-alvo. O snapshot atual tem `navigation-idle-ms=10000` e menu 0/10/30/60 s: 0 desativa. É uma divergência registrada, não uma alegação de correção. A opção de temporizador deve ser explícita e não interromper varredura.
+- Rios não se recolhem por mera inatividade por padrão: o candidato altera `navigation-idle-ms` de 10000 para 0. O menu conserva 0/10/30/60 s; 0 desativa. Preferências já gravadas são preservadas. A saída do modo de navegação ao devolver o foco ao aplicativo, clicar fora, cancelar ou ativar um item permanece: não é recolhimento por tempo. O temporizador opcional não deve interromper varredura. Validar o comportamento real antes de declarar conformidade.
 - Flecha azul no canto superior direito aponta para fora e para cima; amarela no canto inferior direito para fora e para baixo. Ocultas em repouso; a amarela apresenta prévia antes de concluir alteração.
 - Alça Viva: diagonal superior para encerrar (respeitar cancelamento e diálogo de salvamento); para cima no centro para Imersão; para baixo no centro para recolher ao Rio; duplo clique para tela cheia. Título discreto aparece ao aproximar. Ações distintas com limiares e recuperação verificáveis; não eliminar meios acessíveis de controle.
 - Cabeçalho Vivo em janelas reais: reservar ao menos 52 px lógicos como diretriz inicial, ampliar se necessário, sem cobrir conteúdo nem controles próprios; reservar região inferior para redimensionamento. Aplicável a interfaces abertas pela Semente, nativas e integradas, respeitando limites técnicos de cada compositor.
