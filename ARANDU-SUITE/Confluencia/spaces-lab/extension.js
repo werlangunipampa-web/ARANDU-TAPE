@@ -26,7 +26,7 @@ export default class SpacesLab extends Extension {
         this._targetSignals=[];
         this._previewTimeout=0;
         this._pending=null;
-        this._edgeEnabled=false;this._edgeTimer=0;this._edgeGrab=null;this._edge=null;
+        this._edgeEnabled=false;this._edgeTimer=0;this._edgeGrab=null;this._edge=null;this._presence=null;
         this._enabled=true;
         this._gate=new WindowIntentGate(()=>this._context());
         this._indicator=new PanelMenu.Button(0,'Espaços Vivos · laboratório',false);
@@ -155,7 +155,58 @@ export default class SpacesLab extends Extension {
         if(this._previewTimeout){GLib.Source.remove(this._previewTimeout);this._previewTimeout=0;}
         this._preview?.hide();
     }
+    _clearPresence(){
+        const p=this._presence;if(!p)return;
+        this._presence=null;
+        if(p.timer){GLib.Source.remove(p.timer);p.timer=0;}
+        p.actor.remove_all_transitions();
+        p.actor.get_child()?.remove_all_transitions();
+    }
+    _presenceBox(p,size){
+        const d=p.large-size;
+        return {x:p.pos.x+(p.direction.includes('w')?0:p.direction.includes('e')?d:Math.round(d/2)),
+            y:p.pos.y+(p.direction.includes('n')?0:p.direction.includes('s')?d:Math.round(d/2)),
+            width:size,height:size};
+    }
+    _growPresence(p){
+        if(!p||this._presence!==p||!p.actor.visible||p.grown)return;
+        if(p.timer){GLib.Source.remove(p.timer);p.timer=0;}
+        p.grown=true;
+        const mode=Clutter.AnimationMode.EASE_OUT_QUAD;
+        const icon=p.actor.get_child();
+        if(icon){
+            icon.set_icon_size(p.master?26:24);
+            icon.set_scale(.5,.5);
+            icon.ease({scale_x:1,scale_y:1,duration:150,mode});
+        }
+        p.actor.ease({...this._presenceBox(p,p.large),duration:150,mode});
+    }
+    _showPresence(actor,direction,pos,c,master=false){
+        const prior=this._presence;
+        if(prior?.actor===actor&&prior.direction===direction&&prior.target===c.focus&&same(prior.frame,c.frame)&&
+            prior.pos.x===pos.x&&prior.pos.y===pos.y&&actor.visible)return;
+        this._clearPresence();
+        const p={actor,direction,pos,target:c.focus,frame:c.frame,master,small:master?20:18,large:master?34:32,grown:false,timer:0};
+        this._presence=p;
+        const b=this._presenceBox(p,p.small),icon=actor.get_child();
+        actor.set_position(b.x,b.y);actor.set_size(b.width,b.height);
+        if(icon){icon.set_pivot_point(.5,.5);icon.set_icon_size(master?13:12);icon.set_scale(1,1);}
+        actor.show();
+        p.timer=GLib.timeout_add(GLib.PRIORITY_DEFAULT,180,()=>{
+            p.timer=0;
+            try{
+                const now=this._context(),[x,y,mods]=global.get_pointer();
+                const buttons=Clutter.ModifierType.BUTTON1_MASK|Clutter.ModifierType.BUTTON2_MASK|Clutter.ModifierType.BUTTON3_MASK;
+                if(this._presence===p&&!this._pending&&this._edgeEnabled&&!this._indicator.menu.isOpen&&
+                    now.focus===p.target&&same(now.frame,p.frame)&&now.capabilities[p.master?'imersao':'resize']===true&&
+                    !(mods&buttons)&&x>=p.pos.x-6&&x<=p.pos.x+p.large+6&&y>=p.pos.y-6&&y<=p.pos.y+p.large+6)
+                    this._growPresence(p);
+            }catch(_){this._hideEdge();}
+            return GLib.SOURCE_REMOVE;
+        });
+    }
     _hideEdge(){
+        this._clearPresence();
         this._edge=null;this._edgeHandle?.hide();this._edgeGlow?.hide();this._masterTarget=null;this._masterHandle?.hide();
     }
     _syncEdgeTimer(c){
@@ -185,29 +236,31 @@ export default class SpacesLab extends Extension {
         }
         // Independent master zone, below the NE corner. Never overlap the yellow corner.
         const f=c.frame;
-        const mx=f.x+f.width-28,my=f.y+44;
+        const mx=f.x+f.width-36,my=f.y+44;
         const masterNear=c.capabilities.imersao===true && f.width>=100 && f.height>=110 &&
-            mx>=c.work.x && my>=c.work.y && mx+26<=c.work.x+c.work.width && my+26<=c.work.y+c.work.height &&
-            x>=mx-8&&x<=mx+34&&y>=my-8&&y<=my+34;
+            mx>=c.work.x && my>=c.work.y && mx+34<=c.work.x+c.work.width && my+34<=c.work.y+c.work.height &&
+            x>=mx-6&&x<=mx+40&&y>=my-6&&y<=my+40;
         if(masterNear){
-            this._hideEdge();this._masterTarget={target:c.focus,frame:c.frame};
-            this._masterHandle.set_position(mx,my);this._masterHandle.show();return;
+            this._edge=null;this._edgeHandle.hide();this._edgeGlow.hide();
+            this._masterTarget={target:c.focus,frame:c.frame};
+            this._showPresence(this._masterHandle,'e',{x:mx,y:my},c,true);return;
         }
         this._masterTarget=null;this._masterHandle.hide();
+        if(this._presence?.master)this._clearPresence();
         if(!c.capabilities.resize||!resizeFromEdge(c.frame,c.work,'se',0,0)){this._hideEdge();return;}
         // Do not move a revealed button underneath the pointer.
         const old=this._edge;
         if(old&&old.target===c.focus&&same(old.frame,c.frame)&&
-            x>=old.pos.x-3&&x<=old.pos.x+27&&y>=old.pos.y-3&&y<=old.pos.y+27)return;
+            x>=old.pos.x-6&&x<=old.pos.x+38&&y>=old.pos.y-6&&y<=old.pos.y+38)return;
         const direction=edgeAt(c.frame,x,y);
         if(!direction){this._hideEdge();return;}
-        const pos=handlePosition(c.frame,direction,x,y);
+        const pos=handlePosition(c.frame,direction,x,y,32);
         if(!pos){this._hideEdge();return;}
         if(!old||old.direction!==direction||!this._edgeHandle.get_child()){
             const icon=this._icon('arco-'+direction+'.svg');icon.set_icon_size(18);this._edgeHandle.set_child(icon);
         }
         this._edge={direction,pos,target:c.focus,frame:c.frame};
-        this._edgeHandle.set_position(pos.x,pos.y);this._edgeHandle.show();
+        this._showPresence(this._edgeHandle,direction,pos,c);
         this._edgeGlow.set_position(c.frame.x,c.frame.y);
         this._edgeGlow.set_size(c.frame.width,c.frame.height);this._edgeGlow.show();
     }
@@ -230,7 +283,7 @@ export default class SpacesLab extends Extension {
             this._edgeGrab=global.stage.grab(this._edgeHandle);
             if(!this._edgeGrab||(this._edgeGrab.get_seat_state()&Clutter.GrabState.POINTER)===0)throw Error('grab');
             this._pending={kind:'edge',target:c.focus,frame:c.frame,work:c.work,direction:e.direction,x,y,moved:false};
-            this._edgeGlow.hide();this._expire();this._sync();
+            this._growPresence(this._presence);this._edgeGlow.hide();this._expire();this._sync();
         }catch(_){this._cancel();this._sync();}
         return Clutter.EVENT_STOP;
     }
@@ -242,8 +295,12 @@ export default class SpacesLab extends Extension {
             if(Math.hypot(x-p.x,y-p.y)<4&&!p.moved)return true;
             const shape=resizeFromEdge(p.frame,p.work,p.direction,x-p.x,y-p.y);
             if(!shape||!this._gate.preview(shape))throw Error('preview');
-            p.moved=true;this._preview.set_position(shape.x,shape.y);
-            this._preview.set_size(shape.width,shape.height);this._preview.show();
+            p.moved=true;
+            if(!same(p.lastPreview,shape)){
+                this._preview.set_position(shape.x,shape.y);
+                this._preview.set_size(shape.width,shape.height);p.lastPreview={...shape};
+            }
+            if(!this._preview.visible)this._preview.show();
             return true;
         }catch(_){this._cancel();this._sync();return false;}
     }
