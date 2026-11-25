@@ -30,7 +30,7 @@ Fontes atuais: [app.py](../ARANDU-DESKTOP/app.py), [style.css](../ARANDU-SUITE/C
 
 | Elemento | Função e regra | Estado |
 | --- | --- | --- |
-| Semente Adaptativa | Ponto de orientação, navegação e avisos; pequena em repouso; expansão por intenção | Semente pública existente; acesso sob demanda aos menus nativos no candidato; indicadores próprios ainda pendentes |
+| Semente Adaptativa | Ponto de orientação, navegação e avisos; pequena em repouso; expansão por intenção | Semente pública existente; acesso aos menus nativos e espelhamento experimental de sinais GNOME; cobertura independente ainda pendente |
 | Rios | Memória, Abertos e Frequentes; trajetórias e medalhões estáveis; alternar seleção sem fechar os demais rios | Implementação pública existente; padrão de inatividade corrigido no candidato, validação real pendente |
 | Medalhões | Identificar e selecionar item real; foco perceptível; não ativar somente pela aproximação | Implementado parcialmente, varia por adaptador |
 | Opy | Encontro de janelas, seleção e retorno ao trabalho | Protótipo GTK4/Sway; validar |
