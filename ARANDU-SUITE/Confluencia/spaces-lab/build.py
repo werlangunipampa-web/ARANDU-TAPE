@@ -30,4 +30,8 @@ for direction, angle in zip(("n", "ne", "e", "se", "s", "sw", "w", "nw"), range(
 <path d="M13 24 L16 27 L19 24" stroke="#D7BB7C" stroke-width="1.2"/>
 </g></svg>"""
     (out / "assets" / f"arco-{direction}.svg").write_text(svg, encoding="utf-8")
+# Master arrow uses the same bow silhouette, blue and slightly larger.
+master = (out / "assets" / "arco-ne.svg").read_text(encoding="utf-8")
+master = master.replace("#D7BB7C", "#79B9D5").replace("#9E926D", "#537F96").replace("#E6BA59", "#79D5F3")
+(out / "assets" / "arco-mestre.svg").write_text(master, encoding="utf-8")
 print("Laboratório construído (não instalado):", out)
